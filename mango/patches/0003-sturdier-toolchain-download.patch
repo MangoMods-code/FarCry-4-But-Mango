@@ -1,0 +1,13 @@
+diff --git a/tools/build/setup-llvm-mingw.sh b/tools/build/setup-llvm-mingw.sh
+index 5e3ed59..7746028 100755
+--- a/tools/build/setup-llvm-mingw.sh
++++ b/tools/build/setup-llvm-mingw.sh
+@@ -15,7 +15,7 @@ fi
+ mkdir -p "$ROOT/toolchains"
+ echo "Downloading llvm-mingw $VERSION..."
+ ARCHIVE="$ROOT/toolchains/$NAME.tar.xz"
+-curl -fL --retry 3 "$URL" -o "$ARCHIVE.part"
++curl -fL --retry 6 --retry-all-errors --retry-delay 10 --connect-timeout 30 "$URL" -o "$ARCHIVE.part"   # Mango Port: GitHub-hosted Macs drop downloads
+ printf '%s  %s\n' "$SHA256" "$ARCHIVE.part" | shasum -a 256 -c -
+ mv "$ARCHIVE.part" "$ARCHIVE"
+ tar -xJf "$ARCHIVE" -C "$ROOT/toolchains"
