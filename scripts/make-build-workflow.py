@@ -87,4 +87,33 @@ s = s.replace(old, 'echo "ipa=mango-ipa-v1-${{ hashFiles(\'mango/patches/**\') }
 
 # Artifact name.
 s = s.replace('name: Madeira-ipa', 'name: MangoPort-ipa')
+# Release: on a v* tag, attach the IPA to a GitHub Release with that version's notes from
+# docs/CHANGELOG.md (an ubuntu job, so it costs no macOS minutes).
+s = s.rstrip('\n') + '''
+
+  release:
+    needs: [reuse, app]
+    if: always() && startsWith(github.ref, 'refs/tags/v') && (needs.app.result == 'success' || needs.reuse.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: MangoPort-ipa
+          path: dist
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mv dist/Madeira.ipa "dist/MangoPort-$TAG.ipa"
+          awk -v tag="## $TAG" '$0 == tag {on=1; next} /^## / {on=0} on' docs/CHANGELOG.md > notes.md
+          test -s notes.md || echo "Mango Port $TAG" > notes.md
+          gh release create "$TAG" "dist/MangoPort-$TAG.ipa" --title "Mango Port $TAG" --notes-file notes.md
+'''
 open(dst, 'w').write(s)
