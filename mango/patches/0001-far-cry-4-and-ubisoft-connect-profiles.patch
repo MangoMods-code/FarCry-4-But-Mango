@@ -1,5 +1,5 @@
 diff --git a/app/Madeira/GameRecommendations.swift b/app/Madeira/GameRecommendations.swift
-index cd82989..38c18fb 100644
+index cd82989..2b69a69 100644
 --- a/app/Madeira/GameRecommendations.swift
 +++ b/app/Madeira/GameRecommendations.swift
 @@ -1098,6 +1098,91 @@ enum GameRecommendations {
@@ -100,7 +100,7 @@ index cd82989..38c18fb 100644
                        crysis2Remastered, crysis3Remastered, rockstarLauncher, rockstarLauncherSetup, steamBigPicture,
 -                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2, standard]
 +                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2,
-+                      farCry4, ubisoftConnect, ubisoftConnectSetup, standard]
++                      ubisoftConnect, ubisoftConnectSetup, standard]   // Mango Port: farCry4 comes in through steamTitles
          + steamTitles.map(\.list)
  
      // MARK: Recognising a game
@@ -127,7 +127,7 @@ index cd82989..38c18fb 100644
      ]
  
 diff --git a/tests/host/check-game-recommendations.py b/tests/host/check-game-recommendations.py
-index 494d3f8..f2c9f73 100644
+index 494d3f8..6c7afa2 100644
 --- a/tests/host/check-game-recommendations.py
 +++ b/tests/host/check-game-recommendations.py
 @@ -75,16 +75,19 @@ MERGED = {'msfs-2024', 'counter-strike-2', 'breakneck', 'spelunky-2', 'albion-on
@@ -148,7 +148,7 @@ index 494d3f8..f2c9f73 100644
          '                      crysis2Remastered, crysis3Remastered, rockstarLauncher, rockstarLauncherSetup, steamBigPicture,\n'
 -        '                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2, standard]\n'
 +        '                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2,\n'
-+        '                      farCry4, ubisoftConnect, ubisoftConnectSetup, standard]\n'
++        '                      ubisoftConnect, ubisoftConnectSetup, standard]   // Mango Port: farCry4 comes in through steamTitles\n'
          '        + steamTitles.map(\\.list)') in lists_src
  # The Rockstar Games Launcher outside Steam (logs 91-93, 2026-10-28): Launcher.exe in its own folder gets the
  # launcher chain's lines, its installer the standard line; both start in the Wine desktop with Windows services.
@@ -184,3 +184,22 @@ index 494d3f8..f2c9f73 100644
  other_legacy = presets['gta5l-other']
  assert other_legacy['tested'] == [line for line in legacy['tested'] if not line.startswith('env.MADEIRA_DOCK_')], other_legacy
  assert other_legacy['switches'] == legacy['switches'] and other_legacy['version'] == 1, other_legacy
+@@ -804,7 +821,17 @@ check(id(steam + #"\GarrysMod"#, 4000) == "garrys-mod" && id(steam + #"\GarrysMo
+       "Garry's Mod by App ID and folder (either branch) and by its 64-bit program")
+ check(id(steam + #"\P3R"#, 2161700) == "persona-3-reload" && id(steam + #"\P3R\P3R\Binaries\Win64\P3R.exe"#) == "persona-3-reload",
+       "Persona 3 Reload by App ID, folder and program")
+-check(R.steamTitles.count == 52 && R.all.count == 78, "52 merged titles, 78 lists")
++check(R.steamTitles.count == 53 && R.all.count == 81, "52 merged titles + Mango Port's Far Cry 4, 81 lists")
++// Mango Port: Far Cry 4 by App ID, folder and program anywhere; Ubisoft Connect only in its own folder.
++check(id(steam + #"\Far Cry 4"#, 298110) == "mango-far-cry-4" && id(steam + #"\Far Cry 4"#) == "mango-far-cry-4"
++      && id(steam + #"\Far Cry 4\bin\FarCry4.exe"#) == "mango-far-cry-4"
++      && id(#"C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\games\Far Cry 4\bin\FarCry4.exe"#) == "mango-far-cry-4",
++      "Far Cry 4 by App ID, folder and program (Steam or Ubisoft Store)")
++check(id(#"C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\upc.exe"#) == "mango-ubisoft-connect"
++      && id(#"C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\UbisoftConnect.exe"#) == "mango-ubisoft-connect"
++      && id(#"C:\Users\me\Downloads\UbisoftConnectInstaller.exe"#) == "mango-ubisoft-connect-setup"
++      && id(#"C:\Games\Other\upc.exe"#) == "none",
++      "Ubisoft Connect in its own folder, its installer anywhere, another upc.exe nothing")
+ check(id(#"C:\Games\Foo\foo.exe"#) == "none" && id(steam + #"\Portal 2"#, 620) == "none", "other games")
+ check(id("") == "none" && id("C:\\") == "none", "no path")
+ print("PASS: Steam games by App ID or steamapps\\common folder, GTA V Enhanced and RDR2 inside and outside Steam, GoT, GoW, the Horizon games, Rift Apart and the three Crysis Remastered games by their programs, GTA V Legacy outside Steam, the 51 merged Steam titles, others none")
