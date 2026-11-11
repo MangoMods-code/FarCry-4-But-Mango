@@ -17,6 +17,8 @@ on:
   workflow_dispatch:
   push:
     tags: ['v*']
+    # Pushing to the release branch builds and publishes the newest version in docs/CHANGELOG.md.
+    branches: [release]
 
 permissions:
   contents: read
@@ -93,7 +95,7 @@ s = s.rstrip('\n') + '''
 
   release:
     needs: [reuse, app]
-    if: always() && startsWith(github.ref, 'refs/tags/v') && (needs.app.result == 'success' || needs.reuse.result == 'success')
+    if: always() && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/release') && (needs.app.result == 'success' || needs.reuse.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,11 +111,14 @@ s = s.rstrip('\n') + '''
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
         run: |
+          # A tag build uses its tag; a release-branch build uses the newest '## vX.Y.Z' in the changelog.
+          if [ "${GITHUB_REF_TYPE}" = tag ]; then TAG="${GITHUB_REF_NAME}"
+          else TAG=$(awk '/^## v/ {print $2; exit}' docs/CHANGELOG.md); fi
+          test -n "$TAG"
           mv dist/Madeira.ipa "dist/MangoPort-$TAG.ipa"
           awk -v tag="## $TAG" '$0 == tag {on=1; next} /^## / {on=0} on' docs/CHANGELOG.md > notes.md
           test -s notes.md || echo "Mango Port $TAG" > notes.md
-          gh release create "$TAG" "dist/MangoPort-$TAG.ipa" --title "Mango Port $TAG" --notes-file notes.md
+          gh release create "$TAG" "dist/MangoPort-$TAG.ipa" --title "Mango Port $TAG" --notes-file notes.md --target "$GITHUB_SHA"
 '''
 open(dst, 'w').write(s)
