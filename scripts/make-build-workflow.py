@@ -134,7 +134,7 @@ report = '''      - name: Report the failing step
         run: |
           f="$RUNNER_TEMP/step.log"
           [ -s "$f" ] || exit 0
-          msg=$(tail -60 "$f" | cut -c1-300 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
+          msg=$(tr '\\r' '\\n' < "$f" | sed -e 's/\\x1b\\[[0-9;]*m//g' | grep -v '^[[:space:]]*$' | tail -60 | cut -c1-400 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
           echo "::error title=${GITHUB_JOB} failed (last 60 lines)::${msg}"
 '''
 blocks = re.split(r'(?m)^(?=  [a-z0-9-]+:\n)', jobs2)
