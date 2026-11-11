@@ -49,6 +49,13 @@ def checkout(full):
           x=$(ls -d /Applications/Xcode_27*.app 2>/dev/null | sort -V | tail -1 || true)
           if [ -n "$x" ]; then sudo xcode-select -s "$x"; fi
           xcodebuild -version
+          # Madeira needs the iOS 27 SDK (Xcode 27). GitHub's hosted macOS images had only
+          # Xcode 26.6 / iOS 26.5 on 2026-11-11, so stop here with a clear message.
+          sdk=$(xcrun --sdk iphoneos --show-sdk-version)
+          if [ "${{sdk%%.*}}" -lt 27 ]; then
+            echo "::error title=Xcode 27 required::This runner has iOS SDK $sdk. Madeira needs Xcode 27 (iOS 27 SDK). Set the MANGO_MAC_RUNNER repository variable to a runner that has it (e.g. a self-hosted Mac)."
+            exit 1
+          fi
 '''
 s = s.replace('      - uses: actions/checkout@v4\n        with:\n          submodules: recursive\n', '@@FULL@@\n')
 s = s.replace('      - uses: actions/checkout@v4\n', checkout(False))
