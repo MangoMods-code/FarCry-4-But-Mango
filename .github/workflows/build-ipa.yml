@@ -1,6 +1,6 @@
 # Generated from madeira/.github/workflows/build.yml by Mango Port (see docs/BUILDING.md).
 # Differences: runs from this repo with Madeira at madeira/, applies mango/patches first,
-# GitHub-hosted macOS runner (override with the MANGO_MAC_RUNNER repository variable),
+# GitHub's hosted xcode-27 runner (override with the MANGO_MAC_RUNNER repository variable),
 # manual runs only, and the IPA cache key includes the Mango patches.
 name: Build Mango Port IPA
 
@@ -24,7 +24,7 @@ defaults:
 
 jobs:
   plan:
-    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}
+    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}
     outputs:
       ipa: ${{ steps.key.outputs.ipa }}
       reuse: ${{ steps.ipa.outputs.cache-hit }}
@@ -117,7 +117,7 @@ jobs:
   reuse:
     needs: plan
     if: needs.plan.outputs.reuse == 'true'
-    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}
+    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}
     env:
       MADEIRA_PLANNED_SDK: ${{ needs.plan.outputs.sdk }}
       MADEIRA_RUNTIME_SDK: ${{ needs.plan.outputs.sdk }}
@@ -189,7 +189,7 @@ jobs:
   llvm:
     needs: plan
     if: needs.plan.outputs.reuse != 'true'
-    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}
+    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}
     env:
       MADEIRA_PLANNED_SDK: ${{ needs.plan.outputs.sdk }}
     timeout-minutes: 360
@@ -272,7 +272,7 @@ jobs:
   fex:
     needs: plan
     if: needs.plan.outputs.reuse != 'true'
-    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}
+    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}
     env:
       MADEIRA_PLANNED_SDK: ${{ needs.plan.outputs.sdk }}
     timeout-minutes: 360
@@ -360,7 +360,7 @@ jobs:
   i386:
     needs: plan
     if: needs.plan.outputs.reuse != 'true'
-    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}
+    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}
     env:
       MADEIRA_PLANNED_SDK: ${{ needs.plan.outputs.sdk }}
     timeout-minutes: 360
@@ -462,7 +462,7 @@ jobs:
   runtime:
     needs: [plan, llvm]
     if: needs.plan.outputs.reuse != 'true'
-    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}
+    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}
     timeout-minutes: 360
     strategy:
       fail-fast: false
@@ -556,7 +556,7 @@ jobs:
   app:
     needs: [plan, llvm, fex, i386, runtime]
     if: needs.plan.outputs.reuse != 'true'
-    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}
+    runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}
     env:
       MADEIRA_PLANNED_SDK: ${{ needs.plan.outputs.sdk }}
       MADEIRA_PLANNED_IPA: ${{ needs.plan.outputs.ipaenv }}

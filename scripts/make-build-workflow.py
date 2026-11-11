@@ -9,7 +9,7 @@ s = open(src).read()
 head, jobs = s.split('\njobs:\n', 1)
 head = '''# Generated from madeira/.github/workflows/build.yml by Mango Port (see docs/BUILDING.md).
 # Differences: runs from this repo with Madeira at madeira/, applies mango/patches first,
-# GitHub-hosted macOS runner (override with the MANGO_MAC_RUNNER repository variable),
+# GitHub's hosted xcode-27 runner (override with the MANGO_MAC_RUNNER repository variable),
 # manual runs only, and the IPA cache key includes the Mango patches.
 name: Build Mango Port IPA
 
@@ -34,7 +34,7 @@ defaults:
 s = head + '\njobs:\n' + jobs
 
 # Runner label.
-s = s.replace('runs-on: xcode-27', "runs-on: ${{ vars.MANGO_MAC_RUNNER || 'macos-26' }}")
+s = s.replace('runs-on: xcode-27', "runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode-27' }}")
 
 # Checkout steps: this repo, then Madeira + Mango patches, then pick the newest Xcode.
 def checkout(full):

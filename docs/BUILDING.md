@@ -21,11 +21,11 @@ python3 scripts/make-build-workflow.py madeira/.github/workflows/build.yml .gith
 ```
 
 ### Runner and Xcode
-Madeira builds on a runner labelled `xcode-27`, because it needs the **iOS 27 SDK**.
-This workflow uses GitHub's `macos-26` image and selects the newest `Xcode_27*` on it.
-If that image doesn't have Xcode 27 yet, the build fails early at the SDK step.
-To use a different runner, such as a self-hosted Mac or a larger runner, set the
-repository variable `MANGO_MAC_RUNNER` to its label.
+Madeira needs Xcode 27 (the iOS 27 SDK). The workflow runs on GitHub's hosted `xcode-27`
+runner (macOS 27, Apple Silicon), the same label Madeira's own CI uses. GitHub's
+`macos-26`/`macos-latest` images only have Xcode 26, and every job stops in its first
+minute with an "Xcode 27 required" error if it lands on one. To use another runner
+(e.g. a self-hosted Mac), set the repository variable `MANGO_MAC_RUNNER` to its label.
 
 ### Cost — read before the first run
 - A **cold build takes several hours** and runs about 10 macOS jobs in parallel: LLVM, FEX,
