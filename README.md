@@ -45,7 +45,9 @@ scripts/apply-mango.sh        # full submodule fetch + patches
 scripts/test.sh               # host checks
 ```
 
-Then follow `madeira/BUILDING.md` on a Mac (Xcode, the Wine/FEX/DXMT toolchains). The output is the same IPA Madeira makes, renamed Mango Port.
+**No Mac?** Run **Actions → Build Mango Port IPA** and download the `MangoPort-ipa` artifact. Read the cost notes in [`docs/BUILDING.md`](docs/BUILDING.md) first: a cold build takes hours of macOS runner time.
+
+On a Mac, follow `madeira/BUILDING.md` (Xcode, the Wine/FEX/DXMT toolchains). The output is the same IPA Madeira makes, renamed Mango Port.
 
 ## Rules this project keeps
 
