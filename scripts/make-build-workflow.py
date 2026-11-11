@@ -89,6 +89,58 @@ s = s.replace(old, 'echo "ipa=mango-ipa-v1-${{ hashFiles(\'mango/patches/**\') }
 
 # Artifact name.
 s = s.replace('name: Madeira-ipa', 'name: MangoPort-ipa')
+# Diagnostics: this session can read check-run annotations but not job logs, so every
+# run step tees its output to $RUNNER_TEMP/step.log, and a failed job posts the last
+# 60 lines of its failing step as an error annotation.
+def wrap_runs(text):
+    lines = text.split('\n'); out = []; i = 0
+    while i < len(lines):
+        line = lines[i]
+        m = re.match(r'^(\s+)run: (.*)$', line)
+        if not m:
+            out.append(line); i += 1; continue
+        ind, val = m.groups()
+        if val == '|':
+            body = []; i += 1
+            body_ind = None
+            while i < len(lines) and (lines[i].strip() == '' or len(lines[i]) - len(lines[i].lstrip()) > len(ind)):
+                if lines[i].strip():
+                    body_ind = body_ind if body_ind is not None else len(lines[i]) - len(lines[i].lstrip())
+                body.append(lines[i]); i += 1
+            while body and not body[-1].strip(): body.pop()
+            inner = [b[body_ind:] if b.strip() else '' for b in body]
+        else:
+            inner = [val]; i += 1
+            body_ind = len(ind) + 2
+        pad = ' ' * body_ind
+        # A step that only runs after a failure appends, so the failing step's output stays.
+        after_failure = any('failure()' in o for o in out[-3:])
+        out.append(f'{ind}run: |')
+        out.append(f'{pad}set -o pipefail')
+        if not after_failure:
+            out.append(f'{pad}: > "$RUNNER_TEMP/step.log"')
+        out.append(f'{pad}(')
+        out.extend((pad + '  ' + b) if b else '' for b in inner)
+        out.append(f'{pad}) 2>&1 | tee -a "$RUNNER_TEMP/step.log"')
+    return '\n'.join(out)
+
+head2, jobs2 = s.split('\njobs:\n', 1)
+jobs2 = wrap_runs(jobs2)
+# A last step in every job: on failure, post the failing step's tail as an annotation.
+report = '''      - name: Report the failing step
+        if: failure()
+        working-directory: .
+        shell: bash
+        run: |
+          f="$RUNNER_TEMP/step.log"
+          [ -s "$f" ] || exit 0
+          msg=$(tail -60 "$f" | cut -c1-300 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
+          echo "::error title=${GITHUB_JOB} failed (last 60 lines)::${msg}"
+'''
+blocks = re.split(r'(?m)^(?=  [a-z0-9-]+:\n)', jobs2)
+jobs2 = ''.join(b.rstrip('\n') + '\n' + report + ('\n' if b.endswith('\n\n') else '') if re.match(r'  [a-z0-9-]+:\n', b) else b for b in blocks)
+s = head2 + '\njobs:\n' + jobs2
+
 # Release: on a v* tag, attach the IPA to a GitHub Release with that version's notes from
 # docs/CHANGELOG.md (an ubuntu job, so it costs no macOS minutes).
 s = s.rstrip('\n') + '''
