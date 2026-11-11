@@ -1,0 +1,48 @@
+diff --git a/app/Madeira.xcodeproj/project.pbxproj b/app/Madeira.xcodeproj/project.pbxproj
+index cf86a5a..818f70a 100644
+--- a/app/Madeira.xcodeproj/project.pbxproj
++++ b/app/Madeira.xcodeproj/project.pbxproj
+@@ -1305,7 +1305,7 @@
+ 				GCC_WARN_UNUSED_FUNCTION = YES;
+ 				GCC_WARN_UNUSED_VARIABLE = YES;
+ 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+-				MADEIRA_BUNDLE_IDENTIFIER = com.willfaust.madeora;
++				MADEIRA_BUNDLE_IDENTIFIER = com.mangomods.mangoport;
+ 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+ 				MTL_FAST_MATH = YES;
+ 				ONLY_ACTIVE_ARCH = YES;
+@@ -1334,7 +1334,7 @@
+ 				GCC_WARN_UNUSED_FUNCTION = YES;
+ 				GCC_WARN_UNUSED_VARIABLE = YES;
+ 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+-				MADEIRA_BUNDLE_IDENTIFIER = com.willfaust.madeora;
++				MADEIRA_BUNDLE_IDENTIFIER = com.mangomods.mangoport;
+ 				MTL_ENABLE_DEBUG_INFO = NO;
+ 				MTL_FAST_MATH = YES;
+ 				SDKROOT = iphoneos;
+diff --git a/app/Madeira/Info.plist b/app/Madeira/Info.plist
+index 15c078a..1a1a4b0 100644
+--- a/app/Madeira/Info.plist
++++ b/app/Madeira/Info.plist
+@@ -16,7 +16,7 @@
+ 	<key>CFBundleDevelopmentRegion</key>
+ 	<string>en</string>
+ 	<key>CFBundleDisplayName</key>
+-	<string>Madeira</string>
++	<string>Mango Port</string>
+ 	<key>CFBundleDocumentTypes</key>
+ 	<array>
+ 		<dict>
+diff --git a/tests/host/check-jit-method.py b/tests/host/check-jit-method.py
+index 5184340..b3c8d92 100644
+--- a/tests/host/check-jit-method.py
++++ b/tests/host/check-jit-method.py
+@@ -144,7 +144,7 @@ project = (root / "app/Madeira.xcodeproj/project.pbxproj").read_text()
+ helper_source = (root / "app/MadeiraJITHelper/MadeiraJITHelper.swift").read_text()
+ require(project.count('PRODUCT_BUNDLE_IDENTIFIER = "$(MADEIRA_BUNDLE_IDENTIFIER)";') == 2
+         and project.count('PRODUCT_BUNDLE_IDENTIFIER = "$(MADEIRA_BUNDLE_IDENTIFIER).JITHelper";') == 2
+-        and project.count("MADEIRA_BUNDLE_IDENTIFIER = com.willfaust.madeora;") == 2
++        and project.count("MADEIRA_BUNDLE_IDENTIFIER = com.mangomods.mangoport;") == 2   # Mango Port
+         and "AppExtensionPoint" not in helper_source,
+         "one setting, MADEIRA_BUNDLE_IDENTIFIER, names the app and the helper")
+ 

@@ -1,0 +1,186 @@
+diff --git a/app/Madeira/GameRecommendations.swift b/app/Madeira/GameRecommendations.swift
+index cd82989..38c18fb 100644
+--- a/app/Madeira/GameRecommendations.swift
++++ b/app/Madeira/GameRecommendations.swift
+@@ -1098,6 +1098,91 @@ enum GameRecommendations {
+     /// that reserves, releases and reserves again inside the same range never gets it
+     /// back: Madeira Dock spun on "Loading Steam" before Thumper. The game lists that
+     /// were tested with those defaults keep them. No switches.
++    // MARK: Mango Port (MangoMods-code/FarCry-4-But-Mango)
++
++    /// Far Cry 4 (Steam 298110; bin\FarCry4.exe, 64-bit, Direct3D 11). Mango Port's
++    /// target game. The game starts through Ubisoft Connect, a Chromium (CEF)
++    /// launcher like the Rockstar Games Launcher, so this list starts from that
++    /// chain's lines (the pool lines, pure-x64 images uncopied, the Wine desktop
++    /// with Windows services first). NOT DEVICE-TESTED YET: version 1 is a starting
++    /// point; record each device run in docs/FAR_CRY_4.md and raise `version`
++    /// with every working change.
++    static let farCry4 = GameRecommendation(
++        id: "mango-far-cry-4", title: "Far Cry 4 (Mango Port, not tested yet)", version: 1,
++        config: """
++        # Madeira's recommended settings for Far Cry 4 (Mango Port; not device-tested yet).
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        pool-low = 1
++        pool-mid = 1
++        pool-page-fit = 1
++        pool-split = 1
++        env.MADEIRA_X64_IMAGE_NOCOPY = 1
++        env.MADEIRA_EXECREQ_LEAVE = 1
++        env.MADEIRA_POOL_HEAD_RESERVE_MB = 128
++        env.MADEIRA_POOL_LOW_IMAGES = 1
++        env.MADEIRA_POOL_RECYCLE_IMAGES = 1
++        env.MADEIRA_WOW_MIN_FREE_GB = 2
++        env.DXMT_SMALL_RINGS = upc.exe;UbisoftConnect.exe;UplayWebCore.exe
++        env.DXMT_WSI_MONITOR_IDENTITY = 1
++        env.DXMT_WSI_MODE_TABLE = 1
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        # The defaults this list was tested with (upstream's differ).
++        env.MADEIRA_FREE_DELAY_MS = 2000
++        env.MADEIRA_CTX_CPU_AREA = 2
++        env.MADEIRA_WAIT_CHILDREN = 1
++        env.MADEIRA_JIT_DUMP = 0
++        """,
++        fastSync: true, fpsMode: 3, display: "fit", launchMode: "desktop", startServices: true,
++        smallRAMConfig: smallRAMSwapLines)
++
++    /// Ubisoft Connect itself (upc.exe / UbisoftConnect.exe in "Ubisoft\Ubisoft Game
++    /// Launcher"), which Far Cry 4 needs to sign in and start. Modelled on
++    /// `rockstarLauncher`, the other CEF launcher Madeira runs. Not tested yet.
++    static let ubisoftConnect = GameRecommendation(
++        id: "mango-ubisoft-connect", title: "Ubisoft Connect (Mango Port, not tested yet)", version: 1,
++        config: """
++        # Madeira's recommended settings for Ubisoft Connect (Mango Port; not device-tested yet).
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        pool-low = 1
++        pool-mid = 1
++        pool-page-fit = 1
++        pool-split = 1
++        env.FEX_VECTORTSOENABLED = 0
++        env.MADEIRA_X64_IMAGE_NOCOPY = 1
++        env.MADEIRA_EXECREQ_LEAVE = 1
++        env.MADEIRA_LOCK_ORPHAN = stamped
++        env.MADEIRA_POOL_HEAD_RESERVE_MB = 128
++        env.MADEIRA_POOL_LOW_IMAGES = 1
++        env.MADEIRA_POOL_RECYCLE_IMAGES = 1
++        env.MADEIRA_TOUCH_MOUSE = 1
++        env.MADEIRA_WOW_MIN_FREE_GB = 2
++        env.DXMT_SMALL_RINGS = upc.exe;UbisoftConnect.exe;UplayWebCore.exe
++        env.DXMT_WSI_MONITOR_IDENTITY = 1
++        env.DXMT_WSI_MODE_TABLE = 1
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        # The defaults this list was tested with (upstream's differ).
++        env.MADEIRA_FREE_DELAY_MS = 2000
++        env.MADEIRA_CTX_CPU_AREA = 2
++        env.MADEIRA_WAIT_CHILDREN = 1
++        env.MADEIRA_JIT_DUMP = 0
++        """,
++        fastSync: true, display: "fit", launchMode: "desktop", startServices: true)
++
++    /// Ubisoft Connect's installer: Windows services first and the standard line only.
++    static let ubisoftConnectSetup = GameRecommendation(
++        id: "mango-ubisoft-connect-setup", title: "Ubisoft Connect installer (Mango Port)", version: 1,
++        config: """
++        # Madeira's recommended settings for the Ubisoft Connect installer (Mango Port).
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        # The defaults this list was tested with (upstream's differ).
++        env.MADEIRA_FREE_DELAY_MS = 2000
++        env.MADEIRA_CTX_CPU_AREA = 2
++        env.MADEIRA_WAIT_CHILDREN = 1
++        env.MADEIRA_JIT_DUMP = 0
++        """,
++        launchMode: "desktop", startServices: true)
++
+     static let standard = GameRecommendation(
+         id: "standard", title: "games without a list of their own", version: 3,
+         config: """
+@@ -1239,7 +1324,8 @@ enum GameRecommendations {
+     static let all = [rdr2Steam, rdr2Other, gta5EnhancedSteam, gta5EnhancedOther, gta5LegacySteam, gta5LegacyOther, gta4Steam,
+                       ghostOfTsushima, godOfWar, horizonZeroDawn, horizonForbiddenWest, ratchetClankRiftApart, crysisRemastered,
+                       crysis2Remastered, crysis3Remastered, rockstarLauncher, rockstarLauncherSetup, steamBigPicture,
+-                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2, standard]
++                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2,
++                      farCry4, ubisoftConnect, ubisoftConnectSetup, standard]
+         + steamTitles.map(\.list)
+ 
+     // MARK: Recognising a game
+@@ -1361,6 +1447,12 @@ enum GameRecommendations {
+             return rockstarLauncher
+         case "rockstar-games-launcher.exe":
+             return rockstarLauncherSetup
++        case "upc.exe" where parts.dropLast().contains("ubisoft game launcher"),
++             "ubisoftconnect.exe" where parts.dropLast().contains("ubisoft game launcher"):
++            // Mango Port: Ubisoft Connect in its own install folder only.
++            return ubisoftConnect
++        case "ubisoftconnectinstaller.exe":
++            return ubisoftConnectSetup
+         default:
+             return steamTitles.first { $0.programs.contains(last) || (inSteam && $0.steamPrograms.contains(last)) }?.list
+         }
+@@ -1498,6 +1590,8 @@ extension GameRecommendations {
+                    programs: ["neosphere.exe"], steamPrograms: [], list: glyphicaTypingSurvival),
+         SteamTitle(appIDs: [3483510], folders: ["the adventures of elliot the millennium tales"],
+                    programs: ["elliot-win64-shipping.exe"], steamPrograms: [], list: theAdventuresOfElliot),
++        SteamTitle(appIDs: [298110], folders: ["far cry 4"],
++                   programs: ["farcry4.exe"], steamPrograms: [], list: farCry4),   // Mango Port
+ 
+     ]
+ 
+diff --git a/tests/host/check-game-recommendations.py b/tests/host/check-game-recommendations.py
+index 494d3f8..f2c9f73 100644
+--- a/tests/host/check-game-recommendations.py
++++ b/tests/host/check-game-recommendations.py
+@@ -75,16 +75,19 @@ MERGED = {'msfs-2024', 'counter-strike-2', 'breakneck', 'spelunky-2', 'albion-on
+           'life-is-strange-remastered', 'life-is-strange-2', 'project-zomboid', 'spiderheck', 'rounds', 'plateup',
+           'final-fantasy-tactics-ivalice-chronicles', 'jetboard-joust', 'dead-as-disco', 'tung', 'sekiro-shadows-die-twice', 'stardew-valley',
+           'glyphica-typing-survival', 'the-adventures-of-elliot', 'the-escapists-2', 'garrys-mod', 'persona-3-reload'}
++# Mango Port (MangoMods-code/FarCry-4-But-Mango): Far Cry 4 and the Ubisoft Connect launcher chain.
++MANGO = {'mango-far-cry-4', 'mango-ubisoft-connect', 'mango-ubisoft-connect-setup'}
+ assert set(presets) == {'rdr2-steam', 'rdr2-other', 'gta5e-steam', 'gta5e-other', 'gta5l-steam', 'gta5l-other', 'gta4-steam',
+                         'ghost-of-tsushima', 'god-of-war', 'horizon-zero-dawn', 'horizon-forbidden-west', 'ratchet-clank-rift-apart',
+                         'crysis-remastered', 'crysis-2-remastered', 'crysis-3-remastered', 'rockstar-launcher', 'rockstar-launcher-setup',
+                         'steam-big-picture', 'dark-souls-remastered', 'dark-souls-iii', 'fallout-new-vegas', 'fallout-3', 'black-ops-1', 'black-ops-2', 'borderlands-2',
+-                        'standard'} | MERGED, \
++                        'standard'} | MERGED | MANGO, \
+     sorted(presets)
+ assert ('static let all = [rdr2Steam, rdr2Other, gta5EnhancedSteam, gta5EnhancedOther, gta5LegacySteam, gta5LegacyOther, gta4Steam,\n'
+         '                      ghostOfTsushima, godOfWar, horizonZeroDawn, horizonForbiddenWest, ratchetClankRiftApart, crysisRemastered,\n'
+         '                      crysis2Remastered, crysis3Remastered, rockstarLauncher, rockstarLauncherSetup, steamBigPicture,\n'
+-        '                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2, standard]\n'
++        '                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2,\n'
++        '                      farCry4, ubisoftConnect, ubisoftConnectSetup, standard]\n'
+         '        + steamTitles.map(\\.list)') in lists_src
+ # The Rockstar Games Launcher outside Steam (logs 91-93, 2026-10-28): Launcher.exe in its own folder gets the
+ # launcher chain's lines, its installer the standard line; both start in the Wine desktop with Windows services.
+@@ -108,7 +111,21 @@ assert 'if let on = rec.startServices { entry.startServices = on ? true : nil }'
+ titles_src = block(lists_src, '    static let steamTitles: [SteamTitle] = [', '\n    ]\n')
+ for ident in MERGED:
+     assert titles_src.count('list: %s)' % presets[ident]['name']) == 1, ident
+-assert titles_src.count('SteamTitle(') == len(MERGED)
++assert titles_src.count('SteamTitle(') == len(MERGED) + 1   # + Mango Port's Far Cry 4
++assert titles_src.count('list: farCry4)') == 1
++# Mango Port: Far Cry 4 by App ID 298110, its folder or FarCry4.exe; Ubisoft Connect only in its own folder;
++# all three start in the Wine desktop with Windows services first, like the Rockstar chain.
++assert 'SteamTitle(appIDs: [298110], folders: ["far cry 4"],' in titles_src and '"farcry4.exe"' in titles_src
++assert ('        case "upc.exe" where parts.dropLast().contains("ubisoft game launcher"),\n'
++        '             "ubisoftconnect.exe" where parts.dropLast().contains("ubisoft game launcher"):\n') in lists_src
++for ident in MANGO:
++    assert 'launchMode: "desktop", startServices: true' in presets[ident]['switches'], (ident, presets[ident]['switches'])
++for ident in ('mango-far-cry-4', 'mango-ubisoft-connect'):
++    lines = set(presets[ident]['lines'])
++    for line in ('pool-low = 1', 'pool-split = 1', 'env.MADEIRA_X64_IMAGE_NOCOPY = 1',
++                 'env.DXMT_SMALL_RINGS = upc.exe;UbisoftConnect.exe;UplayWebCore.exe'):
++        assert line in lines, (ident, line)
++assert 'smallRAMConfig: smallRAMSwapLines' in presets['mango-far-cry-4']['switches']
+ # ml2021: the Big Picture entry (C:\big-picture.bat) is recognised by its batch name and gets the Steam Big Picture list
+ assert 'if last == "big-picture.bat" { return steamBigPicture }' in lists_src
+ assert 'static var bigPictureEntry: LibraryEntry' in library and 'relativePath: "big-picture.bat"' in library \
+@@ -539,7 +556,7 @@ assert legacy['switches'] == ('avx: false, nvidia: true, wineVCRT: false, fastSy
+                               'display: "fit", smallRAMConfig: smallRAMSwapLines'), legacy['switches']
+ assert 'static let smallRAMSwapLines = "swap-mb = 3072"' in lists_src
+ assert 'static var smallRAMDevice: Bool { deviceRAMBytes < 10 << 30 }' in lists_src
+-assert lists_src.count('smallRAMConfig: smallRAMSwapLines') == 2   # GTA V Legacy inside and outside Steam
++assert lists_src.count('smallRAMConfig: smallRAMSwapLines') == 3   # GTA V Legacy inside and outside Steam; Mango Port's Far Cry 4
+ other_legacy = presets['gta5l-other']
+ assert other_legacy['tested'] == [line for line in legacy['tested'] if not line.startswith('env.MADEIRA_DOCK_')], other_legacy
+ assert other_legacy['switches'] == legacy['switches'] and other_legacy['version'] == 1, other_legacy

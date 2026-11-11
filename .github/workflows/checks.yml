@@ -1,0 +1,30 @@
+name: Mango Port checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  patches-linux:
+    name: Patches apply + source checks (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Mango patches on the pinned Madeira commit
+        run: |
+          chmod +x scripts/*.sh
+          scripts/apply-mango.sh --shallow
+      - name: Run host checks
+        run: scripts/test.sh
+
+  swift-macos:
+    name: Swift fixture (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Mango patches on the pinned Madeira commit
+        run: |
+          chmod +x scripts/*.sh
+          scripts/apply-mango.sh --shallow
+      - name: Run host checks with the Swift compiler required
+        run: scripts/test.sh --require-swift
