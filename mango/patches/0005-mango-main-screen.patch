@@ -37,7 +37,7 @@ index 5cdfa57..02831a9 100644
  	<array>
  		<string>arm64</string>
 diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
-index 77d7cd1..e2a0393 100644
+index 77d7cd1..9c5903b 100644
 --- a/app/Madeira/Library.swift
 +++ b/app/Madeira/Library.swift
 @@ -2077,16 +2077,16 @@ struct LibraryTitleText: View {
@@ -52,7 +52,7 @@ index 77d7cd1..e2a0393 100644
 -                .contentTransition(.symbolEffect(.replace))
 -                .alignmentGuide(.firstTextBaseline) { d in d.height / 2 + LibraryHeaderAlignment.titleFont().capHeight / 2 }
 +        // F4 Mango Port: the mango wordmark, then JIT as a pill (green once the debugger is attached).
-+        HStack(alignment: .center, spacing: 10) {
++        HStack(alignment: .center, spacing: 8) {
 +            MangoWordmark()
 +                .accessibilityElement(children: .ignore)
 +                .accessibilityLabel(LibraryHeaderAlignment.title)
@@ -157,7 +157,7 @@ index 77d7cd1..e2a0393 100644
                          LibraryBadges(entry: entry).foregroundStyle(.secondary)
                      }.padding(4)
                  }
-@@ -7026,3 +7024,184 @@ extension View {
+@@ -7026,3 +7024,190 @@ extension View {
          background(SmartPunctuationOff().frame(width: 0, height: 0))
      }
  }
@@ -205,32 +205,33 @@ index 77d7cd1..e2a0393 100644
 +
 +/// The library's title: the mango, a small "F4", then "Mango" in the mango gradient and
 +/// "Port", in the title font around it.
++/// Kept narrow (about 180 pt): it shares the navigation bar with the library's buttons, and
++/// a wider title pushed them into an overflow menu (v0.4.0 on a 6.1-inch iPhone).
 +struct MangoWordmark: View {
 +    var body: some View {
-+        let size = LibraryHeaderAlignment.titleFont().pointSize
 +        HStack(alignment: .center, spacing: 6) {
-+            Image("MangoGlyph").resizable().scaledToFit()
-+                .frame(width: size * 1.2, height: size * 1.2)
-+            Text(verbatim: "F4 ").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(MangoTheme.muted)
-+                + Text(verbatim: "Mango").foregroundStyle(MangoTheme.wordGradient)
-+                + Text(verbatim: " Port")
++            Image("MangoGlyph").resizable().scaledToFit().frame(width: 32, height: 32)
++            VStack(alignment: .leading, spacing: -3) {
++                Text(verbatim: "F4").font(.system(size: 10, weight: .black, design: .rounded)).tracking(2.2)
++                    .foregroundStyle(MangoTheme.muted)
++                (Text(verbatim: "Mango").foregroundStyle(MangoTheme.wordGradient) + Text(verbatim: " Port"))
++                    .font(.system(size: 25, weight: .black, design: .rounded))
++            }
 +        }
 +        .lineLimit(1)
++        .fixedSize()
 +    }
 +}
 +
-+/// JIT beside the title: a green pill once the debugger is attached, a grey one before.
++/// JIT beside the title: a bolt in a green circle once the debugger is attached, a grey one before.
 +struct MangoJITPill: View {
 +    let on: Bool
 +    var body: some View {
-+        HStack(spacing: 4) {
-+            Image(systemName: "bolt.fill").font(.system(size: 12, weight: .heavy))
-+            Text(verbatim: "JIT").font(.system(size: 13, weight: .heavy, design: .rounded))
-+        }
-+        .foregroundStyle(on ? MangoTheme.leafText : MangoTheme.muted)
-+        .padding(.horizontal, 10).padding(.vertical, 6)
-+        .background(Capsule().fill(on ? MangoTheme.leaf.opacity(0.18) : Color.white.opacity(0.08)))
-+        .overlay(Capsule().strokeBorder(on ? MangoTheme.leaf.opacity(0.35) : Color.white.opacity(0.1), lineWidth: 1))
++        Image(systemName: "bolt.fill").font(.system(size: 13, weight: .heavy))
++            .foregroundStyle(on ? MangoTheme.leafText : MangoTheme.muted)
++            .frame(width: 28, height: 28)
++            .background(Circle().fill(on ? MangoTheme.leaf.opacity(0.18) : Color.white.opacity(0.08)))
++            .overlay(Circle().strokeBorder(on ? MangoTheme.leaf.opacity(0.35) : Color.white.opacity(0.1), lineWidth: 1))
 +        .animation(UIAccessibility.isReduceMotionEnabled ? nil : .easeInOut(duration: 0.3), value: on)
 +    }
 +}
@@ -308,15 +309,20 @@ index 77d7cd1..e2a0393 100644
 +    private func card(_ pick: Pick, played: Date) -> some View {
 +        ZStack(alignment: .bottomLeading) {
 +            LibraryArtwork(entry: artworkEntry(pick), backdrop: true)
-+            LinearGradient(colors: [MangoTheme.night.opacity(0), MangoTheme.night.opacity(0.94)], startPoint: .center, endPoint: .bottom)
++            LinearGradient(stops: [.init(color: MangoTheme.night.opacity(0), location: 0.2),
++                                   .init(color: MangoTheme.night.opacity(0.6), location: 0.5),
++                                   .init(color: MangoTheme.night.opacity(0.95), location: 1)],
++                           startPoint: .top, endPoint: .bottom)
 +            RadialGradient(colors: [MangoTheme.gold.opacity(0.28), MangoTheme.gold.opacity(0)],
 +                           center: UnitPoint(x: 0.9, y: 0.05), startRadius: 0, endRadius: 260)
 +            VStack(alignment: .leading, spacing: 9) {
 +                Text("Continue playing").textCase(.uppercase)
 +                    .font(.system(size: 12, weight: .black, design: .rounded)).tracking(1.6)
 +                    .foregroundStyle(MangoTheme.gold)
++                    .shadow(color: .black.opacity(0.6), radius: 3, y: 1)
 +                Text(title(pick)).font(.system(size: 30, weight: .black, design: .rounded))
 +                    .foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.6)
++                    .shadow(color: .black.opacity(0.5), radius: 6, y: 2)
 +                HStack(spacing: 12) {
 +                    HStack(spacing: 8) {
 +                        Image(systemName: "play.fill")
@@ -508,14 +514,15 @@ index 32fe679..c62e55e 100644
    },
    "version": "1.0"
 diff --git a/app/Madeira/MadeiraApp.swift b/app/Madeira/MadeiraApp.swift
-index 1043715..13c9827 100644
+index 1043715..7b42f9e 100644
 --- a/app/Madeira/MadeiraApp.swift
 +++ b/app/Madeira/MadeiraApp.swift
-@@ -31,6 +31,7 @@ struct MadeiraApp: App {
+@@ -31,6 +31,8 @@ struct MadeiraApp: App {
      var body: some Scene {
          WindowGroup {
              ContentView()
 +                .preferredColorScheme(.dark)   // F4 Mango Port: the brand is a night theme (MangoTheme)
++                .tint(MangoTheme.mango)        // and its accent: the tab bar, links and controls in mango
                  .background(InteractionFrameRateInstaller())   // touch frame-rate request (New library grid)
                  .modifier(ClaimGamepadEvents())
                  .onAppear {

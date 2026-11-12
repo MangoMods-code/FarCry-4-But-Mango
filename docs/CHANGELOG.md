@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.1
+Fixes for the new main screen.
+
+- The F4 Mango Port title now fits beside the library's buttons, which no longer fold into a menu
+- JIT is a bolt beside the title: green when JIT is on
+- Tabs, links and switches are mango orange instead of blue
+- The Continue playing card's text stands out on bright artwork
+
 ## v0.4.0
 The main screen, mango style.
 
