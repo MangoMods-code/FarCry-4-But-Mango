@@ -1,4 +1,4 @@
-name: F4 Mango Port checks
+name: Mango Port checks
 
 on:
   push:

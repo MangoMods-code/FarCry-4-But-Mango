@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rename the Madeira app to F4 Mango Port where people see it, in a Madeira checkout.
+"""Rename the Madeira app to Mango Port where people see it, in a Madeira checkout.
 
     python3 scripts/rebrand.py madeira            rewrite the checkout in place
     python3 scripts/rebrand.py madeira --dry-run  list what would change
@@ -15,7 +15,8 @@ the user-facing Info.plist descriptions. Left alone on purpose:
   - "Madeira JIT", the name of the Shortcut the app runs by name;
   - the per-game settings text (GameRecommendations.swift: the host tests read it)
     and the generated settings catalog (developer notes, regenerated upstream);
-  - every credit to Madeira; the About text is rewritten to credit it.
+  - every credit to Madeira: Settings › Credits (its people and what they built in Madeira,
+    and its footer) stays as it is, and the About text is rewritten to credit it.
 
 "Madeira Dock" becomes "Mango Dock". The app icon becomes mango/icon/AppIcon-1024.png. scripts/make-rebrand-patch.sh turns the result
 into mango/patches/0004-on-screen-rebrand.patch.
@@ -29,11 +30,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from swiftstrings import segments  # noqa: E402
 
-NEW = "F4 Mango Port"
+NEW = "Mango Port"
 # The word Madeira on its own: not part of a path, identifier or file name.
 # "Madeira JIT" stays: it is the name of the Shortcut people install and the app runs it by that name.
 WORD = re.compile(r"(?<![\w/.\-])Madeira(?![\w\-/]|\.\w| JIT\b)")
-ARTICLE = re.compile(r"\b([Aa]) (?=Madeira(?![\w\-/]|\.\w| JIT\b))")
 FILES_PATH = re.compile(r"(?<![\w/.\-])Madeira(?=/wine\b)")
 DOCK = re.compile(r"(?<![\w/.\-])Madeira Dock\b")
 
@@ -44,12 +44,16 @@ SKIP_CALL = re.compile(
     r"(?:\blog|\bLogStore\.shared\.log|NSError|Notification\.Name|graphQL|setValue|appendingPathComponent"
     r"|beginBackgroundTask(?:WithName)?|\bprint|fputs|debugPrint|os_log|NSLog|dprintf)\s*\(\s*(?:\w+\s*:\s*)?$")
 SKIP_ASSIGN = re.compile(r"\b(?:service|userAgent|hostName|domain|identifier|key|suiteName)\s*[:=][^=\n]*$")
+# Texts about Madeira itself, which stay as they are.
+KEEP = {
+    "Madeira is built on Wine, FEX-Emu, DXMT by Feifan He (3Shain) with the Direct3D 9 frontend by David Acevedo (dacevedo12), rpmalloc by Mattias Jansson, StikDebug, StikJIT and idevice. Thank you to everyone who contributes to these projects.",
+}
 # Hand-written replacements, applied before the word rule (exact literal text, quotes excluded).
 EXACT = {
     "Madeira is a proof-of-concept for running x86 Windows games on iOS using FEX-Emu, Wine, and Metal-based graphics translation.":
-        "F4 Mango Port is built on Madeira by Will Faust (github.com/willfaust/Madeira), a proof-of-concept for running "
+        "Mango Port is built on Madeira by Will Faust (github.com/willfaust/Madeira), a proof-of-concept for running "
         "x86 Windows games on iOS using FEX-Emu, Wine, and Metal-based graphics translation. "
-        "F4 Mango Port is free software under the GPL-3.0; its source is at github.com/MangoMods-code/FarCry-4-But-Mango.",
+        "Mango Port is free software under the GPL-3.0; its source is at github.com/MangoMods-code/FarCry-4-But-Mango.",
 }
 
 
@@ -58,23 +62,23 @@ _OURS = "github.com/MangoMods-code/FarCry-4-But-Mango"
 # The About credit in the app's other five languages plus Chinese (the catalog's check wants all six).
 EXACT_TRANSLATIONS = {
     next(iter(EXACT)): {
-        "de": f"F4 Mango Port basiert auf Madeira von Will Faust ({_SRC}), einem Proof of Concept, das x86-Windows-Spiele "
-              f"mit FEX-Emu, Wine und einer Grafikübersetzung auf Metal-Basis unter iOS ausführt. F4 Mango Port ist freie "
+        "de": f"Mango Port basiert auf Madeira von Will Faust ({_SRC}), einem Proof of Concept, das x86-Windows-Spiele "
+              f"mit FEX-Emu, Wine und einer Grafikübersetzung auf Metal-Basis unter iOS ausführt. Mango Port ist freie "
               f"Software unter der GPL-3.0; der Quellcode liegt auf {_OURS}.",
-        "es": f"F4 Mango Port está basado en Madeira, de Will Faust ({_SRC}), una prueba de concepto para ejecutar juegos "
-              f"x86 de Windows en iOS con FEX-Emu, Wine y traducción de gráficos basada en Metal. F4 Mango Port es software "
+        "es": f"Mango Port está basado en Madeira, de Will Faust ({_SRC}), una prueba de concepto para ejecutar juegos "
+              f"x86 de Windows en iOS con FEX-Emu, Wine y traducción de gráficos basada en Metal. Mango Port es software "
               f"libre bajo la GPL-3.0; su código fuente está en {_OURS}.",
-        "ko": f"F4 Mango Port는 Will Faust의 Madeira({_SRC})를 바탕으로 만들어졌습니다. Madeira는 FEX-Emu, Wine, Metal 기반 "
-              f"그래픽 변환을 사용해 iOS에서 x86 Windows 게임을 실행하는 개념 증명 프로젝트입니다. F4 Mango Port는 GPL-3.0 "
+        "ko": f"Mango Port는 Will Faust의 Madeira({_SRC})를 바탕으로 만들어졌습니다. Madeira는 FEX-Emu, Wine, Metal 기반 "
+              f"그래픽 변환을 사용해 iOS에서 x86 Windows 게임을 실행하는 개념 증명 프로젝트입니다. Mango Port는 GPL-3.0 "
               f"자유 소프트웨어이며 소스 코드는 {_OURS}에 있습니다.",
-        "pt-BR": f"O F4 Mango Port é baseado no Madeira, de Will Faust ({_SRC}), uma prova de conceito para rodar jogos x86 "
-                 f"de Windows no iOS usando FEX-Emu, Wine e tradução de gráficos baseada em Metal. O F4 Mango Port é software "
+        "pt-BR": f"O Mango Port é baseado no Madeira, de Will Faust ({_SRC}), uma prova de conceito para rodar jogos x86 "
+                 f"de Windows no iOS usando FEX-Emu, Wine e tradução de gráficos baseada em Metal. O Mango Port é software "
                  f"livre sob a GPL-3.0; o código-fonte está em {_OURS}.",
-        "ru": f"F4 Mango Port основан на Madeira от Will Faust ({_SRC}) — экспериментальном проекте для запуска x86-игр "
-              f"для Windows на iOS с помощью FEX-Emu, Wine и трансляции графики на Metal. F4 Mango Port — свободное ПО "
+        "ru": f"Mango Port основан на Madeira от Will Faust ({_SRC}) — экспериментальном проекте для запуска x86-игр "
+              f"для Windows на iOS с помощью FEX-Emu, Wine и трансляции графики на Metal. Mango Port — свободное ПО "
               f"под лицензией GPL-3.0; исходный код находится на {_OURS}.",
-        "zh-Hans": f"F4 Mango Port 基于 Will Faust 的 Madeira（{_SRC}）构建。Madeira 是一个概念验证项目，借助 FEX-Emu、Wine "
-                   f"和基于 Metal 的图形转译在 iOS 上运行 x86 Windows 游戏。F4 Mango Port 是基于 GPL-3.0 的自由软件，"
+        "zh-Hans": f"Mango Port 基于 Will Faust 的 Madeira（{_SRC}）构建。Madeira 是一个概念验证项目，借助 FEX-Emu、Wine "
+                   f"和基于 Metal 的图形转译在 iOS 上运行 x86 Windows 游戏。Mango Port 是基于 GPL-3.0 的自由软件，"
                    f"源代码位于 {_OURS}。",
     }
 }
@@ -83,7 +87,6 @@ EXACT_TRANSLATIONS = {
 def rename(text):
     text = DOCK.sub("Mango Dock", text)
     text = FILES_PATH.sub(NEW, text)   # "Madeira/wine/drive_c" in the Files app is the app's own folder
-    text = ARTICLE.sub(lambda m: m.group(1) + "n ", text)   # "a Madeira setup" -> "an F4 Mango Port setup"
     return WORD.sub(NEW, text)
 
 
@@ -99,7 +102,12 @@ def rewrite_swift(path, dry):
             continue
         before = src[max(0, start - 120):start]
         line_before = before.rsplit("\n", 1)[-1]
+        if "MadeiraCredit(" in line_before:
+            CREDIT_ROLES.add(src[start + 1:end - 1])
+            continue   # credits name Madeira's own people and what they built in Madeira
         if SKIP_CALL.search(before) or SKIP_ASSIGN.search(line_before):
+            continue
+        if src[start + 1:end - 1] in KEEP:
             continue
         if line_before.rstrip().endswith("+"):
             # A continuation: judge it by the expression it continues.
@@ -124,18 +132,21 @@ def rewrite_swift(path, dry):
     return len(edits)
 
 
+CREDIT_ROLES = set()   # the Credits roles found in the Swift files (rewrite_swift), kept in the catalog too
+
+
 def rewrite_catalog(path, dry):
     data = json.loads(path.read_text())
     out, n = {}, 0
     for key, entry in data["strings"].items():
-        new_key = EXACT.get(key) or rename(key)
+        new_key = key if key in KEEP or key in CREDIT_ROLES else (EXACT.get(key) or rename(key))
         n += new_key != key
         if key in EXACT_TRANSLATIONS:
             for lang, text in EXACT_TRANSLATIONS[key].items():
                 entry.setdefault("localizations", {})[lang] = {"stringUnit": {"state": "translated", "value": text}}
             out[new_key] = entry
             continue
-        for loc in (entry.get("localizations") or {}).values():
+        for loc in ((entry.get("localizations") or {}).values() if new_key != key or key not in KEEP | CREDIT_ROLES else []):
             unit = loc.get("stringUnit")
             if unit and "Madeira" in unit.get("value", ""):
                 unit["value"] = rename(unit["value"])

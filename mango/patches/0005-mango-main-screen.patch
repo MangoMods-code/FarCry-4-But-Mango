@@ -51,7 +51,7 @@ index 77d7cd1..9c5903b 100644
 -                .foregroundStyle(jit ? Color.accentColor : Color.primary)
 -                .contentTransition(.symbolEffect(.replace))
 -                .alignmentGuide(.firstTextBaseline) { d in d.height / 2 + LibraryHeaderAlignment.titleFont().capHeight / 2 }
-+        // F4 Mango Port: the mango wordmark, then JIT as a pill (green once the debugger is attached).
++        // Mango Port: the mango wordmark, then JIT as a pill (green once the debugger is attached).
 +        HStack(alignment: .center, spacing: 8) {
 +            MangoWordmark()
 +                .accessibilityElement(children: .ignore)
@@ -106,7 +106,7 @@ index 77d7cd1..9c5903b 100644
 -                        }
 -                        .buttonStyle(.plain)
 -                        .accessibilityAddTraits(on ? .isSelected : [])
-+        // F4 Mango Port: always the pills, the picked one in the mango gradient (MangoTheme).
++        // Mango Port: always the pills, the picked one in the mango gradient (MangoTheme).
 +        ScrollView(.horizontal, showsIndicators: false) {
 +            HStack(spacing: 8) {
 +                ForEach(tabs) { tab in
@@ -128,7 +128,7 @@ index 77d7cd1..9c5903b 100644
              // The card layouts: the zoomable page or the original one (LibraryGridArm).
              Group { if LibraryGridArm.zoomable(setting: zoomableGrid, layout: layout) { zoomableLibrary } else { library } }
 -                .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
-+                .background(MangoBackground())   // F4 Mango Port: the brand's page (MangoTheme)
++                .background(MangoBackground())   // Mango Port: the brand's page (MangoTheme)
                  .tabItem { Image(systemName: "square.grid.2x2.fill").accessibilityLabel("Library") }
                  .tag(0)
              settingsTab
@@ -136,7 +136,7 @@ index 77d7cd1..9c5903b 100644
          ScrollViewReader { reader in
          ScrollView {
              VStack(alignment: .leading, spacing: 24) {
-+                // F4 Mango Port: the last game played, a tap from its Game details page.
++                // Mango Port: the last game played, a tap from its Game details page.
 +                if search.isEmpty { MangoContinueHero(open: { selected = $0 }) }
                  if !storeTabs.isEmpty { LibraryStoreTabBar(tabs: storeTabs, selection: $storeTab) }
                  desktopButton
@@ -162,9 +162,9 @@ index 77d7cd1..9c5903b 100644
      }
  }
 +
-+// MARK: - F4 Mango Port theme
++// MARK: - Mango Port theme
 +
-+/// F4 Mango Port's brand, shared with Mango Signer: a deep purple night, mango orange to
++/// Mango Port's brand, shared with Mango Signer: a deep purple night, mango orange to
 +/// gold, and the leaf's green. The accent colour app-wide is AccentColor (the asset
 +/// catalog, ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME); the views below use these.
 +enum MangoTheme {
@@ -356,7 +356,7 @@ index a77df7b..00ee4cb 100644
  }
  
  // Six wavelengths, red to violet; their sum per channel normalises white to white.
-+// F4 Mango Port: mango metal (orange, gold, amber, a red blush, the leaf, the night sky's purple).
++// Mango Port: mango metal (orange, gold, amber, a red blush, the leaf, the night sky's purple).
  constant float3 spectrum[6] = {
 -    float3(0.95, 0.10, 0.25),
 -    float3(1.00, 0.45, 0.00),
@@ -381,7 +381,7 @@ index a77df7b..00ee4cb 100644
  
      // Shadows go deep navy, the mid-tones slate blue.
 -    float3 navy = float3(0.03, 0.04, 0.085);
-+    float3 navy = float3(0.078, 0.047, 0.102);   // F4 Mango Port: the brand's deep purple
++    float3 navy = float3(0.078, 0.047, 0.102);   // Mango Port: the brand's deep purple
      rgb = navy + (1.0 - navy) * clamp(rgb, 0.0, 1.0);
      rgb += float3(-0.03, 0.0, 0.07) * (lum * (1.0 - lum) * 4.0);
  
@@ -393,7 +393,7 @@ index 58fe357..e546a4a 100644
      return mix(smoothstep(-0.05, 1.0, v), smoothstep(0.48, 0.60, v), 0.5);
  }
  
-+// F4 Mango Port: mango metal (orange, gold, amber, a red blush, the leaf, the night sky's purple).
++// Mango Port: mango metal (orange, gold, amber, a red blush, the leaf, the night sky's purple).
  constant float3 spectrum[6] = {
 -    float3(0.95, 0.10, 0.25),
 -    float3(1.00, 0.45, 0.00),
@@ -418,7 +418,7 @@ index 58fe357..e546a4a 100644
      rgb = lum + (rgb - lum) * 2.7;
  
 -    float3 navy = float3(0.03, 0.04, 0.085);
-+    float3 navy = float3(0.078, 0.047, 0.102);   // F4 Mango Port: the brand's deep purple
++    float3 navy = float3(0.078, 0.047, 0.102);   // Mango Port: the brand's deep purple
      rgb = navy + (1.0 - navy) * clamp(rgb, 0.0, 1.0);
      rgb += float3(-0.03, 0.0, 0.07) * (lum * (1.0 - lum) * 4.0);
      rgb = clamp(rgb, 0.0, 1.0);
@@ -521,7 +521,7 @@ index 1043715..7b42f9e 100644
      var body: some Scene {
          WindowGroup {
              ContentView()
-+                .preferredColorScheme(.dark)   // F4 Mango Port: the brand is a night theme (MangoTheme)
++                .preferredColorScheme(.dark)   // Mango Port: the brand is a night theme (MangoTheme)
 +                .tint(MangoTheme.mango)        // and its accent: the tab bar, links and controls in mango
                  .background(InteractionFrameRateInstaller())   // touch frame-rate request (New library grid)
                  .modifier(ClaimGamepadEvents())
@@ -557,7 +557,7 @@ index 5b088db..af11c9e 100644
 -require('.pickerStyle(.segmented)' in bar and 'ViewThatFits(in: .horizontal) {' in bar
 -        and 'ScrollView(.horizontal, showsIndicators: false) {' in bar,
 -        'store tabs: the system segmented control, capsules that scroll when it does not fit')
-+# F4 Mango Port: the tabs are always mango pills that scroll (MangoTheme.pillGradient for the picked one).
++# Mango Port: the tabs are always mango pills that scroll (MangoTheme.pillGradient for the picked one).
 +require('ScrollView(.horizontal, showsIndicators: false)' in bar and 'MangoTheme.pillGradient' in bar
 +        and '.accessibilityAddTraits(on ? .isSelected : [])' in bar,
 +        'store tabs: mango pills that scroll, the picked one marked selected')

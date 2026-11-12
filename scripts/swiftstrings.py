@@ -1,4 +1,4 @@
-"""A small Swift lexer that finds string literals (F4 Mango Port's rebrand script uses it).
+"""A small Swift lexer that finds string literals (Mango Port's rebrand script uses it).
 
 literals(src) yields (start, end, text) for every string literal outside comments:
 start/end span the whole literal including quotes, text is its source between the

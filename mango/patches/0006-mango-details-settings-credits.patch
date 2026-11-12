@@ -1,0 +1,139 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 0d0b8ef..540fdfd 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -2081,7 +2081,7 @@ struct LibraryTitleText: View {
+         HStack(alignment: .center, spacing: 8) {
+             MangoWordmark()
+                 .accessibilityElement(children: .ignore)
+-                .accessibilityLabel(LibraryHeaderAlignment.title)
++                .accessibilityLabel(LibraryHeaderAlignment.title + ", powered by Madeira")
+                 .accessibilityAddTraits(.isHeader)
+             MangoJITPill(on: jit)
+                 .accessibilityLabel(jit ? L("JIT enabled") : L("JIT not enabled"))
+@@ -3381,6 +3381,8 @@ struct LibraryView: View {
+                 .tabItem { Image(systemName: "square.grid.2x2.fill").accessibilityLabel("Library") }
+                 .tag(0)
+             settingsTab
++                .scrollContentBackground(.hidden)
++                .background(MangoBackground())   // Mango Port: the library's night page
+                 .tabItem { Image(systemName: "gearshape.fill").accessibilityLabel("Settings") }
+                 .tag(1)
+         }
+@@ -3929,10 +3931,12 @@ struct ExecutableBrowser: View {
+ private struct LibraryPlayStyle: ButtonStyle {
+     var pending: Bool
+     func makeBody(configuration: Configuration) -> some View {
+-        configuration.label.padding(.horizontal, 18).padding(.vertical, 10)
+-            .foregroundStyle(.white)
+-            .background(pending || configuration.isPressed ? Color(uiColor: .darkGray) : .accentColor,
+-                        in: RoundedRectangle(cornerRadius: 14))
++        // Mango Port: the mango gradient pill of the Continue playing card.
++        configuration.label.font(.system(.body, design: .rounded).weight(.black))
++            .padding(.horizontal, 20).padding(.vertical, 10)
++            .foregroundStyle(MangoTheme.onAccent)
++            .background(Capsule().fill(pending || configuration.isPressed ? AnyShapeStyle(Color(uiColor: .darkGray)) : AnyShapeStyle(MangoTheme.buttonGradient)))
++            .shadow(color: MangoTheme.mango.opacity(pending ? 0 : 0.45), radius: 10, y: 5)
+             .scaleEffect(configuration.isPressed ? 0.955 : 1)
+             .animation(.spring(response: 0.3, dampingFraction: 0.5), value: configuration.isPressed)
+     }
+@@ -4475,9 +4479,12 @@ struct LibraryDetail: View {
+             Form {
+                 Section {
+                     HStack(spacing: 20) {
+-                        artwork(backdrop: false).frame(width: 120, height: 180).clipShape(RoundedRectangle(cornerRadius: 14))
++                        artwork(backdrop: false).frame(width: 120, height: 180)
++                            .clipShape(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous))
++                            .overlay(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous).strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
++                            .shadow(color: MangoTheme.mango.opacity(0.3), radius: 16, y: 8)
+                         VStack(alignment: .leading, spacing: 12) {
+-                            Text(entry.title).font(.title2.bold())
++                            Text(entry.title).font(.system(.title2, design: .rounded).weight(.heavy))
+                             LibraryBadges(entry: entry)
+                             if let appID = entry.steamAppID, let summary = SteamOwnedLibrary.shared.playtime[appID]?.summary {
+                                 Text(summary).font(.subheadline).foregroundStyle(.secondary)
+@@ -4492,7 +4499,7 @@ struct LibraryDetail: View {
+                                 HStack(spacing: 10) {
+                                     // Enabling JIT can take seconds with nothing else on screen.
+                                     if model.startingJIT == entry.id {
+-                                        ProgressView().tint(.white)
++                                        ProgressView().tint(MangoTheme.onAccent)
+                                         Text("Starting JIT").fontWeight(.semibold)
+                                     } else {
+                                         Image(systemName: "play.fill"); Text("Play").fontWeight(.semibold)
+@@ -4505,9 +4512,9 @@ struct LibraryDetail: View {
+                     }.padding(.vertical, 24)
+                         .listRowBackground(
+                             artwork(backdrop: true).blur(radius: 4)
+-                                .overlay(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.48))
++                                .overlay(MangoTheme.night.opacity(0.55))
+                                 .overlay(alignment: .bottom) {
+-                                    LinearGradient(colors: [.clear, Color(uiColor: .secondarySystemGroupedBackground)], startPoint: .top, endPoint: .bottom).frame(height: 70)
++                                    LinearGradient(colors: [.clear, MangoTheme.night], startPoint: .top, endPoint: .bottom).frame(height: 70)
+                                 }.clipped()
+                         )
+                 }
+@@ -4569,6 +4576,8 @@ struct LibraryDetail: View {
+                     readSetup { try GameSetup.read(file: try result.get()) }
+                 }
+             }
++            .scrollContentBackground(.hidden)
++            .background(MangoBackground())   // Mango Port: the library's night page
+             .navigationTitle("Game details").navigationBarTitleDisplayMode(.inline)
+             .navigationDestination(for: Page.self) { item in page(item) }
+             .toolbarBackground(.regularMaterial, for: .navigationBar)
+@@ -7066,19 +7075,19 @@ struct MangoBackground: View {
+     }
+ }
+ 
+-/// The library's title: the mango, a small "F4", then "Mango" in the mango gradient and
+-/// "Port", in the title font around it.
++/// The library's title: the mango, "Mango" in the mango gradient and "Port", with
++/// "powered by Madeira" under it.
+ /// Kept narrow (about 180 pt): it shares the navigation bar with the library's buttons, and
+ /// a wider title pushed them into an overflow menu (v0.4.0 on a 6.1-inch iPhone).
+ struct MangoWordmark: View {
+     var body: some View {
+         HStack(alignment: .center, spacing: 6) {
+             Image("MangoGlyph").resizable().scaledToFit().frame(width: 32, height: 32)
+-            VStack(alignment: .leading, spacing: -3) {
+-                Text(verbatim: "F4").font(.system(size: 10, weight: .black, design: .rounded)).tracking(2.2)
+-                    .foregroundStyle(MangoTheme.muted)
++            VStack(alignment: .leading, spacing: -2) {
+                 (Text(verbatim: "Mango").foregroundStyle(MangoTheme.wordGradient) + Text(verbatim: " Port"))
+                     .font(.system(size: 25, weight: .black, design: .rounded))
++                Text(verbatim: "powered by Madeira").font(.system(size: 10, weight: .bold, design: .rounded)).tracking(0.4)
++                    .foregroundStyle(MangoTheme.muted)
+             }
+         }
+         .lineLimit(1)
+diff --git a/app/Madeira/Onboarding.swift b/app/Madeira/Onboarding.swift
+index 1b1daff..884379a 100644
+--- a/app/Madeira/Onboarding.swift
++++ b/app/Madeira/Onboarding.swift
+@@ -319,7 +319,7 @@ struct OnboardingView: View {
+ 
+     private var welcome: some View {
+         VStack(alignment: .leading, spacing: 20) {
+-            Image(systemName: "gamecontroller.fill").font(.system(size: 52)).foregroundStyle(.tint).accessibilityHidden(true)
++            Image("MangoGlyph").resizable().scaledToFit().frame(width: 72, height: 72).accessibilityHidden(true)   // Mango Port
+             if model.since > 0 {
+                 // After an update: only the pages added since this device last ran setup.
+                 Text("New in Mango Port").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+diff --git a/app/Madeira/SettingsPages.swift b/app/Madeira/SettingsPages.swift
+index bf21f70..9c45def 100644
+--- a/app/Madeira/SettingsPages.swift
++++ b/app/Madeira/SettingsPages.swift
+@@ -232,6 +232,12 @@ struct SettingsPageView: View {
+ /// The credits, on their own page and last on the long one.
+ struct SettingsCreditsSection: View {
+     var body: some View {
++        // Mango Port: who makes this fork, then Madeira's own credits, unchanged.
++        Section {
++            MadeiraCredit(name: "MangoMods", handle: "MangoMods-code", role: "Mango Port: the mango look, game support and builds")
++        } header: { Text(verbatim: "Mango Port") } footer: {
++            Text(verbatim: "Mango Port is built on Madeira by Will Faust and its contributors, and is free software under the GPL-3.0.")
++        }
+         Section {
+             MadeiraCredit(name: "Will Faust", handle: "willfaust", role: "Created Madeira")
+             MadeiraCredit(name: "Nick", handle: "125hz", role: "32-bit game support, the game library and Madeira Dock")

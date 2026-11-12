@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # Usage: python3 scripts/make-build-workflow.py madeira/.github/workflows/build.yml .github/workflows/build-ipa.yml
-"""Adapt Madeira's build.yml so it runs from the F4 Mango Port repo (Madeira as a submodule at madeira/)."""
+"""Adapt Madeira's build.yml so it runs from the Mango Port repo (Madeira as a submodule at madeira/)."""
 import re, sys
 src, dst = sys.argv[1], sys.argv[2]
 s = open(src).read()
 
 # Header: name, manual trigger only, run steps inside madeira/.
 head, jobs = s.split('\njobs:\n', 1)
-head = '''# Generated from madeira/.github/workflows/build.yml by F4 Mango Port (see docs/BUILDING.md).
+head = '''# Generated from madeira/.github/workflows/build.yml by Mango Port (see docs/BUILDING.md).
 # Differences: runs from this repo with Madeira at madeira/, applies mango/patches first,
 # GitHub's hosted xcode-27 runner (override with the MANGO_MAC_RUNNER repository variable),
 # manual runs only, and the IPA cache key includes the Mango patches.
-name: Build F4 Mango Port IPA
+name: Build Mango Port IPA
 
 on:
   workflow_dispatch:
@@ -178,7 +178,7 @@ s = s.rstrip('\n') + '''
           test -n "$TAG"
           mv dist/Madeira.ipa "dist/F4MangoPort-$TAG.ipa"
           awk -v tag="## $TAG" '$0 == tag {on=1; next} /^## / {on=0} on' docs/CHANGELOG.md > notes.md
-          test -s notes.md || echo "F4 Mango Port $TAG" > notes.md
-          gh release create "$TAG" "dist/F4MangoPort-$TAG.ipa" --title "F4 Mango Port $TAG" --notes-file notes.md --target "$GITHUB_SHA"
+          test -s notes.md || echo "Mango Port $TAG" > notes.md
+          gh release create "$TAG" "dist/F4MangoPort-$TAG.ipa" --title "Mango Port $TAG" --notes-file notes.md --target "$GITHUB_SHA"
 '''
 open(dst, 'w').write(s)

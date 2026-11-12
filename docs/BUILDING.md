@@ -1,9 +1,9 @@
-# Building the F4 Mango Port IPA
+# Building the Mango Port IPA
 
 ## On GitHub (no Mac needed)
 
-**Actions → Build F4 Mango Port IPA → Run workflow.** When it finishes, download the
-`F4MangoPort-ipa` artifact. It contains `Madeira.ipa`, which is the F4 Mango Port app.
+**Actions → Build Mango Port IPA → Run workflow.** When it finishes, download the
+`F4MangoPort-ipa` artifact. It contains `Madeira.ipa`, which is the Mango Port app.
 The IPA is ad-hoc signed with the increased-memory entitlement, so re-sign it with
 Mango Signer or your usual sideloader.
 
@@ -40,7 +40,7 @@ minute with an "Xcode 27 required" error if it lands on one. To use another runn
 - **Private repo:** macOS minutes count 10× against your plan's included minutes and are
   billed after that. One cold build can use up a free or Pro allowance and then cost real money.
   Set a spending limit in your GitHub billing settings first.
-- **Public repo:** standard GitHub-hosted runners are free. F4 Mango Port has to be public anyway
+- **Public repo:** standard GitHub-hosted runners are free. Mango Port has to be public anyway
   once you share the IPA (GPL-3.0), so making it public before building is the cheap option.
 
 ## On a Mac

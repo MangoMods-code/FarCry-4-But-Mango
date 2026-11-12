@@ -6,9 +6,9 @@ index cd82989..2b69a69 100644
      /// that reserves, releases and reserves again inside the same range never gets it
      /// back: Madeira Dock spun on "Loading Steam" before Thumper. The game lists that
      /// were tested with those defaults keep them. No switches.
-+    // MARK: F4 Mango Port (MangoMods-code/FarCry-4-But-Mango)
++    // MARK: Mango Port (MangoMods-code/FarCry-4-But-Mango)
 +
-+    /// Far Cry 4 (Steam 298110; bin\FarCry4.exe, 64-bit, Direct3D 11). F4 Mango Port's
++    /// Far Cry 4 (Steam 298110; bin\FarCry4.exe, 64-bit, Direct3D 11). Mango Port's
 +    /// target game. The game starts through Ubisoft Connect, a Chromium (CEF)
 +    /// launcher like the Rockstar Games Launcher, so this list starts from that
 +    /// chain's lines (the pool lines, pure-x64 images uncopied, the Wine desktop
@@ -16,9 +16,9 @@ index cd82989..2b69a69 100644
 +    /// point; record each device run in docs/FAR_CRY_4.md and raise `version`
 +    /// with every working change.
 +    static let farCry4 = GameRecommendation(
-+        id: "mango-far-cry-4", title: "Far Cry 4 (F4 Mango Port, not tested yet)", version: 1,
++        id: "mango-far-cry-4", title: "Far Cry 4 (Mango Port, not tested yet)", version: 1,
 +        config: """
-+        # Madeira's recommended settings for Far Cry 4 (F4 Mango Port; not device-tested yet).
++        # Madeira's recommended settings for Far Cry 4 (Mango Port; not device-tested yet).
 +        # Reset to Recommended, at the bottom of the game's settings, brings them back.
 +        pool-low = 1
 +        pool-mid = 1
@@ -47,9 +47,9 @@ index cd82989..2b69a69 100644
 +    /// Launcher"), which Far Cry 4 needs to sign in and start. Modelled on
 +    /// `rockstarLauncher`, the other CEF launcher Madeira runs. Not tested yet.
 +    static let ubisoftConnect = GameRecommendation(
-+        id: "mango-ubisoft-connect", title: "Ubisoft Connect (F4 Mango Port, not tested yet)", version: 1,
++        id: "mango-ubisoft-connect", title: "Ubisoft Connect (Mango Port, not tested yet)", version: 1,
 +        config: """
-+        # Madeira's recommended settings for Ubisoft Connect (F4 Mango Port; not device-tested yet).
++        # Madeira's recommended settings for Ubisoft Connect (Mango Port; not device-tested yet).
 +        # Reset to Recommended, at the bottom of the game's settings, brings them back.
 +        pool-low = 1
 +        pool-mid = 1
@@ -78,9 +78,9 @@ index cd82989..2b69a69 100644
 +
 +    /// Ubisoft Connect's installer: Windows services first and the standard line only.
 +    static let ubisoftConnectSetup = GameRecommendation(
-+        id: "mango-ubisoft-connect-setup", title: "Ubisoft Connect installer (F4 Mango Port)", version: 1,
++        id: "mango-ubisoft-connect-setup", title: "Ubisoft Connect installer (Mango Port)", version: 1,
 +        config: """
-+        # Madeira's recommended settings for the Ubisoft Connect installer (F4 Mango Port).
++        # Madeira's recommended settings for the Ubisoft Connect installer (Mango Port).
 +        # Reset to Recommended, at the bottom of the game's settings, brings them back.
 +        env.MADEIRA_EC_HOOK_TRACE = 0
 +        # The defaults this list was tested with (upstream's differ).
@@ -100,7 +100,7 @@ index cd82989..2b69a69 100644
                        crysis2Remastered, crysis3Remastered, rockstarLauncher, rockstarLauncherSetup, steamBigPicture,
 -                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2, standard]
 +                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2,
-+                      ubisoftConnect, ubisoftConnectSetup, standard]   // F4 Mango Port: farCry4 comes in through steamTitles
++                      ubisoftConnect, ubisoftConnectSetup, standard]   // Mango Port: farCry4 comes in through steamTitles
          + steamTitles.map(\.list)
  
      // MARK: Recognising a game
@@ -110,7 +110,7 @@ index cd82989..2b69a69 100644
              return rockstarLauncherSetup
 +        case "upc.exe" where parts.dropLast().contains("ubisoft game launcher"),
 +             "ubisoftconnect.exe" where parts.dropLast().contains("ubisoft game launcher"):
-+            // F4 Mango Port: Ubisoft Connect in its own install folder only.
++            // Mango Port: Ubisoft Connect in its own install folder only.
 +            return ubisoftConnect
 +        case "ubisoftconnectinstaller.exe":
 +            return ubisoftConnectSetup
@@ -122,7 +122,7 @@ index cd82989..2b69a69 100644
          SteamTitle(appIDs: [3483510], folders: ["the adventures of elliot the millennium tales"],
                     programs: ["elliot-win64-shipping.exe"], steamPrograms: [], list: theAdventuresOfElliot),
 +        SteamTitle(appIDs: [298110], folders: ["far cry 4"],
-+                   programs: ["farcry4.exe"], steamPrograms: [], list: farCry4),   // F4 Mango Port
++                   programs: ["farcry4.exe"], steamPrograms: [], list: farCry4),   // Mango Port
  
      ]
  
@@ -134,7 +134,7 @@ index 494d3f8..6c7afa2 100644
            'life-is-strange-remastered', 'life-is-strange-2', 'project-zomboid', 'spiderheck', 'rounds', 'plateup',
            'final-fantasy-tactics-ivalice-chronicles', 'jetboard-joust', 'dead-as-disco', 'tung', 'sekiro-shadows-die-twice', 'stardew-valley',
            'glyphica-typing-survival', 'the-adventures-of-elliot', 'the-escapists-2', 'garrys-mod', 'persona-3-reload'}
-+# F4 Mango Port (MangoMods-code/FarCry-4-But-Mango): Far Cry 4 and the Ubisoft Connect launcher chain.
++# Mango Port (MangoMods-code/FarCry-4-But-Mango): Far Cry 4 and the Ubisoft Connect launcher chain.
 +MANGO = {'mango-far-cry-4', 'mango-ubisoft-connect', 'mango-ubisoft-connect-setup'}
  assert set(presets) == {'rdr2-steam', 'rdr2-other', 'gta5e-steam', 'gta5e-other', 'gta5l-steam', 'gta5l-other', 'gta4-steam',
                          'ghost-of-tsushima', 'god-of-war', 'horizon-zero-dawn', 'horizon-forbidden-west', 'ratchet-clank-rift-apart',
@@ -148,7 +148,7 @@ index 494d3f8..6c7afa2 100644
          '                      crysis2Remastered, crysis3Remastered, rockstarLauncher, rockstarLauncherSetup, steamBigPicture,\n'
 -        '                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2, standard]\n'
 +        '                      darkSoulsRemastered, darkSoulsIII, falloutNewVegas, fallout3, blackOps1, blackOps2, borderlands2,\n'
-+        '                      ubisoftConnect, ubisoftConnectSetup, standard]   // F4 Mango Port: farCry4 comes in through steamTitles\n'
++        '                      ubisoftConnect, ubisoftConnectSetup, standard]   // Mango Port: farCry4 comes in through steamTitles\n'
          '        + steamTitles.map(\\.list)') in lists_src
  # The Rockstar Games Launcher outside Steam (logs 91-93, 2026-10-28): Launcher.exe in its own folder gets the
  # launcher chain's lines, its installer the standard line; both start in the Wine desktop with Windows services.
@@ -157,9 +157,9 @@ index 494d3f8..6c7afa2 100644
  for ident in MERGED:
      assert titles_src.count('list: %s)' % presets[ident]['name']) == 1, ident
 -assert titles_src.count('SteamTitle(') == len(MERGED)
-+assert titles_src.count('SteamTitle(') == len(MERGED) + 1   # + F4 Mango Port's Far Cry 4
++assert titles_src.count('SteamTitle(') == len(MERGED) + 1   # + Mango Port's Far Cry 4
 +assert titles_src.count('list: farCry4)') == 1
-+# F4 Mango Port: Far Cry 4 by App ID 298110, its folder or FarCry4.exe; Ubisoft Connect only in its own folder;
++# Mango Port: Far Cry 4 by App ID 298110, its folder or FarCry4.exe; Ubisoft Connect only in its own folder;
 +# all three start in the Wine desktop with Windows services first, like the Rockstar chain.
 +assert 'SteamTitle(appIDs: [298110], folders: ["far cry 4"],' in titles_src and '"farcry4.exe"' in titles_src
 +assert ('        case "upc.exe" where parts.dropLast().contains("ubisoft game launcher"),\n'
@@ -180,7 +180,7 @@ index 494d3f8..6c7afa2 100644
  assert 'static let smallRAMSwapLines = "swap-mb = 3072"' in lists_src
  assert 'static var smallRAMDevice: Bool { deviceRAMBytes < 10 << 30 }' in lists_src
 -assert lists_src.count('smallRAMConfig: smallRAMSwapLines') == 2   # GTA V Legacy inside and outside Steam
-+assert lists_src.count('smallRAMConfig: smallRAMSwapLines') == 3   # GTA V Legacy inside and outside Steam; F4 Mango Port's Far Cry 4
++assert lists_src.count('smallRAMConfig: smallRAMSwapLines') == 3   # GTA V Legacy inside and outside Steam; Mango Port's Far Cry 4
  other_legacy = presets['gta5l-other']
  assert other_legacy['tested'] == [line for line in legacy['tested'] if not line.startswith('env.MADEIRA_DOCK_')], other_legacy
  assert other_legacy['switches'] == legacy['switches'] and other_legacy['version'] == 1, other_legacy
@@ -189,8 +189,8 @@ index 494d3f8..6c7afa2 100644
  check(id(steam + #"\P3R"#, 2161700) == "persona-3-reload" && id(steam + #"\P3R\P3R\Binaries\Win64\P3R.exe"#) == "persona-3-reload",
        "Persona 3 Reload by App ID, folder and program")
 -check(R.steamTitles.count == 52 && R.all.count == 78, "52 merged titles, 78 lists")
-+check(R.steamTitles.count == 53 && R.all.count == 81, "52 merged titles + F4 Mango Port's Far Cry 4, 81 lists")
-+// F4 Mango Port: Far Cry 4 by App ID, folder and program anywhere; Ubisoft Connect only in its own folder.
++check(R.steamTitles.count == 53 && R.all.count == 81, "52 merged titles + Mango Port's Far Cry 4, 81 lists")
++// Mango Port: Far Cry 4 by App ID, folder and program anywhere; Ubisoft Connect only in its own folder.
 +check(id(steam + #"\Far Cry 4"#, 298110) == "mango-far-cry-4" && id(steam + #"\Far Cry 4"#) == "mango-far-cry-4"
 +      && id(steam + #"\Far Cry 4\bin\FarCry4.exe"#) == "mango-far-cry-4"
 +      && id(#"C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\games\Far Cry 4\bin\FarCry4.exe"#) == "mango-far-cry-4",

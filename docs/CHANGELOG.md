@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.0
+Mango Port: not just Far Cry 4.
+
+- New name: **Mango Port**, because it plays Fallout 4, Skyrim, Black Ops and more, powered by Madeira
+- New icon: just the mango
+- "powered by Madeira" under the title, and a Mango Port section in Settings › Credits above Madeira's own credits
+- Game details page: the night theme, a rounder cover and a mango Play button
+- Settings now uses the night theme too
+- The welcome screen shows the mango
+
 ## v0.4.1
 Fixes for the new main screen.
 

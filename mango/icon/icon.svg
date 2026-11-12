@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- F4 Mango Port app icon: an original drawing (a mango on a dusk sky). GPL-3.0 like the rest of the repo. -->
+  <!-- Mango Port app icon: an original drawing (a mango on a dusk sky). GPL-3.0 like the rest of the repo. -->
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#1b1033"/>
@@ -36,10 +36,5 @@
     <path d="M505 255 C 520 215 530 190 548 165" stroke="#5b3a1e" stroke-width="22" stroke-linecap="round" fill="none"/>
     <path d="M545 175 C 610 120 720 120 790 165 C 720 230 610 240 545 175 Z" fill="url(#leaf)"/>
     <path d="M555 177 C 630 168 700 165 770 166" stroke="#d9f7c4" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.7"/>
-  </g>
-  <!-- F4 badge -->
-  <g>
-    <rect x="585" y="675" width="290" height="185" rx="48" fill="#12091f" stroke="#ffa62b" stroke-width="14"/>
-    <text x="730" y="814" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-weight="bold" font-size="150" fill="#ffe066">F4</text>
   </g>
 </svg>

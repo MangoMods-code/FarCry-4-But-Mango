@@ -29,7 +29,7 @@ index 15c078a..1a1a4b0 100644
  	<string>en</string>
  	<key>CFBundleDisplayName</key>
 -	<string>Madeira</string>
-+	<string>F4 Mango Port</string>
++	<string>Mango Port</string>
  	<key>CFBundleDocumentTypes</key>
  	<array>
  		<dict>
@@ -42,7 +42,7 @@ index 5184340..b3c8d92 100644
  require(project.count('PRODUCT_BUNDLE_IDENTIFIER = "$(MADEIRA_BUNDLE_IDENTIFIER)";') == 2
          and project.count('PRODUCT_BUNDLE_IDENTIFIER = "$(MADEIRA_BUNDLE_IDENTIFIER).JITHelper";') == 2
 -        and project.count("MADEIRA_BUNDLE_IDENTIFIER = com.willfaust.madeora;") == 2
-+        and project.count("MADEIRA_BUNDLE_IDENTIFIER = com.mangomods.mangoport;") == 2   # F4 Mango Port
++        and project.count("MADEIRA_BUNDLE_IDENTIFIER = com.mangomods.mangoport;") == 2   # Mango Port
          and "AppExtensionPoint" not in helper_source,
          "one setting, MADEIRA_BUNDLE_IDENTIFIER, names the app and the helper")
  

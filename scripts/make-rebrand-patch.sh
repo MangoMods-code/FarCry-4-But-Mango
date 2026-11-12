@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# F4 Mango Port: regenerate mango/patches/0004-on-screen-rebrand.patch with scripts/rebrand.py.
+# Mango Port: regenerate mango/patches/0004-on-screen-rebrand.patch with scripts/rebrand.py.
 # Run after bumping the Madeira submodule (and after rebasing patches 0001-0003), or after
 # changing rebrand.py or the icon. Needs a clean Madeira checkout with no 0004 applied.
 set -euo pipefail

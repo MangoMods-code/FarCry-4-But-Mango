@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# F4 Mango Port: stamp the app with this repo's release number, so Settings and sideloaders
+# Mango Port: stamp the app with this repo's release number, so Settings and sideloaders
 # show e.g. 0.1.3 instead of Madeira's own version. The number is the first "## vX.Y.Z" in
 # docs/CHANGELOG.md, the same one the release job tags. The build number is derived from it
 # (0.1.3 -> 103) so every release counts up.
