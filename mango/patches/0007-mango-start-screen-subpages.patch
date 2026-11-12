@@ -1,0 +1,75 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 540fdfd..e763e5a 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -4579,7 +4579,9 @@ struct LibraryDetail: View {
+             .scrollContentBackground(.hidden)
+             .background(MangoBackground())   // Mango Port: the library's night page
+             .navigationTitle("Game details").navigationBarTitleDisplayMode(.inline)
+-            .navigationDestination(for: Page.self) { item in page(item) }
++            .navigationDestination(for: Page.self) { item in
++                page(item).scrollContentBackground(.hidden).background(MangoBackground())   // Mango Port
++            }
+             .toolbarBackground(.regularMaterial, for: .navigationBar)
+             .toolbarBackground(.visible, for: .navigationBar)
+             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { model.save(entry); dismiss() } } }
+@@ -5709,14 +5711,15 @@ struct LibraryHUD: View {
+         ScrollView {
+             VStack(spacing: compact ? 10 : 18) {
+                 launchCover(entry).frame(width: compact ? 90 : 120, height: compact ? 135 : 180)
+-                    .clipShape(RoundedRectangle(cornerRadius: 14)).shadow(radius: 20)
++                    .clipShape(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous))
++                    .shadow(color: MangoTheme.mango.opacity(0.35), radius: 22, y: 10)
+                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { coverFrame = $0; LaunchCurtain.shared.track($0) }
+                     .opacity(coverLanded ? 1 : 0)
+                     .modifier(LaunchEntrance(visible: launchVisible, step: 0, rise: CGSize(width: 0, height: 26), scale: 0.84, still: curtained))
+-                Text(entry.title).font(.title2.bold()).multilineTextAlignment(.center)
++                Text(entry.title).font(.system(.title2, design: .rounded).weight(.heavy)).multilineTextAlignment(.center)
+                     .modifier(LaunchEntrance(visible: launchVisible, step: 1, rise: CGSize(width: 0, height: 14), still: curtained))
+                 if dockStart.failure == nil {
+-                    ProgressView().tint(.white).modifier(LaunchEntrance(visible: launchVisible, step: 2, still: curtained))
++                    ProgressView().tint(MangoTheme.gold).modifier(LaunchEntrance(visible: launchVisible, step: 2, still: curtained))
+                 }
+                 if let failure = dockStart.failure {
+                     Text("Mango Dock stopped").font(.headline)
+@@ -5791,12 +5794,12 @@ struct LibraryHUD: View {
+             launchCover(entry).frame(width: coverHeight * 2 / 3, height: coverHeight)
+                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                 .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.14), lineWidth: 0.5))
+-                .shadow(color: .black.opacity(0.55), radius: 30, y: 14)
++                .shadow(color: MangoTheme.mango.opacity(0.3), radius: 30, y: 14)
+                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { coverFrame = $0; LaunchCurtain.shared.track($0) }
+                 .opacity(coverLanded ? 1 : 0)
+                 .modifier(LaunchEntrance(visible: launchVisible, step: 0, rise: CGSize(width: -36, height: 0), scale: 0.86, still: curtained))
+             VStack(alignment: .leading, spacing: short ? 10 : 14) {
+-                Text(entry.title).font(.system(size: short ? 28 : 38, weight: .bold))
++                Text(entry.title).font(.system(size: short ? 28 : 38, weight: .heavy, design: .rounded))
+                     .lineLimit(2).minimumScaleFactor(0.6)
+                     .modifier(LaunchEntrance(visible: launchVisible, step: 1, rise: CGSize(width: 22, height: 0), still: curtained))
+                 launchWideStatus.modifier(LaunchEntrance(visible: launchVisible, step: 2, rise: CGSize(width: 22, height: 0), still: curtained))
+@@ -5865,7 +5868,8 @@ struct LibraryHUD: View {
+         Button(action: action) {
+             Image(systemName: symbol).font(.system(size: 19, weight: .semibold))
+                 .frame(width: 46, height: 46)
+-                .background(Circle().fill(Color.white.opacity(on ? 0.32 : 0.16)))
++                .background(Circle().fill(on ? AnyShapeStyle(MangoTheme.mango.opacity(0.45)) : AnyShapeStyle(Color.white.opacity(0.16))))
++                .overlay(Circle().strokeBorder(on ? MangoTheme.gold.opacity(0.8) : Color.white.opacity(0.12), lineWidth: 1))
+                 .contentShape(Circle())
+         }
+         .buttonStyle(.plain).foregroundStyle(.white)
+diff --git a/app/Madeira/SettingsPages.swift b/app/Madeira/SettingsPages.swift
+index 9c45def..87a5644 100644
+--- a/app/Madeira/SettingsPages.swift
++++ b/app/Madeira/SettingsPages.swift
+@@ -101,7 +101,10 @@ struct SettingsPagesList: View {
+                 if !pages.isEmpty {
+                     Section {
+                         ForEach(pages, id: \.self) { page in
+-                            NavigationLink { SettingsPageView(page: page, startDock: startDock) } label: { row(page) }
++                            NavigationLink {
++                                SettingsPageView(page: page, startDock: startDock)
++                                    .scrollContentBackground(.hidden).background(MangoBackground())   // Mango Port
++                            } label: { row(page) }
+                         }
+                     } header: { if let title = group.0 { Text(title) } }
+                 }

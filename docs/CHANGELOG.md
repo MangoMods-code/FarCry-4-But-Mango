@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.0
+New logo, and the mango look everywhere.
+
+- New app icon: the mango with its orbit ring
+- The game-start screen: a gold spinner, a bolder title and a mango glow around the cover
+- Every Game details page (Display, Controls, Launch and the rest) and every Settings page now uses the night theme
+
 ## v0.5.0
 Mango Port: not just Far Cry 4.
 
