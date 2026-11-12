@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.2
+F4 Mango Port, inside and out.
+
+- New mango app icon
+- Every screen now says F4 Mango Port instead of Madeira, and Madeira Dock is now Mango Dock
+- About credits Madeira by Will Faust, which F4 Mango Port is built on
+- Same bundle ID, so it installs over the previous version and keeps your games and settings
+
 ## v0.1.1
 Renamed to F4 Mango Port.
 

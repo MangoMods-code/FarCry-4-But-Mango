@@ -14,7 +14,13 @@ The workflow is Madeira's own build (`madeira/.github/workflows/build.yml`), ada
 - runs only when started by hand or when a `v*` tag is pushed, because builds are expensive
 - includes the Mango patches in the IPA cache key, so a profile change gives a new IPA
 
-After bumping the Madeira submodule, regenerate the workflow:
+After bumping the Madeira submodule, regenerate the rebrand patch (it is generated, so never edit it
+by hand) and the workflow:
+
+```bash
+scripts/make-rebrand-patch.sh
+```
+
 
 ```bash
 python3 scripts/make-build-workflow.py madeira/.github/workflows/build.yml .github/workflows/build-ipa.yml

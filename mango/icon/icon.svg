@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- F4 Mango Port app icon: an original drawing (a mango on a dusk sky). GPL-3.0 like the rest of the repo. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1033"/>
+      <stop offset="0.55" stop-color="#3a1747"/>
+      <stop offset="1" stop-color="#7a2a3a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.56" r="0.42">
+      <stop offset="0" stop-color="#ffb347" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fruit" x1="0.15" y1="0.1" x2="0.85" y2="0.95">
+      <stop offset="0" stop-color="#ffe066"/>
+      <stop offset="0.45" stop-color="#ffa62b"/>
+      <stop offset="0.8" stop-color="#f2542d"/>
+      <stop offset="1" stop-color="#c0392b"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7ed957"/>
+      <stop offset="1" stop-color="#1e8a4c"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.35" cy="0.3" r="0.35">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+  <circle cx="512" cy="575" r="430" fill="url(#glow)"/>
+  <!-- ground silhouette -->
+  <path d="M0 860 C 180 800 330 840 512 815 C 700 790 850 830 1024 800 L1024 1024 L0 1024 Z" fill="#12091f" opacity="0.85"/>
+  <!-- mango -->
+  <g transform="rotate(-18 512 560)">
+    <path d="M512 250 C 690 250 790 410 770 590 C 750 770 620 860 485 850 C 330 838 245 720 258 575 C 270 440 330 380 400 330 C 440 300 470 250 512 250 Z" fill="url(#fruit)"/>
+    <path d="M512 250 C 690 250 790 410 770 590 C 750 770 620 860 485 850 C 330 838 245 720 258 575 C 270 440 330 380 400 330 C 440 300 470 250 512 250 Z" fill="url(#shine)"/>
+    <path d="M505 255 C 520 215 530 190 548 165" stroke="#5b3a1e" stroke-width="22" stroke-linecap="round" fill="none"/>
+    <path d="M545 175 C 610 120 720 120 790 165 C 720 230 610 240 545 175 Z" fill="url(#leaf)"/>
+    <path d="M555 177 C 630 168 700 165 770 166" stroke="#d9f7c4" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.7"/>
+  </g>
+  <!-- F4 badge -->
+  <g>
+    <rect x="585" y="675" width="290" height="185" rx="48" fill="#12091f" stroke="#ffa62b" stroke-width="14"/>
+    <text x="730" y="814" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-weight="bold" font-size="150" fill="#ffe066">F4</text>
+  </g>
+</svg>
