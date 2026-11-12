@@ -1,4 +1,4 @@
-# Mango Port — Far Cry 4 on iPhone
+# F4 Mango Port — Far Cry 4 on iPhone
 
 A Five Star–style, single-game launcher for running **your own copy of Far Cry 4** natively on a non-jailbroken iPhone. It's built on [Madeira](https://github.com/willfaust/Madeira) (Wine + FEX-Emu + DXMT), with Mango's game profile, branding and setup flow layered on top as small patches.
 
@@ -10,7 +10,7 @@ A Five Star–style, single-game launcher for running **your own copy of Far Cry
 | --- | --- |
 | `madeira/` | Madeira, pinned as a submodule at a known-good commit (`401a927`) |
 | `mango/patches/0001-…profiles.patch` | Far Cry 4 + Ubisoft Connect recommended settings, recognition rules and their host tests |
-| `mango/patches/0002-…branding.patch` | App name **Mango Port**, bundle ID `com.mangomods.mangoport` |
+| `mango/patches/0002-…branding.patch` | App name **F4 Mango Port**, bundle ID `com.mangomods.mangoport` |
 | `scripts/apply-mango.sh` | Fetches Madeira and applies the patches (idempotent) |
 | `scripts/test.sh` | Runs the Madeira host checks the patches touch |
 | `docs/` | Roadmap, Far Cry 4 test log, legal notes |
@@ -19,7 +19,7 @@ Keeping Mango's changes as patches means pulling a newer Madeira is: bump the su
 
 ## What the Far Cry 4 profile does
 
-When Mango Port sees Far Cry 4 — by Steam App ID `298110`, a `Far Cry 4` folder under `steamapps\common`, or `FarCry4.exe` anywhere — it applies:
+When F4 Mango Port sees Far Cry 4 — by Steam App ID `298110`, a `Far Cry 4` folder under `steamapps\common`, or `FarCry4.exe` anywhere — it applies:
 
 - Madeira's memory-pool lines that let Chromium (CEF) launchers load, since the game starts through **Ubisoft Connect**
 - DXMT's small-ring mode for Ubisoft Connect's windows
@@ -34,7 +34,7 @@ Ubisoft Connect itself (`upc.exe` / `UbisoftConnect.exe` in its `Ubisoft Game La
 - iPhone on **iOS 26+** (A15 / iPhone 13 Pro or newer; more RAM is better)
 - **JIT** via StikDebug or Madeira's built-in StikJIT helper
 - Sideloaded with the **increased memory limit** entitlement intact
-- **Your own Far Cry 4** (Steam or Ubisoft Store) and a Ubisoft account. Mango Port ships no game files.
+- **Your own Far Cry 4** (Steam or Ubisoft Store) and a Ubisoft account. F4 Mango Port ships no game files.
 
 ## Build
 
@@ -45,9 +45,9 @@ scripts/apply-mango.sh        # full submodule fetch + patches
 scripts/test.sh               # host checks
 ```
 
-**No Mac?** Run **Actions → Build Mango Port IPA** and download the `MangoPort-ipa` artifact. Read the cost notes in [`docs/BUILDING.md`](docs/BUILDING.md) first: a cold build takes hours of macOS runner time.
+**No Mac?** Run **Actions → Build F4 Mango Port IPA** and download the `F4MangoPort-ipa` artifact. Read the cost notes in [`docs/BUILDING.md`](docs/BUILDING.md) first: a cold build takes hours of macOS runner time.
 
-On a Mac, follow `madeira/BUILDING.md` (Xcode, the Wine/FEX/DXMT toolchains). The output is the same IPA Madeira makes, renamed Mango Port.
+On a Mac, follow `madeira/BUILDING.md` (Xcode, the Wine/FEX/DXMT toolchains). The output is the same IPA Madeira makes, renamed F4 Mango Port.
 
 ## Rules this project keeps
 
@@ -58,4 +58,4 @@ On a Mac, follow `madeira/BUILDING.md` (Xcode, the Wine/FEX/DXMT toolchains). Th
 
 ## Credits
 
-Everything that makes PC games run on iOS is [Madeira](https://github.com/willfaust/Madeira) by Will Faust and its contributors, built on Wine, FEX-Emu, DXMT and StikDebug. Mango Port adds a game profile on top.
+Everything that makes PC games run on iOS is [Madeira](https://github.com/willfaust/Madeira) by Will Faust and its contributors, built on Wine, FEX-Emu, DXMT and StikDebug. F4 Mango Port adds a game profile on top.

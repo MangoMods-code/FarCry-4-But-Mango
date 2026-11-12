@@ -7,4 +7,4 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/madeira"
 python3 -I tests/host/check-game-recommendations.py "$@"
 python3 -I tests/host/check-jit-method.py
-echo "Mango Port checks: PASS"
+echo "F4 Mango Port checks: PASS"

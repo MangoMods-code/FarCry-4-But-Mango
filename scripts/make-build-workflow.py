@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # Usage: python3 scripts/make-build-workflow.py madeira/.github/workflows/build.yml .github/workflows/build-ipa.yml
-"""Adapt Madeira's build.yml so it runs from the Mango Port repo (Madeira as a submodule at madeira/)."""
+"""Adapt Madeira's build.yml so it runs from the F4 Mango Port repo (Madeira as a submodule at madeira/)."""
 import re, sys
 src, dst = sys.argv[1], sys.argv[2]
 s = open(src).read()
 
 # Header: name, manual trigger only, run steps inside madeira/.
 head, jobs = s.split('\njobs:\n', 1)
-head = '''# Generated from madeira/.github/workflows/build.yml by Mango Port (see docs/BUILDING.md).
+head = '''# Generated from madeira/.github/workflows/build.yml by F4 Mango Port (see docs/BUILDING.md).
 # Differences: runs from this repo with Madeira at madeira/, applies mango/patches first,
 # GitHub's hosted xcode-27 runner (override with the MANGO_MAC_RUNNER repository variable),
 # manual runs only, and the IPA cache key includes the Mango patches.
-name: Build Mango Port IPA
+name: Build F4 Mango Port IPA
 
 on:
   workflow_dispatch:
@@ -95,7 +95,7 @@ assert s.count(old) == 1
 s = s.replace(old, 'echo "ipa=mango-ipa-v1-${{ hashFiles(\'mango/patches/**\') }}-')
 
 # Artifact name.
-s = s.replace('name: Madeira-ipa', 'name: MangoPort-ipa')
+s = s.replace('name: Madeira-ipa', 'name: F4MangoPort-ipa')
 # Diagnostics: this session can read check-run annotations but not job logs, so every
 # run step tees its output to $RUNNER_TEMP/step.log, and a failed job posts the last
 # 60 lines of its failing step as an error annotation.
@@ -165,7 +165,7 @@ s = s.rstrip('\n') + '''
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: MangoPort-ipa
+          name: F4MangoPort-ipa
           path: dist
       - name: Publish the release
         env:
@@ -175,9 +175,9 @@ s = s.rstrip('\n') + '''
           if [ "${GITHUB_REF_TYPE}" = tag ]; then TAG="${GITHUB_REF_NAME}"
           else TAG=$(awk '/^## v/ {print $2; exit}' docs/CHANGELOG.md); fi
           test -n "$TAG"
-          mv dist/Madeira.ipa "dist/MangoPort-$TAG.ipa"
+          mv dist/Madeira.ipa "dist/F4MangoPort-$TAG.ipa"
           awk -v tag="## $TAG" '$0 == tag {on=1; next} /^## / {on=0} on' docs/CHANGELOG.md > notes.md
-          test -s notes.md || echo "Mango Port $TAG" > notes.md
-          gh release create "$TAG" "dist/MangoPort-$TAG.ipa" --title "Mango Port $TAG" --notes-file notes.md --target "$GITHUB_SHA"
+          test -s notes.md || echo "F4 Mango Port $TAG" > notes.md
+          gh release create "$TAG" "dist/F4MangoPort-$TAG.ipa" --title "F4 Mango Port $TAG" --notes-file notes.md --target "$GITHUB_SHA"
 '''
 open(dst, 'w').write(s)

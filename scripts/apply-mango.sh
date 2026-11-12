@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mango Port: fetch Madeira at the pinned commit and apply Mango's patches on top.
+# F4 Mango Port: fetch Madeira at the pinned commit and apply Mango's patches on top.
 #
 #   scripts/apply-mango.sh            fetch submodules (recursive) and apply patches
 #   scripts/apply-mango.sh --shallow  only the top-level Madeira checkout (no Wine/FEX/DXMT);

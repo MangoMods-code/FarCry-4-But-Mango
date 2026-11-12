@@ -3,7 +3,7 @@
 ## Milestone 1 — Profiles on Madeira ✅ (this commit)
 - Madeira pinned as a submodule; Mango changes kept as patches
 - Far Cry 4, Ubisoft Connect and its installer recognised and given recommended settings
-- App renamed Mango Port (`com.mangomods.mangoport`)
+- App renamed F4 Mango Port (`com.mangomods.mangoport`)
 - Madeira's host checks updated and passing; CI runs them on Linux and macOS
 
 ## Milestone 2 — First device run (needs a Mac + iPhone)

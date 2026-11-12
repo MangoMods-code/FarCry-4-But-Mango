@@ -1,7 +1,13 @@
 # Changelog
 
+## v0.1.1
+Renamed to F4 Mango Port.
+
+- The app's name on your Home Screen is now **F4 Mango Port**
+- Same bundle ID as v0.1.0, so it installs over the old version and keeps your games and settings
+
 ## v0.1.0
-First test build of Mango Port.
+First test build of F4 Mango Port.
 
 - Runs Windows PC games on your iPhone, with Far Cry 4 set up out of the box
 - Recognises Far Cry 4 from Steam or the Ubisoft Store and applies tuned settings automatically
