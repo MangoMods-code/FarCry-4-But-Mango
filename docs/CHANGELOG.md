@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0
+Same app as v0.1.2, renumbered so updates are detected.
+
+- Builds before v0.1.2 reported Madeira's version number, 0.2.0, so sideloaders saw v0.1.2 as older than what was installed. From now on F4 Mango Port's versions start above it.
+- Includes everything in v0.1.2: the mango icon, F4 Mango Port on every screen, Mango Dock, and the Madeira credit in About
+
 ## v0.1.2
 F4 Mango Port, inside and out.
 
