@@ -96,7 +96,7 @@ jobs:
           set -o pipefail
           : > "$RUNNER_TEMP/step.log"
           (
-            echo "ipa=mango-ipa-v1-${{ hashFiles('mango/patches/**') }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.sdk.outputs.ipa }}-$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+            echo "ipa=mango-ipa-v1-${{ hashFiles('mango/patches/**', 'docs/CHANGELOG.md') }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.sdk.outputs.ipa }}-$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
           ) 2>&1 | tee -a "$RUNNER_TEMP/step.log"
       - id: ipa
         uses: actions/cache/restore@v4
@@ -571,7 +571,7 @@ jobs:
           set -o pipefail
           : > "$RUNNER_TEMP/step.log"
           (
-            scripts/apply-mango.sh
+            scripts/apply-mango.sh && scripts/set-version.sh
           ) 2>&1 | tee -a "$RUNNER_TEMP/step.log"
       - name: Select the newest Xcode
         working-directory: .

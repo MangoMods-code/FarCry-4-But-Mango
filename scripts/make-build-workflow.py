@@ -39,10 +39,11 @@ s = s.replace('runs-on: xcode-27', "runs-on: ${{ vars.MANGO_MAC_RUNNER || 'xcode
 # Checkout steps: this repo, then Madeira + Mango patches, then pick the newest Xcode.
 def checkout(full):
     mode = '' if full else ' --shallow'
+    stamp = ' && scripts/set-version.sh' if full else ''
     return f'''      - uses: actions/checkout@v4
       - name: Fetch Madeira and apply Mango patches
         working-directory: .
-        run: scripts/apply-mango.sh{mode}
+        run: scripts/apply-mango.sh{mode}{stamp}
       - name: Select the newest Xcode
         working-directory: .
         run: |
@@ -92,7 +93,7 @@ s = re.sub(r'hashFiles\(([^)]*)\)', fix_hash, s)
 # The IPA cache key must change when Mango's patches change (Madeira's tree hash does not).
 old = 'echo "ipa=ipa-v1-'
 assert s.count(old) == 1
-s = s.replace(old, 'echo "ipa=mango-ipa-v1-${{ hashFiles(\'mango/patches/**\') }}-')
+s = s.replace(old, 'echo "ipa=mango-ipa-v1-${{ hashFiles(\'mango/patches/**\', \'docs/CHANGELOG.md\') }}-')
 
 # Artifact name.
 s = s.replace('name: Madeira-ipa', 'name: F4MangoPort-ipa')
