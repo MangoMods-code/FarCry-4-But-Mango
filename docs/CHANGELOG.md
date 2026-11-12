@@ -4,6 +4,8 @@
 New logo, and the mango look everywhere.
 
 - New app icon: the mango with its orbit ring
+- The same mango beside the title, on the launch screen and on the welcome page (the title's mango was missing in v0.4 and v0.5)
+- Mango orange is now the accent colour everywhere, and the launch screen has its night background
 - The game-start screen: a gold spinner, a bolder title and a mango glow around the cover
 - Every Game details page (Display, Controls, Launch and the rest) and every Settings page now uses the night theme
 
