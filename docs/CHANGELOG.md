@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.0
+The main screen, mango style.
+
+- New night theme in F4 Mango Port's colours, with mango orange buttons, switches and links throughout the app
+- The title is now the mango and F4 Mango Port, with a JIT pill that turns green when JIT is on
+- Continue playing: the game you played last sits at the top of your library, one tap from its details and Play
+- Store tabs are now mango pills, and game cards are rounder with a soft edge
+- Liquid metal buttons and tab bar shine in mango, gold and leaf green
+- A new launch screen with the mango
+
 ## v0.3.0
 Same app as v0.1.2, renumbered so updates are detected.
 

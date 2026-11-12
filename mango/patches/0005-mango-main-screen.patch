@@ -1,0 +1,559 @@
+diff --git a/app/Madeira.xcodeproj/project.pbxproj b/app/Madeira.xcodeproj/project.pbxproj
+index 818f70a..5f0fd9f 100644
+--- a/app/Madeira.xcodeproj/project.pbxproj
++++ b/app/Madeira.xcodeproj/project.pbxproj
+@@ -1347,6 +1347,7 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
++				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+ 				"OTHER_LDFLAGS[sdk=iphoneos*]" = ("$(inherited)", "$(MADEIRA_VULKAN_LDFLAGS)");
+ 				CODE_SIGN_ENTITLEMENTS = Madeira/Madeira.entitlements;
+ 				CODE_SIGN_IDENTITY = "Apple Development";
+@@ -1400,6 +1401,7 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
++				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+ 				"OTHER_LDFLAGS[sdk=iphoneos*]" = ("$(inherited)", "$(MADEIRA_VULKAN_LDFLAGS)");
+ 				CODE_SIGN_ENTITLEMENTS = Madeira/Madeira.entitlements;
+ 				CODE_SIGN_STYLE = Automatic;
+diff --git a/app/Madeira/Info.plist b/app/Madeira/Info.plist
+index 5cdfa57..02831a9 100644
+--- a/app/Madeira/Info.plist
++++ b/app/Madeira/Info.plist
+@@ -106,7 +106,12 @@
+ 	<key>UIFileSharingEnabled</key>
+ 	<true/>
+ 	<key>UILaunchScreen</key>
+-	<dict/>
++	<dict>
++		<key>UIColorName</key>
++		<string>LaunchBackground</string>
++		<key>UIImageName</key>
++		<string>MangoGlyph</string>
++	</dict>
+ 	<key>UIRequiredDeviceCapabilities</key>
+ 	<array>
+ 		<string>arm64</string>
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 77d7cd1..e2a0393 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -2077,16 +2077,16 @@ struct LibraryTitleText: View {
+     @ObservedObject private var jitState = LibraryJITState.shared
+     var body: some View {
+         let jit = jitState.enabled
+-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+-            Text(LibraryHeaderAlignment.title).accessibilityAddTraits(.isHeader)
+-            Image(systemName: jit ? "bolt.fill" : "bolt")
+-                .font(.system(size: LibraryHeaderAlignment.titleFont().pointSize * 0.53, weight: .thin))
+-                .foregroundStyle(jit ? Color.accentColor : Color.primary)
+-                .contentTransition(.symbolEffect(.replace))
+-                .alignmentGuide(.firstTextBaseline) { d in d.height / 2 + LibraryHeaderAlignment.titleFont().capHeight / 2 }
++        // F4 Mango Port: the mango wordmark, then JIT as a pill (green once the debugger is attached).
++        HStack(alignment: .center, spacing: 10) {
++            MangoWordmark()
++                .accessibilityElement(children: .ignore)
++                .accessibilityLabel(LibraryHeaderAlignment.title)
++                .accessibilityAddTraits(.isHeader)
++            MangoJITPill(on: jit)
+                 .accessibilityLabel(jit ? L("JIT enabled") : L("JIT not enabled"))
+         }
+-        .font(.largeTitle.bold())
++        .font(.system(.largeTitle, design: .rounded).weight(.black))
+         .fixedSize()
+         .offset(x: alignment.shift)
+         .background(LibraryTitleAnchor())   // after the offset: marks where the text is laid out
+@@ -2928,7 +2928,7 @@ struct LibrarySectionHeader<Trailing: View>: View {
+                     withAnimation(UIAccessibility.isReduceMotionEnabled ? nil : .easeInOut(duration: 0.2)) { collapsed.wrappedValue.toggle() }
+                 } label: {
+                     HStack(alignment: .firstTextBaseline, spacing: 8) {
+-                        Text(title).font(.title2.bold())
++                        Text(title).font(.system(.title2, design: .rounded).weight(.heavy))
+                         if let count, count > 0 { Text("\(count)").font(.subheadline).foregroundStyle(.secondary) }
+                         Image(systemName: "chevron.right").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                             .rotationEffect(.degrees(collapsed.wrappedValue ? 0 : 90))
+@@ -2941,7 +2941,7 @@ struct LibrarySectionHeader<Trailing: View>: View {
+             }
+         } else {
+             HStack(alignment: .firstTextBaseline) {
+-                Text(title).font(.title2.bold())
++                Text(title).font(.system(.title2, design: .rounded).weight(.heavy))
+                 if let count, count > 0 { Text("\(count)").font(.subheadline).foregroundStyle(.secondary) }
+                 Spacer()
+                 trailing
+@@ -3008,26 +3008,20 @@ struct LibraryStoreTabBar: View {
+     }
+ 
+     var body: some View {
+-        ViewThatFits(in: .horizontal) {
+-            Picker("Store", selection: picked) {
+-                ForEach(tabs) { Text($0.title).tag($0) }
+-            }
+-            .pickerStyle(.segmented)
+-            .fixedSize()
+-            .frame(maxWidth: .infinity)
+-            ScrollView(.horizontal, showsIndicators: false) {
+-                HStack(spacing: 8) {
+-                    ForEach(tabs) { tab in
+-                        let on = picked.wrappedValue == tab
+-                        Button { picked.wrappedValue = tab } label: {
+-                            Text(tab.title).font(.subheadline.weight(.semibold))
+-                                .padding(.horizontal, 14).padding(.vertical, 7)
+-                                .foregroundStyle(on ? Color.white : Color.primary)
+-                                .background(Capsule().fill(on ? Color.accentColor : Color(uiColor: .tertiarySystemFill)))
+-                        }
+-                        .buttonStyle(.plain)
+-                        .accessibilityAddTraits(on ? .isSelected : [])
++        // F4 Mango Port: always the pills, the picked one in the mango gradient (MangoTheme).
++        ScrollView(.horizontal, showsIndicators: false) {
++            HStack(spacing: 8) {
++                ForEach(tabs) { tab in
++                    let on = picked.wrappedValue == tab
++                    Button { picked.wrappedValue = tab } label: {
++                        Text(tab.title).font(.system(.subheadline, design: .rounded).weight(.heavy))
++                            .padding(.horizontal, 15).frame(minHeight: 36)
++                            .foregroundStyle(on ? MangoTheme.onAccent : MangoTheme.soft)
++                            .background(Capsule().fill(on ? AnyShapeStyle(MangoTheme.pillGradient) : AnyShapeStyle(Color.white.opacity(0.06))))
++                            .overlay(Capsule().strokeBorder(Color.white.opacity(on ? 0 : 0.1), lineWidth: 1))
+                     }
++                    .buttonStyle(.plain)
++                    .accessibilityAddTraits(on ? .isSelected : [])
+                 }
+             }
+         }
+@@ -3383,7 +3377,7 @@ struct LibraryView: View {
+         TabView(selection: Binding(get: { tab }, set: { switchTab(to: $0) })) {
+             // The card layouts: the zoomable page or the original one (LibraryGridArm).
+             Group { if LibraryGridArm.zoomable(setting: zoomableGrid, layout: layout) { zoomableLibrary } else { library } }
+-                .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
++                .background(MangoBackground())   // F4 Mango Port: the brand's page (MangoTheme)
+                 .tabItem { Image(systemName: "square.grid.2x2.fill").accessibilityLabel("Library") }
+                 .tag(0)
+             settingsTab
+@@ -3620,6 +3614,8 @@ struct LibraryView: View {
+         ScrollViewReader { reader in
+         ScrollView {
+             VStack(alignment: .leading, spacing: 24) {
++                // F4 Mango Port: the last game played, a tap from its Game details page.
++                if search.isEmpty { MangoContinueHero(open: { selected = $0 }) }
+                 if !storeTabs.isEmpty { LibraryStoreTabBar(tabs: storeTabs, selection: $storeTab) }
+                 desktopButton
+                 // The library's sections, as in the fork: Steam (installed and downloading
+@@ -3834,11 +3830,13 @@ struct LibraryView: View {
+                     }.padding(10).background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+                 } else {
+                     VStack(alignment: .leading, spacing: 6) {
+-                        LibraryArtwork(entry: entry).aspectRatio(2.0 / 3.0, contentMode: .fit).clipShape(RoundedRectangle(cornerRadius: 12))
++                        LibraryArtwork(entry: entry).aspectRatio(2.0 / 3.0, contentMode: .fit)
++                            .clipShape(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous))
++                            .overlay(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+                             .modifier(LibraryCardArtworkPress { pressed, bounds in
+                                 AmbientGlowItem(id: "entry-\(entry.id)", seed: entry.id.hashValue, art: .library(entry), pressed: pressed, bounds: bounds)
+                             })
+-                        Text(entry.title).font(.subheadline.weight(.semibold)).lineLimit(2)
++                        Text(entry.title).font(.system(.subheadline, design: .rounded).weight(.heavy)).lineLimit(2)
+                         LibraryBadges(entry: entry).foregroundStyle(.secondary)
+                     }.padding(4)
+                 }
+@@ -7026,3 +7024,184 @@ extension View {
+         background(SmartPunctuationOff().frame(width: 0, height: 0))
+     }
+ }
++
++// MARK: - F4 Mango Port theme
++
++/// F4 Mango Port's brand, shared with Mango Signer: a deep purple night, mango orange to
++/// gold, and the leaf's green. The accent colour app-wide is AccentColor (the asset
++/// catalog, ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME); the views below use these.
++enum MangoTheme {
++    static func rgb(_ hex: UInt32, _ alpha: Double = 1) -> Color {
++        Color(.sRGB, red: Double((hex >> 16) & 0xff) / 255, green: Double((hex >> 8) & 0xff) / 255,
++              blue: Double(hex & 0xff) / 255, opacity: alpha)
++    }
++    static let night = rgb(0x140c1a)
++    static let dusk = rgb(0x1d1326)
++    static let deep = rgb(0x120a17)
++    static let mango = rgb(0xff9f1c)
++    static let gold = rgb(0xffcf4a)
++    static let orange = rgb(0xff7a1a)
++    static let leaf = rgb(0x5cc45c)
++    static let leafText = rgb(0x8fe08f)
++    static let soft = rgb(0xd9cde3)
++    static let muted = rgb(0xa898b5)
++    static let onAccent = rgb(0x1a0d05)
++    /// A grid card's artwork corners (the library's and Steam's cards).
++    static let cardRadius: CGFloat = 18
++    static let wordGradient = LinearGradient(colors: [gold, orange], startPoint: .leading, endPoint: .trailing)
++    static let pillGradient = LinearGradient(colors: [gold, orange], startPoint: .top, endPoint: .bottom)
++    static let buttonGradient = LinearGradient(colors: [rgb(0xffb347), orange], startPoint: .top, endPoint: .bottom)
++}
++
++/// The library page's background: the night gradient with a mango glow in the top corner.
++struct MangoBackground: View {
++    var body: some View {
++        ZStack {
++            LinearGradient(colors: [MangoTheme.dusk, MangoTheme.night, MangoTheme.deep], startPoint: .top, endPoint: .bottom)
++            RadialGradient(colors: [MangoTheme.mango.opacity(0.22), MangoTheme.mango.opacity(0)],
++                           center: UnitPoint(x: 0.08, y: 0), startRadius: 0, endRadius: 460)
++        }
++        .ignoresSafeArea()
++        .accessibilityHidden(true)
++    }
++}
++
++/// The library's title: the mango, a small "F4", then "Mango" in the mango gradient and
++/// "Port", in the title font around it.
++struct MangoWordmark: View {
++    var body: some View {
++        let size = LibraryHeaderAlignment.titleFont().pointSize
++        HStack(alignment: .center, spacing: 6) {
++            Image("MangoGlyph").resizable().scaledToFit()
++                .frame(width: size * 1.2, height: size * 1.2)
++            Text(verbatim: "F4 ").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(MangoTheme.muted)
++                + Text(verbatim: "Mango").foregroundStyle(MangoTheme.wordGradient)
++                + Text(verbatim: " Port")
++        }
++        .lineLimit(1)
++    }
++}
++
++/// JIT beside the title: a green pill once the debugger is attached, a grey one before.
++struct MangoJITPill: View {
++    let on: Bool
++    var body: some View {
++        HStack(spacing: 4) {
++            Image(systemName: "bolt.fill").font(.system(size: 12, weight: .heavy))
++            Text(verbatim: "JIT").font(.system(size: 13, weight: .heavy, design: .rounded))
++        }
++        .foregroundStyle(on ? MangoTheme.leafText : MangoTheme.muted)
++        .padding(.horizontal, 10).padding(.vertical, 6)
++        .background(Capsule().fill(on ? MangoTheme.leaf.opacity(0.18) : Color.white.opacity(0.08)))
++        .overlay(Capsule().strokeBorder(on ? MangoTheme.leaf.opacity(0.35) : Color.white.opacity(0.1), lineWidth: 1))
++        .animation(UIAccessibility.isReduceMotionEnabled ? nil : .easeInOut(duration: 0.3), value: on)
++    }
++}
++
++/// Continue playing: the most recently played game you can start (a game you added, or an
++/// installed Steam game by its library entry's date or Steam's own, whichever is later),
++/// as a wide card at the top of the library. A tap opens its Game details page, where Play
++/// does every check a start needs. Nothing is shown before a game has been played.
++struct MangoContinueHero: View {
++    var open: (LibraryEntry) -> Void
++    @ObservedObject private var library = LibraryModel.shared
++    @ObservedObject private var steamGames = SteamGamesModel.shared
++    @ObservedObject private var steam = SteamOwnedLibrary.shared
++
++    private enum Pick {
++        case entry(LibraryEntry)
++        case steam(DockGame, String)
++    }
++
++    private var latest: (pick: Pick, played: Date)? {
++        var best: (pick: Pick, played: Date)?
++        for entry in library.entries where entry.desktop != true && entry.listedInLibrary && entry.steamAppID == nil {
++            if let played = entry.lastPlayed, played > (best?.played ?? .distantPast) { best = (pick: Pick.entry(entry), played: played) }
++        }
++        if SteamGamesSection.shown {
++            for item in SteamGamesRules.items(installed: steamGames.games, owned: [], search: "") {
++                guard let game = item.installed else { continue }
++                let recorded = library.entries.first { $0.steamAppID == item.id }?.lastPlayed
++                let fromSteam = steam.playtime[item.id].flatMap {
++                    $0.lastPlayed > 0 ? Date(timeIntervalSince1970: TimeInterval($0.lastPlayed)) : nil
++                }
++                if let played = [recorded, fromSteam].compactMap({ $0 }).max(), played > (best?.played ?? .distantPast) {
++                    best = (pick: Pick.steam(game, item.name), played: played)
++                }
++            }
++        }
++        return best
++    }
++
++    var body: some View {
++        if let latest {
++            Button { open(entry(for: latest.pick)) } label: { card(latest.pick, played: latest.played) }
++                .buttonStyle(.plain)
++                .accessibilityElement(children: .combine)
++                .accessibilityHint(L("Opens the game's details"))
++        }
++    }
++
++    private func entry(for pick: Pick) -> LibraryEntry {
++        switch pick {
++        case .entry(let entry): return entry
++        case .steam(let game, let name): return library.steamEntry(game, title: name)
++        }
++    }
++
++    private func title(_ pick: Pick) -> String {
++        switch pick {
++        case .entry(let entry): return entry.title
++        case .steam(_, let name): return name
++        }
++    }
++
++    /// The wide artwork: a game's chosen cover, else Steam's store art (LibraryArtwork, backdrop).
++    private func artworkEntry(_ pick: Pick) -> LibraryEntry {
++        switch pick {
++        case .entry(let entry): return entry
++        case .steam(let game, let name):
++            if let recorded = library.entries.first(where: { $0.steamAppID == game.id }) { return recorded }
++            var entry = LibraryEntry(title: name, relativePath: "", bits: 0)
++            entry.steamAppID = game.id
++            return entry
++        }
++    }
++
++    private func card(_ pick: Pick, played: Date) -> some View {
++        ZStack(alignment: .bottomLeading) {
++            LibraryArtwork(entry: artworkEntry(pick), backdrop: true)
++            LinearGradient(colors: [MangoTheme.night.opacity(0), MangoTheme.night.opacity(0.94)], startPoint: .center, endPoint: .bottom)
++            RadialGradient(colors: [MangoTheme.gold.opacity(0.28), MangoTheme.gold.opacity(0)],
++                           center: UnitPoint(x: 0.9, y: 0.05), startRadius: 0, endRadius: 260)
++            VStack(alignment: .leading, spacing: 9) {
++                Text("Continue playing").textCase(.uppercase)
++                    .font(.system(size: 12, weight: .black, design: .rounded)).tracking(1.6)
++                    .foregroundStyle(MangoTheme.gold)
++                Text(title(pick)).font(.system(size: 30, weight: .black, design: .rounded))
++                    .foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.6)
++                HStack(spacing: 12) {
++                    HStack(spacing: 8) {
++                        Image(systemName: "play.fill")
++                        Text("Continue")
++                    }
++                    .font(.system(size: 17, weight: .black, design: .rounded))
++                    .foregroundStyle(MangoTheme.onAccent)
++                    .padding(.horizontal, 22).frame(height: 46)
++                    .background(Capsule().fill(MangoTheme.buttonGradient))
++                    .shadow(color: MangoTheme.mango.opacity(0.5), radius: 12, y: 6)
++                    Text(played, format: .relative(presentation: .named))
++                        .font(.system(size: 13, weight: .bold, design: .rounded))
++                        .foregroundStyle(MangoTheme.soft).lineLimit(1)
++                }
++            }
++            .padding(18)
++        }
++        .frame(maxWidth: .infinity)
++        .frame(height: 236)
++        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
++        .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
++        .shadow(color: MangoTheme.mango.opacity(0.35), radius: 24, y: 14)
++        .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
++    }
++}
+diff --git a/app/Madeira/LiquidMetal.metal b/app/Madeira/LiquidMetal.metal
+index a77df7b..00ee4cb 100644
+--- a/app/Madeira/LiquidMetal.metal
++++ b/app/Madeira/LiquidMetal.metal
+@@ -70,15 +70,16 @@ static float studio(float2 n, float shiftA, float shiftB) {
+ }
+ 
+ // Six wavelengths, red to violet; their sum per channel normalises white to white.
++// F4 Mango Port: mango metal (orange, gold, amber, a red blush, the leaf, the night sky's purple).
+ constant float3 spectrum[6] = {
+-    float3(0.95, 0.10, 0.25),
+-    float3(1.00, 0.45, 0.00),
+-    float3(0.85, 0.85, 0.00),
+-    float3(0.10, 0.90, 0.35),
+-    float3(0.05, 0.40, 1.00),
+-    float3(0.45, 0.05, 0.95),
++    float3(0.95, 0.33, 0.18),
++    float3(1.00, 0.48, 0.10),
++    float3(1.00, 0.62, 0.11),
++    float3(1.00, 0.81, 0.29),
++    float3(0.36, 0.77, 0.36),
++    float3(0.62, 0.35, 0.90),
+ };
+-constant float3 spectrumSum = float3(3.40, 2.75, 2.55);
++constant float3 spectrumSum = float3(4.93, 3.36, 1.94);
+ 
+ } // namespace liquidmetal
+ 
+@@ -148,7 +149,7 @@ constant float3 spectrumSum = float3(3.40, 2.75, 2.55);
+     rgb = lum + (rgb - lum) * 2.7;
+ 
+     // Shadows go deep navy, the mid-tones slate blue.
+-    float3 navy = float3(0.03, 0.04, 0.085);
++    float3 navy = float3(0.078, 0.047, 0.102);   // F4 Mango Port: the brand's deep purple
+     rgb = navy + (1.0 - navy) * clamp(rgb, 0.0, 1.0);
+     rgb += float3(-0.03, 0.0, 0.07) * (lum * (1.0 - lum) * 4.0);
+ 
+diff --git a/app/Madeira/LiquidMetalSkin.metal b/app/Madeira/LiquidMetalSkin.metal
+index 58fe357..e546a4a 100644
+--- a/app/Madeira/LiquidMetalSkin.metal
++++ b/app/Madeira/LiquidMetalSkin.metal
+@@ -62,15 +62,16 @@ static float studio(float2 n, float shiftA, float shiftB) {
+     return mix(smoothstep(-0.05, 1.0, v), smoothstep(0.48, 0.60, v), 0.5);
+ }
+ 
++// F4 Mango Port: mango metal (orange, gold, amber, a red blush, the leaf, the night sky's purple).
+ constant float3 spectrum[6] = {
+-    float3(0.95, 0.10, 0.25),
+-    float3(1.00, 0.45, 0.00),
+-    float3(0.85, 0.85, 0.00),
+-    float3(0.10, 0.90, 0.35),
+-    float3(0.05, 0.40, 1.00),
+-    float3(0.45, 0.05, 0.95),
++    float3(0.95, 0.33, 0.18),
++    float3(1.00, 0.48, 0.10),
++    float3(1.00, 0.62, 0.11),
++    float3(1.00, 0.81, 0.29),
++    float3(0.36, 0.77, 0.36),
++    float3(0.62, 0.35, 0.90),
+ };
+-constant float3 spectrumSum = float3(3.40, 2.75, 2.55);
++constant float3 spectrumSum = float3(4.93, 3.36, 1.94);
+ 
+ } // namespace liquidmetalskin
+ 
+@@ -154,7 +155,7 @@ fragment half4 liquidMetalSkinFragment(liquidmetalskin::VertexOut in [[stage_in]
+     float lum = dot(rgb, float3(0.299, 0.587, 0.114));
+     rgb = lum + (rgb - lum) * 2.7;
+ 
+-    float3 navy = float3(0.03, 0.04, 0.085);
++    float3 navy = float3(0.078, 0.047, 0.102);   // F4 Mango Port: the brand's deep purple
+     rgb = navy + (1.0 - navy) * clamp(rgb, 0.0, 1.0);
+     rgb += float3(-0.03, 0.0, 0.07) * (lum * (1.0 - lum) * 4.0);
+     rgb = clamp(rgb, 0.0, 1.0);
+diff --git a/app/Madeira/Localizable.xcstrings b/app/Madeira/Localizable.xcstrings
+index 32fe679..c62e55e 100644
+--- a/app/Madeira/Localizable.xcstrings
++++ b/app/Madeira/Localizable.xcstrings
+@@ -30160,6 +30160,86 @@
+           }
+         }
+       }
++    },
++    "Continue playing": {
++      "localizations": {
++        "de": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Weiterspielen"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Seguir jugando"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "이어서 플레이"
++          }
++        },
++        "pt-BR": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Continuar jogando"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Продолжить игру"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "继续游戏"
++          }
++        }
++      }
++    },
++    "Continue": {
++      "localizations": {
++        "de": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Weiter"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Continuar"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "계속"
++          }
++        },
++        "pt-BR": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Continuar"
++          }
++        },
++        "ru": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Продолжить"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "继续"
++          }
++        }
++      }
+     }
+   },
+   "version": "1.0"
+diff --git a/app/Madeira/MadeiraApp.swift b/app/Madeira/MadeiraApp.swift
+index 1043715..13c9827 100644
+--- a/app/Madeira/MadeiraApp.swift
++++ b/app/Madeira/MadeiraApp.swift
+@@ -31,6 +31,7 @@ struct MadeiraApp: App {
+     var body: some Scene {
+         WindowGroup {
+             ContentView()
++                .preferredColorScheme(.dark)   // F4 Mango Port: the brand is a night theme (MangoTheme)
+                 .background(InteractionFrameRateInstaller())   // touch frame-rate request (New library grid)
+                 .modifier(ClaimGamepadEvents())
+                 .onAppear {
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index 61ae95c..428ad4c 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -813,12 +813,13 @@ struct SteamGameCell: View {
+                     SteamGameArtwork(appID: item.id, notDownloaded: notDownloaded).aspectRatio(2.0 / 3.0, contentMode: .fit)
+                         .overlay { overlay(download) }
+                         .overlay { if notDownloaded { notDownloadedFace(.largeTitle) } }
+-                        .clipShape(RoundedRectangle(cornerRadius: 12))
++                        .clipShape(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous))
++                        .overlay(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+                         .modifier(LibraryCardArtworkPress { pressed, bounds in
+                             AmbientGlowItem(id: "steam-\(item.id)", seed: item.id, art: .steam(item.id), dimmed: notDownloaded,
+                                             pressed: pressed, bounds: bounds)
+                         })
+-                    Text(item.name).font(.subheadline.weight(.semibold)).lineLimit(2)
++                    Text(item.name).font(.system(.subheadline, design: .rounded).weight(.heavy)).lineLimit(2)
+                     pills(status, entry)
+                     if let played = steam.playtime[item.id]?.played {
+                         Text(played).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+diff --git a/tests/host/check-library-sections.py b/tests/host/check-library-sections.py
+index 5b088db..af11c9e 100644
+--- a/tests/host/check-library-sections.py
++++ b/tests/host/check-library-sections.py
+@@ -123,9 +123,10 @@ require('static var enabled: Bool { MadeiraConfig.flag("MADEIRA_LIBRARY_TABS") }
+         'store tabs: only the shown sections, none with fewer than two, MADEIRA_LIBRARY_TABS=0 turns them off')
+ require('guard let tab = LibraryStoreTab(rawValue: stored), tabs.contains(tab) else { return .all }' in tabs,
+         'store tabs: a tab that is no longer offered shows All')
+-require('.pickerStyle(.segmented)' in bar and 'ViewThatFits(in: .horizontal) {' in bar
+-        and 'ScrollView(.horizontal, showsIndicators: false) {' in bar,
+-        'store tabs: the system segmented control, capsules that scroll when it does not fit')
++# F4 Mango Port: the tabs are always mango pills that scroll (MangoTheme.pillGradient for the picked one).
++require('ScrollView(.horizontal, showsIndicators: false)' in bar and 'MangoTheme.pillGradient' in bar
++        and '.accessibilityAddTraits(on ? .isSelected : [])' in bar,
++        'store tabs: mango pills that scroll, the picked one marked selected')
+ require('group == "platform" ? LibraryStoreTab.available(' in view
+         and page.index('LibraryStoreTabBar(tabs: storeTabs, selection: $storeTab)') < page.index('desktopButton'),
+         'store tabs: at the top of the page, with Group by Platform only')
