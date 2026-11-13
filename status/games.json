@@ -1,40 +1,40 @@
 {
-  "games": [
+  "games" : [
     {
-      "appID": 42700,
-      "name": "Call of Duty: Black Ops",
-      "note": "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira.",
-      "status": "notYet",
-      "updated": "2026-11-13"
+      "appID" : 42700,
+      "name" : "Call of Duty: Black Ops",
+      "note" : "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira.",
+      "status" : "notYet",
+      "updated" : "2026-11-13"
     },
     {
-      "appID": 377160,
-      "name": "Fallout 4",
-      "note": "Tested in Mango Port: plays well. Busy open-world areas can slow down.",
-      "status": "works",
-      "updated": "2026-11-12"
+      "appID" : 377160,
+      "name" : "Fallout 4",
+      "note" : "Not Fully Tested Yet",
+      "status" : "issues",
+      "updated" : "2026-11-13"
     },
     {
-      "appID": 5155360,
-      "name": "Hood Warfare 2",
-      "note": "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
-      "status": "cantRun",
-      "updated": "2026-11-12"
+      "appID" : 5155360,
+      "name" : "Hood Warfare 2",
+      "note" : "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
+      "status" : "cantRun",
+      "updated" : "2026-11-12"
     },
     {
-      "appID": 1205970,
-      "name": "MX vs ATV Legends",
-      "note": "Tested in Mango Port: plays, with some issues.",
-      "status": "issues",
-      "updated": "2026-11-13"
+      "appID" : 1205970,
+      "name" : "MX vs ATV Legends",
+      "note" : "Tested in Mango Port: plays, with some issues.",
+      "status" : "issues",
+      "updated" : "2026-11-13"
     },
     {
-      "appID": 489830,
-      "name": "The Elder Scrolls V: Skyrim Special Edition",
-      "note": "Tested in Mango Port: plays well.",
-      "status": "works",
-      "updated": "2026-11-12"
+      "appID" : 489830,
+      "name" : "The Elder Scrolls V: Skyrim Special Edition",
+      "note" : "Tested in Mango Port: plays well.",
+      "status" : "works",
+      "updated" : "2026-11-12"
     }
   ],
-  "version": 1
+  "version" : 1
 }
