@@ -35,4 +35,12 @@ Edit `status/games.json` on GitHub. Each game:
 ```
 
 `status` is `works`, `issues`, `notYet` or `cantRun`. Only `cantRun` blocks Install and Play.
+
+A game's modes that Steam sells as separate apps (Zombies, Multiplayer) go on its card, each
+with its own status; leave `modes` out when there are none:
+
+```json
+{ "appID": 202970, "name": "Call of Duty: Black Ops II", "status": "works", "note": "", "updated": "2026-11-13",
+  "modes": [ { "appID": 212910, "name": "Zombies", "status": "works", "note": "" } ] }
+```
 `scripts/check-status-list.py` (run by `scripts/test.sh` and CI) checks the file.

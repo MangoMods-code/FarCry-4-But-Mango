@@ -1,54 +1,55 @@
 {
-  "games" : [
+  "games": [
     {
-      "appID" : 42700,
-      "name" : "Call of Duty: Black Ops",
-      "note" : "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira.",
-      "status" : "notYet",
-      "updated" : "2026-11-13"
+      "appID": 42700,
+      "modes": [
+        {
+          "appID": 42710,
+          "name": "Multiplayer",
+          "note": "Same as Base Black Ops Issue",
+          "status": "notYet"
+        }
+      ],
+      "name": "Call of Duty: Black Ops",
+      "note": "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira.",
+      "status": "notYet",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 42710,
-      "name" : "Call of Duty: Black Ops - Multiplayer",
-      "note" : "Same as Base Black Ops Issue",
-      "status" : "notYet",
-      "updated" : "2026-11-13"
+      "appID": 202970,
+      "name": "Call of Duty: Black Ops II",
+      "note": "Tested on mango port: Full campaign not tested.",
+      "status": "works",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 202970,
-      "name" : "Call of Duty: Black Ops II",
-      "note" : "Tested on mango port: Full campaign not tested.",
-      "status" : "works",
-      "updated" : "2026-11-13"
+      "appID": 377160,
+      "name": "Fallout 4",
+      "note": "Tested in Mango Port: plays well. Busy open-world areas can slow down.",
+      "status": "works",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 377160,
-      "name" : "Fallout 4",
-      "note" : "Tested in Mango Port: plays well. Busy open-world areas can slow down.",
-      "status" : "works",
-      "updated" : "2026-11-13"
+      "appID": 5155360,
+      "name": "Hood Warfare 2",
+      "note": "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
+      "status": "cantRun",
+      "updated": "2026-11-12"
     },
     {
-      "appID" : 5155360,
-      "name" : "Hood Warfare 2",
-      "note" : "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
-      "status" : "cantRun",
-      "updated" : "2026-11-12"
+      "appID": 1205970,
+      "name": "MX vs ATV Legends",
+      "note": "Tested on an iPhone 17 pro max, I could barely run it. I promise you won’t be able to get it to a playable state.",
+      "status": "issues",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 1205970,
-      "name" : "MX vs ATV Legends",
-      "note" : "Tested on an iPhone 17 pro max, I could barely run it. I promise you won’t be able to get it to a playable state.",
-      "status" : "issues",
-      "updated" : "2026-11-13"
-    },
-    {
-      "appID" : 489830,
-      "name" : "The Elder Scrolls V: Skyrim Special Edition",
-      "note" : "Tested in Mango Port: plays well.",
-      "status" : "works",
-      "updated" : "2026-11-12"
+      "appID": 489830,
+      "name": "The Elder Scrolls V: Skyrim Special Edition",
+      "note": "Tested in Mango Port: plays well.",
+      "status": "works",
+      "updated": "2026-11-12"
     }
   ],
-  "version" : 1
+  "version": 1
 }

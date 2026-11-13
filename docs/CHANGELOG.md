@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.10.0
+Game modes as add-ons, and cards that open from anywhere.
+
+- Games whose modes are separate Steam apps (Black Ops II's **Zombies** and **Multiplayer**, Black Ops, Modern Warfare 2 and 3 Multiplayer) now show as one game. Their modes are listed under **Add-ons** on the game's page and download sheet: switch one on to download it, off to remove it, and tap **Open** to play it
+- A mode installed into the same folder as its main game can't be removed on its own (that would delete the main game too); the app tells you instead
+- Game status: a game's card can now list its modes, each with its own status and note. Owners add them from the game's edit sheet under **Modes**
+- Fixed: tapping a game's artwork on the main screen and in the Steam library didn't open it; the whole card opens it now
+- Fixed: the Live Activity while pairing said "Pairing with Madeira"; it now says **Pairing with Mango Port**
+
 ## v0.9.2
 Game status keeps your changes.
 

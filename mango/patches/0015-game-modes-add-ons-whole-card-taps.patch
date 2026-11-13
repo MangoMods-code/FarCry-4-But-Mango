@@ -1,0 +1,385 @@
+diff --git a/app/Madeira/JITPairing.swift b/app/Madeira/JITPairing.swift
+index a0b3b27..6c369f6 100644
+--- a/app/Madeira/JITPairing.swift
++++ b/app/Madeira/JITPairing.swift
+@@ -260,7 +260,7 @@ import UserNotifications
+             guard ok else { log("register refused"); backgroundLimited = true; return }
+             registered = identifier
+         }
+-        let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: "Pairing with Madeira",
++        let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: "Pairing with \(Self.hostName)",
+                                                        subtitle: "Settings › Privacy & Security › Developer Mode")
+         request.strategy = .fail
+         do {
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 9b023a7..a44d2e0 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -3866,6 +3866,7 @@ struct LibraryView: View {
+                     }.padding(4)
+                 }
+             }.foregroundStyle(.primary)
++                .contentShape(Rectangle())   // Mango Port: the whole card, artwork included, opens the game
+         }.libraryCardButtonStyle(grid: !list)
+             .overlay(RoundedRectangle(cornerRadius: 16).stroke(focused == entry.id && controller.connected ? Color.accentColor : .clear, lineWidth: 2))
+             .id(entry.id)
+@@ -3883,6 +3884,13 @@ private struct LibrarySheets: ViewModifier {
+     @ObservedObject var jit: JITCoordinator
+     func body(content: Content) -> some View {
+         content
++            // Mango Port: an add-on's Open on its main game's page shows the add-on's page instead.
++            .onReceive(MangoAddOnRouter.shared.$open) { entry in
++                guard let entry else { return }
++                MangoAddOnRouter.shared.open = nil
++                selected = nil
++                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { selected = entry }
++            }
+             .sheet(isPresented: $browser) {
+                 NavigationStack { ExecutableBrowser(folder: LibraryModel.drive) { entry in
+                     // madeira-bcd: the page shows the entry as stored, with its recommended settings.
+@@ -4553,6 +4561,10 @@ struct LibraryDetail: View {
+                 if let appID = entry.steamAppID, let download = SteamOwnedLibrary.shared.downloads[appID] {
+                     Section { SteamDownloadStatus(download: download) }
+                 }
++                // Mango Port: the game's modes that are Steam apps of their own (Zombies, Multiplayer).
++                if let appID = entry.steamAppID, MangoGameFamily.modes[appID] != nil {
++                    MangoAddOnsSection(appID: appID, opens: true)
++                }
+                 if let appName = entry.epicAppName {
+                     EpicEntrySection(entry: $entry) { leaving = true; dismiss() }
+                     EpicCloudSection(appName: appName)
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index 20c2893..c14897c 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -73,7 +73,7 @@ enum SteamGamesRules {
+     /// name), filtered by the library's search text. A game Steam installed
+     /// but the account does not list (or that is listed before the library
+     /// loaded) keeps the name of its install record.
+-    static func items(installed: [DockGame], owned: [SteamOwnedGame], search: String) -> [Item] {
++    static func items(installed: [DockGame], owned: [SteamOwnedGame], search: String, mergeModes: Bool = true) -> [Item] {
+         var byID: [Int: Item] = [:]
+         for game in owned { byID[game.id] = Item(id: game.id, name: game.name, installed: nil, owned: game) }
+         for game in installed {
+@@ -81,6 +81,13 @@ enum SteamGamesRules {
+             else { byID[game.id] = Item(id: game.id, name: game.name, installed: game, owned: nil) }
+         }
+         let text = search.trimmingCharacters(in: .whitespaces)
++        // Mango Port: a game's modes that Steam sells as apps of their own (Black Ops II's Zombies
++        // and Multiplayer) are its add-ons, not cards of their own (MangoGameFamily).
++        if mergeModes && text.isEmpty {
++            for id in Array(byID.keys) where MangoGameFamily.hidesCard(id, mode: byID[id], parent: MangoGameFamily.parentOf[id].flatMap({ byID[$0] })) {
++                byID[id] = nil
++            }
++        }
+         let all = byID.values.filter { text.isEmpty || $0.name.localizedCaseInsensitiveContains(text) }
+         return all.sorted {
+             let a = $0.installed != nil, b = $1.installed != nil
+@@ -833,6 +840,7 @@ struct SteamGameCell: View {
+             }
+         }
+         .foregroundStyle(.primary)
++        .contentShape(Rectangle())   // Mango Port: the whole card, artwork included, opens the game
+         .accessibilityElement(children: .combine)
+         // Read once per install folder, build and picked program, and again when Steam's
+         // launch configuration arrives (LibraryModel.refreshSteamMetadata).
+@@ -1170,7 +1178,7 @@ struct SteamGameSheet: View {
+ 
+     var body: some View {
+         let owned = SteamOwnedLibrary.enabled ? steam.owned : []
+-        let item = SteamGamesRules.items(installed: games.games, owned: owned, search: "").first { $0.id == appID }
++        let item = SteamGamesRules.items(installed: games.games, owned: owned, search: "", mergeModes: false).first { $0.id == appID }
+         NavigationStack {
+             Form {
+                 if let item {
+@@ -1232,6 +1240,7 @@ struct SteamGameSheet: View {
+                         Text(SteamGameSheet.downloadNote)
+                             .font(.footnote).foregroundStyle(.secondary)
+                     }
++                    if MangoGameFamily.modes[appID] != nil { MangoAddOnsSection(appID: appID, opens: false) }   // Mango Port
+                     if item.installed == nil, SteamOwnedLibrary.dlcEnabled, let dlc = steam.game(appID)?.dlc, !dlc.isEmpty {
+                         Section {
+                             SteamDLCRows(appID: appID)
+@@ -1830,8 +1839,16 @@ enum MangoCompat {
+     static func entry(_ appID: Int?) -> Entry? {
+         guard let appID else { return nil }
+         if let online = MangoStatusStore.shared.remote {
+-            guard let game = online.first(where: { $0.appID == appID }), let status = Status(rawValue: game.status) else { return nil }
+-            return Entry(status: status, note: game.note)
++            if let game = online.first(where: { $0.appID == appID }) {
++                return Status(rawValue: game.status).map { Entry(status: $0, note: game.note) }
++            }
++            // A mode listed on its main game's card (Black Ops II's Zombies).
++            for game in online {
++                if let mode = game.modes?.first(where: { $0.appID == appID }) {
++                    return Status(rawValue: mode.status).map { Entry(status: $0, note: mode.note) }
++                }
++            }
++            return nil
+         }
+         return games[appID]
+     }
+@@ -1925,6 +1942,16 @@ final class MangoStatusStore: ObservableObject {
+         var status: String
+         var note: String
+         var updated: String
++        /// Mango Port: the game's modes that are Steam apps of their own (Zombies, Multiplayer), each
++        /// with its own status. Optional, so lists written before modes existed still read.
++        var modes: [Mode]? = nil
++        var id: Int { appID }
++    }
++    struct Mode: Codable, Identifiable, Equatable {
++        var appID: Int
++        var name: String
++        var status: String
++        var note: String
+         var id: Int { appID }
+     }
+     private struct File: Codable {
+@@ -2100,7 +2127,9 @@ struct MangoStatusPage: View {
+     private var shown: [MangoStatusStore.Game] {
+         let all = store.remote ?? MangoCompat.builtInList
+         let query = search.trimmingCharacters(in: .whitespaces)
+-        return query.isEmpty ? all : all.filter { $0.name.localizedCaseInsensitiveContains(query) }
++        return query.isEmpty ? all : all.filter { game in
++            game.name.localizedCaseInsensitiveContains(query) || (game.modes ?? []).contains { $0.name.localizedCaseInsensitiveContains(query) }
++        }
+     }
+ 
+     var body: some View {
+@@ -2160,6 +2189,17 @@ struct MangoStatusPage: View {
+             VStack(alignment: .leading, spacing: 3) {
+                 Text(verbatim: game.name).font(.system(.body, design: .rounded).weight(.heavy))
+                 if !game.note.isEmpty { Text(verbatim: game.note).font(.footnote).foregroundStyle(.secondary) }
++                // Mango Port: the game's modes, each with its own status, on the same card.
++                ForEach(game.modes ?? []) { mode in
++                    VStack(alignment: .leading, spacing: 2) {
++                        HStack(spacing: 6) {
++                            Image(systemName: "arrow.turn.down.right").font(.caption2.weight(.bold)).foregroundStyle(.tertiary)
++                            Text(verbatim: mode.name).font(.system(.caption, design: .rounded).weight(.heavy))
++                            if let status = MangoCompat.Status(rawValue: mode.status) { MangoCompatLabel(status: status) }
++                        }
++                        if !mode.note.isEmpty { Text(verbatim: mode.note).font(.caption2).foregroundStyle(.secondary).padding(.leading, 18) }
++                    }
++                }
+                 if !game.updated.isEmpty { Text(verbatim: L("Tested") + " " + game.updated).font(.caption2).foregroundStyle(.tertiary) }
+             }
+         }
+@@ -2246,6 +2286,16 @@ struct MangoStatusEditor: View {
+     @Environment(\.dismiss) private var dismiss
+     @ObservedObject private var steamGames = SteamGamesModel.shared
+     @State private var appIDText = ""
++    /// The game's modes while they are edited (MangoStatusStore.Mode), written back on Save.
++    @State private var modes: [ModeDraft] = []
++    @State private var modesRead = false
++    struct ModeDraft: Identifiable {
++        let id = UUID()
++        var appIDText: String
++        var name: String
++        var status: String
++        var note: String
++    }
+ 
+     var body: some View {
+         NavigationStack {
+@@ -2282,15 +2332,199 @@ struct MangoStatusEditor: View {
+                 Section {
+                     TextField(L("What works, and what doesn't"), text: $game.note, axis: .vertical).lineLimit(3...8)
+                 } header: { Text(verbatim: L("Note")) }
++                modesSection
++            }
++            .onAppear {
++                guard !modesRead else { return }
++                modesRead = true
++                modes = (game.modes ?? []).map { ModeDraft(appIDText: String($0.appID), name: $0.name, status: $0.status, note: $0.note) }
+             }
+             .navigationTitle(isNew ? L("Add a game") : L("Edit status")).navigationBarTitleDisplayMode(.inline)
+             .toolbar {
+                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
+                 ToolbarItem(placement: .confirmationAction) {
+-                    Button(L("Save")) { save(game); dismiss() }
++                    Button(L("Save")) { save(withModes()); dismiss() }
+                         .disabled(game.appID <= 0 || game.name.trimmingCharacters(in: .whitespaces).isEmpty)
+                 }
+             }
+         }
+     }
++
++    /// Mango Port: Zombies, Multiplayer and other modes Steam sells as apps of their own, kept on
++    /// this game's card with a status each. The known ones are one tap away (MangoGameFamily).
++    @ViewBuilder private var modesSection: some View {
++        let taken = Set(modes.compactMap { Int($0.appIDText) })
++        let known = (MangoGameFamily.modes[game.appID] ?? []).filter { !taken.contains($0.appID) }
++        Section {
++            ForEach($modes) { $mode in
++                VStack(alignment: .leading, spacing: 8) {
++                    HStack {
++                        TextField(L("Mode name"), text: $mode.name).font(.body.weight(.semibold))
++                        Picker(L("Status"), selection: $mode.status) {
++                            ForEach(MangoCompat.Status.allCases, id: \.self) { status in
++                                MangoCompatLabel(status: status).tag(status.rawValue)
++                            }
++                        }
++                        .pickerStyle(.menu).labelsHidden()
++                    }
++                    TextField(L("Steam App ID"), text: $mode.appIDText).keyboardType(.numberPad).font(.caption.monospaced())
++                    TextField(L("What works, and what doesn't"), text: $mode.note, axis: .vertical).font(.footnote).lineLimit(1...4)
++                }
++                .padding(.vertical, 2)
++            }
++            .onDelete { modes.remove(atOffsets: $0) }
++            Menu {
++                ForEach(known, id: \.appID) { mode in
++                    Button(mode.name) { addMode(appID: String(mode.appID), name: mode.name) }
++                }
++                Button(L("Another mode by App ID")) { addMode(appID: "", name: "") }
++            } label: { Label(L("Add a mode"), systemImage: "plus.circle") }
++        } header: {
++            Text(verbatim: L("Modes"))
++        } footer: {
++            Text(verbatim: L("Zombies, Multiplayer and other modes that Steam lists as separate apps. They show on this game's card with their own status. Swipe a mode to remove it."))
++        }
++    }
++
++    private func addMode(appID: String, name: String) {
++        modes.append(ModeDraft(appIDText: appID, name: name, status: game.status, note: ""))
++    }
++
++    /// The game with its edited modes: ones without a name or App ID are left out, and so are
++    /// repeats and the game's own App ID.
++    private func withModes() -> MangoStatusStore.Game {
++        var game = game
++        var seen: Set<Int> = [game.appID]
++        var kept: [MangoStatusStore.Mode] = []
++        for draft in modes {
++            let name = draft.name.trimmingCharacters(in: .whitespaces)
++            guard let id = Int(draft.appIDText.filter(\.isNumber)), id > 0, !name.isEmpty, seen.insert(id).inserted else { continue }
++            kept.append(MangoStatusStore.Mode(appID: id, name: name, status: draft.status, note: draft.note.trimmingCharacters(in: .whitespacesAndNewlines)))
++        }
++        game.modes = kept.isEmpty ? nil : kept
++        return game
++    }
++}
++
++// MARK: - Mango Port: game modes as add-ons
++
++/// Games whose modes Steam sells as apps of their own, by the main game's App ID. In the
++/// library a mode is an add-on of its main game (SteamGamesRules.items) instead of a card of
++/// its own; the main game's page and download sheet list it with a switch (MangoAddOnsSection).
++enum MangoGameFamily {
++    struct Mode: Hashable { let appID: Int; let name: String }
++    static let modes: [Int: [Mode]] = [
++        202970: [Mode(appID: 212910, name: "Zombies"), Mode(appID: 202990, name: "Multiplayer")],   // Call of Duty: Black Ops II
++        42700: [Mode(appID: 42710, name: "Multiplayer")],     // Call of Duty: Black Ops
++        10180: [Mode(appID: 10190, name: "Multiplayer")],     // Call of Duty: Modern Warfare 2 (2009)
++        115300: [Mode(appID: 42690, name: "Multiplayer")],    // Call of Duty: Modern Warfare 3 (2011)
++    ]
++    static let parentOf: [Int: Int] = {
++        var map: [Int: Int] = [:]
++        for (parent, list) in modes { for mode in list { map[mode.appID] = parent } }
++        return map
++    }()
++    /// A mode's card is left out when its main game is in the library too, unless the mode is
++    /// installed and its main game is not (then the mode's card is the only way to play it).
++    static func hidesCard(_ appID: Int, mode: SteamGamesRules.Item?, parent: SteamGamesRules.Item?) -> Bool {
++        guard parentOf[appID] != nil, let mode, let parent else { return false }
++        return mode.installed == nil || parent.installed != nil
++    }
++}
++
++/// Opens a mode's Game details page from its main game's page: the library swaps the page it
++/// shows (LibrarySheets).
++@MainActor final class MangoAddOnRouter: ObservableObject {
++    static let shared = MangoAddOnRouter()
++    @Published var open: LibraryEntry?
++}
++
++/// A game's modes, each with a switch: on downloads it (with the game's Steam download queue),
++/// off removes it. A mode that shares its install folder with another installed app (Black Ops
++/// II's modes install into the main game's folder) is not deleted: removing its folder would
++/// remove the main game too.
++struct MangoAddOnsSection: View {
++    let appID: Int
++    /// The Game details page shows Open for an installed mode; the download sheet does not.
++    var opens: Bool
++    @ObservedObject private var steam = SteamOwnedLibrary.shared
++    @ObservedObject private var games = SteamGamesModel.shared
++    @State private var removing: DockGame?
++    @State private var shared: MangoGameFamily.Mode?
++
++    var body: some View {
++        let list = MangoGameFamily.modes[appID] ?? []
++        Section {
++            ForEach(list, id: \.appID) { mode in row(mode) }
++        } header: {
++            Text("Add-ons")
++        } footer: {
++            Text("These modes are separate apps on Steam. Switch one on to download it, or off to remove it.")
++        }
++        .confirmationDialog(removing.map { "Remove \($0.name)?" } ?? "", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
++                            titleVisibility: .visible) {
++            Button("Remove", role: .destructive) { if let game = removing { steam.uninstall(game) }; removing = nil }
++        } message: { Text("Its files are deleted. You can download it again any time.") }
++        .alert("This mode can't be removed on its own", isPresented: Binding(get: { shared != nil }, set: { if !$0 { shared = nil } })) {
++            Button("OK", role: .cancel) { shared = nil }
++        } message: {
++            Text("\(shared?.name ?? "This mode") is installed in the same folder as the main game, so deleting it would delete the main game too. Uninstall the whole game from its Steam page to free the space.")
++        }
++    }
++
++    @ViewBuilder private func row(_ mode: MangoGameFamily.Mode) -> some View {
++        let installed = games.games.first { $0.id == mode.appID }
++        let download = steam.downloads[mode.appID]
++        let owned = steam.game(mode.appID) != nil
++        let downloading: Bool = {
++            guard let download else { return false }
++            switch download.state { case .active, .queued: return true; case .paused, .failed: return false }
++        }()
++        let on = installed?.installed == true || downloading
++        VStack(alignment: .leading, spacing: 6) {
++            Toggle(isOn: Binding(get: { on }, set: { switchTo($0, mode, installed: installed, downloading: downloading) })) {
++                VStack(alignment: .leading, spacing: 2) {
++                    HStack(spacing: 6) {
++                        Text(mode.name).font(.system(.body, design: .rounded).weight(.heavy))
++                        if let tested = MangoCompat.entry(mode.appID) { MangoCompatLabel(status: tested.status) }
++                    }
++                    Text(caption(installed: installed, download: download, owned: owned)).font(.caption).foregroundStyle(.secondary)
++                }
++            }
++            .tint(MangoTheme.mango)
++            .disabled(!owned && installed == nil && download == nil)
++            if let download { SteamDownloadStatus(download: download) }
++            if opens, let installed, installed.installed, download == nil {
++                Button {
++                    MangoAddOnRouter.shared.open = LibraryModel.shared.steamEntry(installed, title: steam.game(mode.appID)?.name ?? installed.name)
++                } label: { Label("Open \(mode.name)", systemImage: "play.circle.fill") }
++                    .font(.subheadline.weight(.semibold))
++            }
++        }
++        .padding(.vertical, 2)
++    }
++
++    private func caption(installed: DockGame?, download: SteamOwnedLibrary.Download?, owned: Bool) -> String {
++        if let download {
++            switch download.state {
++            case .active: return L("Downloading")
++            case .queued: return L("Waiting to download")
++            case .paused: return L("Paused — switch on to resume")
++            case .failed: return L("Download stopped — switch on to try again")
++            }
++        }
++        if let installed { return installed.installed ? L("Downloaded") : L("Partly downloaded — switch on to finish") }
++        return owned ? L("Not downloaded") : L("Not in your Steam library")
++    }
++
++    private func switchTo(_ on: Bool, _ mode: MangoGameFamily.Mode, installed: DockGame?, downloading: Bool) {
++        UIImpactFeedbackGenerator(style: .light).impactOccurred()
++        if on { steam.install(mode.appID); return }
++        if downloading { steam.pause(mode.appID); return }
++        guard let installed else { return }
++        let sharesFolder = games.games.contains {
++            $0.id != installed.id && $0.library == installed.library && $0.installDir.caseInsensitiveCompare(installed.installDir) == .orderedSame
++        }
++        if sharesFolder { shared = mode } else { removing = installed }
++    }
+ }
