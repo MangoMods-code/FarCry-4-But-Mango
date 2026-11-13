@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.2
+A smoother top bar.
+
+- Fixed the title smearing into a glass bubble when you open or leave a page in Settings or the library
+- The bolt beside the title still enables JIT with a tap
+
 ## v0.6.1
 One-tap JIT.
 

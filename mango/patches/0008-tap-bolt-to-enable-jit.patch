@@ -1,5 +1,5 @@
 diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
-index e763e5a..d51582c 100644
+index e763e5a..62a399f 100644
 --- a/app/Madeira/Library.swift
 +++ b/app/Madeira/Library.swift
 @@ -2058,11 +2058,13 @@ enum LibraryRendererBadge {
@@ -26,22 +26,25 @@ index e763e5a..d51582c 100644
      @ObservedObject private var alignment = LibraryHeaderAlignment.shared
      @ObservedObject private var jitState = LibraryJITState.shared
      var body: some View {
-@@ -2083,8 +2086,13 @@ struct LibraryTitleText: View {
+@@ -2083,8 +2086,17 @@ struct LibraryTitleText: View {
                  .accessibilityElement(children: .ignore)
                  .accessibilityLabel(LibraryHeaderAlignment.title + ", powered by Madeira")
                  .accessibilityAddTraits(.isHeader)
--            MangoJITPill(on: jit)
 +            // Mango Port: a tap on the grey bolt enables JIT from the library, the way
 +            // Settings' Enable JIT button does; once it is green there is nothing to do.
-+            Button(action: enableJIT) { MangoJITPill(on: jit) }
-+                .buttonStyle(.plain)
-+                .disabled(jit)
++            // A tap gesture, not a Button: a button made this toolbar item interactive, and
++            // iOS 26 then gave the whole title a Liquid Glass platter that smeared into the
++            // back button on every push and pop (v0.6.1).
+             MangoJITPill(on: jit)
++                .contentShape(Circle())
++                .onTapGesture { if !jit { enableJIT() } }
                  .accessibilityLabel(jit ? L("JIT enabled") : L("JIT not enabled"))
-+                .accessibilityHint(jit ? "" : L("Enables JIT"))
++                .accessibilityAddTraits(jit ? [] : .isButton)
++                .accessibilityAction { if !jit { enableJIT() } }
          }
          .font(.system(.largeTitle, design: .rounded).weight(.black))
          .fixedSize()
-@@ -3399,7 +3407,7 @@ struct LibraryView: View {
+@@ -3399,7 +3411,7 @@ struct LibraryView: View {
          // which iOS 26 draws as a Liquid Glass morph between the two.
          .navigationTitle("")
          .toolbar {
