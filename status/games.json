@@ -10,8 +10,8 @@
     {
       "appID" : 377160,
       "name" : "Fallout 4",
-      "note" : "Not Fully Tested Yet",
-      "status" : "issues",
+      "note" : "Tested in Mango Port: plays well. Busy open-world areas can slow down.",
+      "status" : "works",
       "updated" : "2026-11-13"
     },
     {
