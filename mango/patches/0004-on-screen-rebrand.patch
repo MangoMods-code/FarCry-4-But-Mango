@@ -1,5 +1,5 @@
 diff --git a/app/Madeira/AppleSignIn.swift b/app/Madeira/AppleSignIn.swift
-index 65a5d3f..af79f60 100644
+index 65a5d3f1..af79f604 100644
 --- a/app/Madeira/AppleSignIn.swift
 +++ b/app/Madeira/AppleSignIn.swift
 @@ -203,15 +203,15 @@ private let secondFactorCallback: MadeiraAppleTwoFactorCallback = { context, req
@@ -25898,7 +25898,7 @@ zImL$#=0DTEv}|Y8qo=iL$C*k#X@0sVo?6AdD^w!Rym-N%yP7A!jv57{U=)l31o$BN
 ZhkyS8-vdIK3nqd@Jzf1=);T3K0RUmA^)>(i
 
 diff --git a/app/Madeira/BackgroundRun.swift b/app/Madeira/BackgroundRun.swift
-index 1d96730..223d324 100644
+index 1d96730b..223d324e 100644
 --- a/app/Madeira/BackgroundRun.swift
 +++ b/app/Madeira/BackgroundRun.swift
 @@ -350,7 +350,7 @@ import UserNotifications
@@ -25911,7 +25911,7 @@ index 1d96730..223d324 100644
                                                                           content: content, trigger: nil))
          }
 diff --git a/app/Madeira/ConfigCatalog.swift b/app/Madeira/ConfigCatalog.swift
-index 8d67292..f5633ef 100644
+index 8d67292e..f5633efb 100644
 --- a/app/Madeira/ConfigCatalog.swift
 +++ b/app/Madeira/ConfigCatalog.swift
 @@ -72,10 +72,10 @@ struct AllSettingsView: View {
@@ -25946,7 +25946,7 @@ index 8d67292..f5633ef 100644
          }
          .onChange(of: refresh) { _, _ in values = MadeiraConfig.all() }
 diff --git a/app/Madeira/ContentView.swift b/app/Madeira/ContentView.swift
-index 0c85315..a48b9b5 100644
+index 0c853153..a48b9b54 100644
 --- a/app/Madeira/ContentView.swift
 +++ b/app/Madeira/ContentView.swift
 @@ -1330,7 +1330,7 @@ struct ContentView: View {
@@ -26077,7 +26077,7 @@ index 0c85315..a48b9b5 100644
                          .foregroundColor(.secondary)
                  }
 diff --git a/app/Madeira/DockInstallers.swift b/app/Madeira/DockInstallers.swift
-index b88d4fc..c480351 100644
+index b88d4fc5..c4803516 100644
 --- a/app/Madeira/DockInstallers.swift
 +++ b/app/Madeira/DockInstallers.swift
 @@ -567,7 +567,7 @@ enum DockInstallScripts {
@@ -26131,7 +26131,7 @@ index b88d4fc..c480351 100644
      }
  }
 diff --git a/app/Madeira/DockReset.swift b/app/Madeira/DockReset.swift
-index 7dfea46..f69f031 100644
+index 7dfea46b..f69f031c 100644
 --- a/app/Madeira/DockReset.swift
 +++ b/app/Madeira/DockReset.swift
 @@ -565,7 +565,7 @@ enum DockReset {
@@ -26144,7 +26144,7 @@ index 7dfea46..f69f031 100644
          list += summary.moved.map { "  " + $0 }
          list += ["", "Uninstall entries removed from system.reg:"] + summary.entries.map { "  " + $0 }
 diff --git a/app/Madeira/DockStartScreen.swift b/app/Madeira/DockStartScreen.swift
-index 9bd42f2..20ec446 100644
+index 9bd42f2d..20ec446f 100644
 --- a/app/Madeira/DockStartScreen.swift
 +++ b/app/Madeira/DockStartScreen.swift
 @@ -247,7 +247,7 @@ enum DockStartStatus {
@@ -26166,7 +26166,7 @@ index 9bd42f2..20ec446 100644
  }
  
 diff --git a/app/Madeira/EAGames.swift b/app/Madeira/EAGames.swift
-index 1c83f45..4ffe35d 100644
+index 1c83f45b..4ffe35d2 100644
 --- a/app/Madeira/EAGames.swift
 +++ b/app/Madeira/EAGames.swift
 @@ -371,7 +371,7 @@ struct EAGameSheet: View {
@@ -26197,7 +26197,7 @@ index 1c83f45..4ffe35d 100644
          .onAppear { ea.start() }
          .confirmationDialog("Sign out of EA?", isPresented: $confirmSignOut, titleVisibility: .visible) {
 diff --git a/app/Madeira/EntitlementChecker.swift b/app/Madeira/EntitlementChecker.swift
-index dae9fdc..e5f6c43 100644
+index dae9fdc9..e5f6c435 100644
 --- a/app/Madeira/EntitlementChecker.swift
 +++ b/app/Madeira/EntitlementChecker.swift
 @@ -75,8 +75,8 @@ struct SigningStatus {
@@ -26212,7 +26212,7 @@ index dae9fdc..e5f6c43 100644
  }
  
 diff --git a/app/Madeira/EpicCloud.swift b/app/Madeira/EpicCloud.swift
-index 647d52c..c4d79ef 100644
+index 647d52c8..c4d79ef7 100644
 --- a/app/Madeira/EpicCloud.swift
 +++ b/app/Madeira/EpicCloud.swift
 @@ -136,7 +136,7 @@ import SwiftUI
@@ -26243,7 +26243,7 @@ index 647d52c..c4d79ef 100644
                      Button("Use Epic's saves", role: .destructive) { Task { await cloud.resolve(appName, useCloud: true) } }
                      Button("Cancel", role: .cancel) {}
 diff --git a/app/Madeira/EpicGames.swift b/app/Madeira/EpicGames.swift
-index f190520..c6a659a 100644
+index f1905202..c6a659a8 100644
 --- a/app/Madeira/EpicGames.swift
 +++ b/app/Madeira/EpicGames.swift
 @@ -163,7 +163,7 @@ struct EpicSignInCard: View {
@@ -26292,7 +26292,7 @@ index f190520..c6a659a 100644
          .onAppear { epic.start() }
          .confirmationDialog("Sign out of Epic Games?", isPresented: $confirmSignOut, titleVisibility: .visible) {
 diff --git a/app/Madeira/ExternalDrives.swift b/app/Madeira/ExternalDrives.swift
-index 69f5deb..cd8b92d 100644
+index 69f5deb5..cd8b92d3 100644
 --- a/app/Madeira/ExternalDrives.swift
 +++ b/app/Madeira/ExternalDrives.swift
 @@ -228,7 +228,7 @@ final class ExternalDrives: ObservableObject {
@@ -26341,7 +26341,7 @@ index 69f5deb..cd8b92d 100644
      }
  
 diff --git a/app/Madeira/GOGGames.swift b/app/Madeira/GOGGames.swift
-index 6f4eb9f..4266d45 100644
+index 6f4eb9f8..4266d45b 100644
 --- a/app/Madeira/GOGGames.swift
 +++ b/app/Madeira/GOGGames.swift
 @@ -162,7 +162,7 @@ struct GOGSignInCard: View {
@@ -26390,7 +26390,7 @@ index 6f4eb9f..4266d45 100644
          .onAppear { gog.start() }
          .confirmationDialog("Sign out of GOG?", isPresented: $confirmSignOut, titleVisibility: .visible) {
 diff --git a/app/Madeira/GameIniFiles.swift b/app/Madeira/GameIniFiles.swift
-index 0b3a74a..25eb941 100644
+index 0b3a74aa..25eb9411 100644
 --- a/app/Madeira/GameIniFiles.swift
 +++ b/app/Madeira/GameIniFiles.swift
 @@ -249,8 +249,8 @@ enum IniSettingHelp {
@@ -26414,7 +26414,7 @@ index 0b3a74a..25eb941 100644
          "fgrassstartfadedistance": "How far away grass is drawn. Lower is faster.",
          "imingrasssize": "Grass spacing: higher means less grass and more speed.",
 diff --git a/app/Madeira/GameRecommendationsApply.swift b/app/Madeira/GameRecommendationsApply.swift
-index 82572a3..12fa3fe 100644
+index 82572a3b..12fa3fe1 100644
 --- a/app/Madeira/GameRecommendationsApply.swift
 +++ b/app/Madeira/GameRecommendationsApply.swift
 @@ -92,27 +92,27 @@ extension GameRecommendations {
@@ -26453,7 +26453,7 @@ index 82572a3..12fa3fe 100644
  
      // MARK: -
 diff --git a/app/Madeira/GameSetupShare.swift b/app/Madeira/GameSetupShare.swift
-index ef39ae5..a72ee6a 100644
+index ef39ae52..a72ee6ad 100644
 --- a/app/Madeira/GameSetupShare.swift
 +++ b/app/Madeira/GameSetupShare.swift
 @@ -161,8 +161,8 @@ struct GameSetup {
@@ -26486,7 +26486,7 @@ index ef39ae5..a72ee6a 100644
                      self.error = "This game's setup could not be saved: \(error.localizedDescription)"
                  }
 diff --git a/app/Madeira/HardwareInput.swift b/app/Madeira/HardwareInput.swift
-index 4bc102b..b0f6227 100644
+index 4bc102b3..b0f6227b 100644
 --- a/app/Madeira/HardwareInput.swift
 +++ b/app/Madeira/HardwareInput.swift
 @@ -2665,7 +2665,7 @@ struct HardwareInputSettings: View {
@@ -26499,7 +26499,7 @@ index 4bc102b..b0f6227 100644
                  .foregroundColor(.secondary)
                  .fixedSize(horizontal: false, vertical: true)
 diff --git a/app/Madeira/Info.plist b/app/Madeira/Info.plist
-index 1a1a4b0..c24e013 100644
+index 1a1a4b0e..c24e0139 100644
 --- a/app/Madeira/Info.plist
 +++ b/app/Madeira/Info.plist
 @@ -21,7 +21,7 @@
@@ -26530,7 +26530,7 @@ index 1a1a4b0..c24e013 100644
  			<string>app.madeira.setup</string>
  			<key>UTTypeTagSpecification</key>
 diff --git a/app/Madeira/ItchGames.swift b/app/Madeira/ItchGames.swift
-index 6de57db..0f0da54 100644
+index 6de57db9..0f0da546 100644
 --- a/app/Madeira/ItchGames.swift
 +++ b/app/Madeira/ItchGames.swift
 @@ -75,7 +75,7 @@ struct ItchGamesSection: View {
@@ -26590,7 +26590,7 @@ index 6de57db..0f0da54 100644
                  if let failure { Section { Text(failure).foregroundStyle(.red) } }
              }
 diff --git a/app/Madeira/ItchLibrary.swift b/app/Madeira/ItchLibrary.swift
-index 517633e..568f098 100644
+index 517633e8..568f098e 100644
 --- a/app/Madeira/ItchLibrary.swift
 +++ b/app/Madeira/ItchLibrary.swift
 @@ -61,11 +61,11 @@ enum ItchInstallError: LocalizedError {
@@ -26618,7 +26618,7 @@ index 517633e..568f098 100644
              .joined(separator: "\r\n")
      }
 diff --git a/app/Madeira/JITBuiltInHost.swift b/app/Madeira/JITBuiltInHost.swift
-index 51bf93a..9751f73 100644
+index 51bf93a4..9751f736 100644
 --- a/app/Madeira/JITBuiltInHost.swift
 +++ b/app/Madeira/JITBuiltInHost.swift
 @@ -80,25 +80,25 @@ enum MadeiraBuiltInJIT {
@@ -26685,7 +26685,7 @@ index 51bf93a..9751f73 100644
          }
          LogStore.shared.log("[jit-helper] \(operation): finished success=\(response.success ? 1 : 0)")
 diff --git a/app/Madeira/JITPairing.swift b/app/Madeira/JITPairing.swift
-index 931beea..42ff804 100644
+index 931beea3..42ff8043 100644
 --- a/app/Madeira/JITPairing.swift
 +++ b/app/Madeira/JITPairing.swift
 @@ -81,7 +81,7 @@ import UserNotifications
@@ -26755,7 +26755,7 @@ index 931beea..42ff804 100644
          }
          task.expirationHandler = {
 diff --git a/app/Madeira/JITSetup.swift b/app/Madeira/JITSetup.swift
-index 9d6179b..abcec07 100644
+index 9d6179b5..abcec075 100644
 --- a/app/Madeira/JITSetup.swift
 +++ b/app/Madeira/JITSetup.swift
 @@ -139,7 +139,7 @@ final class JITCoordinator: ObservableObject {
@@ -26863,7 +26863,7 @@ index 9d6179b..abcec07 100644
                  }
  
 diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
-index 651c0d2..09177d9 100644
+index 651c0d25..09177d99 100644
 --- a/app/Madeira/Library.swift
 +++ b/app/Madeira/Library.swift
 @@ -477,7 +477,7 @@ struct LibraryEntry: Codable, Identifiable {
@@ -27105,7 +27105,7 @@ index 651c0d2..09177d9 100644
                  }
              }.frame(maxWidth: .infinity, alignment: .leading).padding(22)
 diff --git a/app/Madeira/LibraryGridPage.swift b/app/Madeira/LibraryGridPage.swift
-index f4870b6..48db3f9 100644
+index f4870b69..48db3f9c 100644
 --- a/app/Madeira/LibraryGridPage.swift
 +++ b/app/Madeira/LibraryGridPage.swift
 @@ -264,7 +264,7 @@ struct LibraryGridPageModel: Equatable {
@@ -27127,7 +27127,7 @@ index f4870b6..48db3f9 100644
              return AnyView(GOGGamesSection(search: search, layout: layout, width: width, open: open, inGrid: true))
          case .store(.itch, _):
 diff --git a/app/Madeira/Localizable.xcstrings b/app/Madeira/Localizable.xcstrings
-index 25536ba..0fa635d 100644
+index 25536bad..0fa635d0 100644
 --- a/app/Madeira/Localizable.xcstrings
 +++ b/app/Madeira/Localizable.xcstrings
 @@ -921,18 +921,18 @@
@@ -30674,7 +30674,7 @@ index 25536ba..0fa635d 100644
          }
        }
 diff --git a/app/Madeira/MadeiraDock.swift b/app/Madeira/MadeiraDock.swift
-index a07bcb6..0420018 100644
+index a07bcb64..04200187 100644
 --- a/app/Madeira/MadeiraDock.swift
 +++ b/app/Madeira/MadeiraDock.swift
 @@ -169,7 +169,7 @@ enum MadeiraDock {
@@ -30769,7 +30769,7 @@ index a07bcb6..0420018 100644
          do {
              try fm.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: url.path)
 diff --git a/app/Madeira/MadeiraDockView.swift b/app/Madeira/MadeiraDockView.swift
-index 84faf5d..e13fc7e 100644
+index 84faf5d4..e13fc7e2 100644
 --- a/app/Madeira/MadeiraDockView.swift
 +++ b/app/Madeira/MadeiraDockView.swift
 @@ -88,7 +88,7 @@ final class MadeiraDockModel: ObservableObject {
@@ -30836,7 +30836,7 @@ index 84faf5d..e13fc7e 100644
      }
  }
 diff --git a/app/Madeira/Onboarding.swift b/app/Madeira/Onboarding.swift
-index f773044..1b1daff 100644
+index f7730447..1b1daff0 100644
 --- a/app/Madeira/Onboarding.swift
 +++ b/app/Madeira/Onboarding.swift
 @@ -322,20 +322,20 @@ struct OnboardingView: View {
@@ -31006,7 +31006,7 @@ index f773044..1b1daff 100644
      }
  }
 diff --git a/app/Madeira/SettingsPages.swift b/app/Madeira/SettingsPages.swift
-index 646eb05..bf21f70 100644
+index 646eb055..bf21f703 100644
 --- a/app/Madeira/SettingsPages.swift
 +++ b/app/Madeira/SettingsPages.swift
 @@ -144,10 +144,10 @@ struct SettingsPageView: View {
@@ -31041,7 +31041,7 @@ index 646eb05..bf21f70 100644
      }
  }
 diff --git a/app/Madeira/SigningRefresh.swift b/app/Madeira/SigningRefresh.swift
-index 70cf6cb..c26fb9f 100644
+index 70cf6cbe..c26fb9f8 100644
 --- a/app/Madeira/SigningRefresh.swift
 +++ b/app/Madeira/SigningRefresh.swift
 @@ -113,7 +113,7 @@ struct SigningProfile {
@@ -31177,7 +31177,7 @@ index 70cf6cb..c26fb9f 100644
  
      /// What the alert offers besides closing it: a sign-in when Apple turned the last one
 diff --git a/app/Madeira/SteamAchievements.swift b/app/Madeira/SteamAchievements.swift
-index 36a1371..1091234 100644
+index 36a13715..10912346 100644
 --- a/app/Madeira/SteamAchievements.swift
 +++ b/app/Madeira/SteamAchievements.swift
 @@ -435,13 +435,13 @@ struct SteamAchievementsSection: View {
@@ -31197,7 +31197,7 @@ index 36a1371..1091234 100644
          }
      }
 diff --git a/app/Madeira/SteamCloud.swift b/app/Madeira/SteamCloud.swift
-index 5a0f6b6..1927f6c 100644
+index 5a0f6b6f..1927f6ca 100644
 --- a/app/Madeira/SteamCloud.swift
 +++ b/app/Madeira/SteamCloud.swift
 @@ -319,7 +319,7 @@ enum ProfileUnification {
@@ -31210,7 +31210,7 @@ index 5a0f6b6..1927f6c 100644
      }
  
 diff --git a/app/Madeira/SteamDownloadBackground.swift b/app/Madeira/SteamDownloadBackground.swift
-index 7e6c0d5..8a3264d 100644
+index 7e6c0d5e..8a3264df 100644
 --- a/app/Madeira/SteamDownloadBackground.swift
 +++ b/app/Madeira/SteamDownloadBackground.swift
 @@ -111,7 +111,7 @@ import UserNotifications
@@ -31250,7 +31250,7 @@ index 7e6c0d5..8a3264d 100644
                  self.endGrace()
              }
 diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
-index f12840a..b7d08a9 100644
+index f12840ab..b7d08a92 100644
 --- a/app/Madeira/SteamGames.swift
 +++ b/app/Madeira/SteamGames.swift
 @@ -159,7 +159,7 @@ enum SteamGamesRules {
@@ -31369,7 +31369,7 @@ index f12840a..b7d08a9 100644
                  }
                  Toggle("Smaller JIT pool (512 MB) for this launch", isOn: $dock.compactPool)
 diff --git a/app/Madeira/SteamOwnedLibrary.swift b/app/Madeira/SteamOwnedLibrary.swift
-index 4dd6b07..58a82c6 100644
+index 4dd6b07c..58a82c6f 100644
 --- a/app/Madeira/SteamOwnedLibrary.swift
 +++ b/app/Madeira/SteamOwnedLibrary.swift
 @@ -939,7 +939,7 @@ final class SteamOwnedLibrary: ObservableObject {
@@ -31409,7 +31409,7 @@ index 4dd6b07..58a82c6 100644
                  SteamLog.event("[steam-depot] failed app=\(appID) reason=drive-missing")
                  outcome = .failed(message)
 diff --git a/app/Madeira/SteamRuntime.swift b/app/Madeira/SteamRuntime.swift
-index 4a0af30..4f12e20 100644
+index 4a0af306..4f12e200 100644
 --- a/app/Madeira/SteamRuntime.swift
 +++ b/app/Madeira/SteamRuntime.swift
 @@ -38,7 +38,7 @@ enum SteamRuntimeFiles {
@@ -31422,7 +31422,7 @@ index 4a0af30..4f12e20 100644
          }
      }
 diff --git a/app/Madeira/SteamWorkshop.swift b/app/Madeira/SteamWorkshop.swift
-index f23fbd1..0ddd086 100644
+index f23fbd13..0ddd0863 100644
 --- a/app/Madeira/SteamWorkshop.swift
 +++ b/app/Madeira/SteamWorkshop.swift
 @@ -437,7 +437,7 @@ struct SteamWorkshopSections: View {
@@ -31435,7 +31435,7 @@ index f23fbd1..0ddd086 100644
          .task(id: "\(appID) \(steam.workshopReady) \(installed)") { await model.refresh(appID) }
          .alert("Steam Workshop", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
 diff --git a/app/Madeira/StikJITHelper.swift b/app/Madeira/StikJITHelper.swift
-index 70fbc8f..910248b 100644
+index 70fbc8ff..910248b0 100644
 --- a/app/Madeira/StikJITHelper.swift
 +++ b/app/Madeira/StikJITHelper.swift
 @@ -16,13 +16,13 @@ enum StikJITHelper {
@@ -31497,7 +31497,7 @@ index 70fbc8f..910248b 100644
              return nil
          }
 diff --git a/app/Madeira/SwiftEA/EAAPI.swift b/app/Madeira/SwiftEA/EAAPI.swift
-index dd727d8..b894842 100644
+index dd727d8a..b8948427 100644
 --- a/app/Madeira/SwiftEA/EAAPI.swift
 +++ b/app/Madeira/SwiftEA/EAAPI.swift
 @@ -41,7 +41,7 @@ enum EAAPIError: LocalizedError, Equatable {
@@ -31510,7 +31510,7 @@ index dd727d8..b894842 100644
          case .license(let reason): return "EA did not give this game a licence (\(reason)). Check that your account owns it and try again."
          }
 diff --git a/app/Madeira/SwiftEA/EAFormats.swift b/app/Madeira/SwiftEA/EAFormats.swift
-index 5f8d1b6..693ee59 100644
+index 5f8d1b65..693ee594 100644
 --- a/app/Madeira/SwiftEA/EAFormats.swift
 +++ b/app/Madeira/SwiftEA/EAFormats.swift
 @@ -440,7 +440,7 @@ enum EAZipError: LocalizedError, Equatable {
@@ -31523,7 +31523,7 @@ index 5f8d1b6..693ee59 100644
          }
      }
 diff --git a/app/Madeira/SwiftEpic/EpicAPI.swift b/app/Madeira/SwiftEpic/EpicAPI.swift
-index c732fb3..fa0895a 100644
+index c732fb3b..fa0895a7 100644
 --- a/app/Madeira/SwiftEpic/EpicAPI.swift
 +++ b/app/Madeira/SwiftEpic/EpicAPI.swift
 @@ -175,7 +175,7 @@ actor EpicAPI {
@@ -31536,7 +31536,7 @@ index c732fb3..fa0895a 100644
  
      private let http: URLSession
 diff --git a/app/Madeira/SwiftEpic/EpicFormats.swift b/app/Madeira/SwiftEpic/EpicFormats.swift
-index b4ca4e4..c07c1eb 100644
+index b4ca4e42..c07c1ebf 100644
 --- a/app/Madeira/SwiftEpic/EpicFormats.swift
 +++ b/app/Madeira/SwiftEpic/EpicFormats.swift
 @@ -31,7 +31,7 @@ enum EpicFormatError: LocalizedError, Equatable {
@@ -31549,7 +31549,7 @@ index b4ca4e4..c07c1eb 100644
          }
      }
 diff --git a/app/Madeira/SwiftGOG/GOGAPI.swift b/app/Madeira/SwiftGOG/GOGAPI.swift
-index 2a63cf7..d16c14c 100644
+index 2a63cf7b..d16c14c6 100644
 --- a/app/Madeira/SwiftGOG/GOGAPI.swift
 +++ b/app/Madeira/SwiftGOG/GOGAPI.swift
 @@ -36,8 +36,8 @@ enum GOGAPIError: LocalizedError, Equatable {
@@ -31564,7 +31564,7 @@ index 2a63cf7..d16c14c 100644
          }
      }
 diff --git a/app/Madeira/SwiftGOG/GOGSetup.swift b/app/Madeira/SwiftGOG/GOGSetup.swift
-index 6f4297c..ba94f09 100644
+index 6f4297c4..ba94f090 100644
 --- a/app/Madeira/SwiftGOG/GOGSetup.swift
 +++ b/app/Madeira/SwiftGOG/GOGSetup.swift
 @@ -101,11 +101,11 @@ enum GOGSetup {
@@ -31583,7 +31583,7 @@ index 6f4297c..ba94f09 100644
                  plan.download.append(d)   // files the game uses from its folder
              } else if d.isProgram || (d.isPackage && hasMsiexec) {
 diff --git a/app/Madeira/SwiftItch/ItchAPI.swift b/app/Madeira/SwiftItch/ItchAPI.swift
-index 552860c..ad8095e 100644
+index 552860c7..ad8095e0 100644
 --- a/app/Madeira/SwiftItch/ItchAPI.swift
 +++ b/app/Madeira/SwiftItch/ItchAPI.swift
 @@ -28,7 +28,7 @@ enum ItchAPIError: LocalizedError {
@@ -31596,7 +31596,7 @@ index 552860c..ad8095e 100644
          }
      }
 diff --git a/app/Madeira/SwiftItch/ItchArchive.swift b/app/Madeira/SwiftItch/ItchArchive.swift
-index fd42711..ec14c75 100644
+index fd427118..ec14c75a 100644
 --- a/app/Madeira/SwiftItch/ItchArchive.swift
 +++ b/app/Madeira/SwiftItch/ItchArchive.swift
 @@ -23,8 +23,8 @@ enum ItchArchiveError: LocalizedError {
@@ -31611,7 +31611,7 @@ index fd42711..ec14c75 100644
      }
  
 diff --git a/app/Madeira/SwiftSteam/Content/DepotDownloader.swift b/app/Madeira/SwiftSteam/Content/DepotDownloader.swift
-index 937c3e5..e6801bc 100644
+index 937c3e5d..e6801bc3 100644
 --- a/app/Madeira/SwiftSteam/Content/DepotDownloader.swift
 +++ b/app/Madeira/SwiftSteam/Content/DepotDownloader.swift
 @@ -748,14 +748,14 @@ final class DepotDownloader {
@@ -31632,7 +31632,7 @@ index 937c3e5..e6801bc 100644
                  method: .remoteClientSendSteamBroadcastPacket,
                  body: SteamLANPeer.steamBroadcast(steamID: steamID, clientID: localID, payload: ownStatus))
 diff --git a/app/Madeira/SwiftSteam/Core/SteamError.swift b/app/Madeira/SwiftSteam/Core/SteamError.swift
-index ee45bb8..acb9f04 100644
+index ee45bb85..acb9f044 100644
 --- a/app/Madeira/SwiftSteam/Core/SteamError.swift
 +++ b/app/Madeira/SwiftSteam/Core/SteamError.swift
 @@ -119,7 +119,7 @@ enum SteamError: LocalizedError, Equatable {
@@ -31645,7 +31645,7 @@ index ee45bb8..acb9f04 100644
              return "Decryption failed: \(reason)"
          case .decompressionFailed:
 diff --git a/app/Madeira/SwiftSteam/SteamSignIn.swift b/app/Madeira/SwiftSteam/SteamSignIn.swift
-index 58ac043..38e2775 100644
+index 58ac043e..38e27753 100644
 --- a/app/Madeira/SwiftSteam/SteamSignIn.swift
 +++ b/app/Madeira/SwiftSteam/SteamSignIn.swift
 @@ -209,7 +209,7 @@ final class SteamSignInModel: ObservableObject {
@@ -31658,7 +31658,7 @@ index 58ac043..38e2775 100644
              return
          }
 diff --git a/app/Madeira/SwiftSteam/SteamSignInView.swift b/app/Madeira/SwiftSteam/SteamSignInView.swift
-index 200e7bc..4f8165f 100644
+index 200e7bce..4f8165fb 100644
 --- a/app/Madeira/SwiftSteam/SteamSignInView.swift
 +++ b/app/Madeira/SwiftSteam/SteamSignInView.swift
 @@ -25,7 +25,7 @@ struct SteamSignInView: View {
@@ -31680,7 +31680,7 @@ index 200e7bc..4f8165f 100644
                  }
              }
 diff --git a/app/Madeira/VCRedist.swift b/app/Madeira/VCRedist.swift
-index 64bbbf2..5ba81f4 100644
+index 64bbbf2d..5ba81f4c 100644
 --- a/app/Madeira/VCRedist.swift
 +++ b/app/Madeira/VCRedist.swift
 @@ -447,7 +447,7 @@ struct VCRedistSettingsSection: View {
@@ -31693,7 +31693,7 @@ index 64bbbf2..5ba81f4 100644
          .confirmationDialog("Remove the Visual C++ runtime?", isPresented: $confirmRemove, titleVisibility: .visible) {
              Button("Remove", role: .destructive) { redist.remove() }
 diff --git a/app/Madeira/WineGecko.swift b/app/Madeira/WineGecko.swift
-index 6e57bd1..09c121b 100644
+index 6e57bd1f..09c121bd 100644
 --- a/app/Madeira/WineGecko.swift
 +++ b/app/Madeira/WineGecko.swift
 @@ -216,7 +216,7 @@ struct WineGeckoSettingsSection: View {
@@ -31706,7 +31706,7 @@ index 6e57bd1..09c121b 100644
          .confirmationDialog("Remove Wine Gecko?", isPresented: $confirmRemove, titleVisibility: .visible) {
              Button("Remove", role: .destructive) { gecko.remove() }
 diff --git a/app/Madeira/WineMono.swift b/app/Madeira/WineMono.swift
-index 457e839..8eab6a1 100644
+index 457e839f..8eab6a11 100644
 --- a/app/Madeira/WineMono.swift
 +++ b/app/Madeira/WineMono.swift
 @@ -443,7 +443,7 @@ struct WineMonoSettingsSection: View {
@@ -31719,7 +31719,7 @@ index 457e839..8eab6a1 100644
          .confirmationDialog("Remove Wine Mono?", isPresented: $confirmRemove, titleVisibility: .visible) {
              Button("Remove", role: .destructive) { mono.remove() }
 diff --git a/tests/host/check-dock-installers.py b/tests/host/check-dock-installers.py
-index 6a22db4..cc54bc0 100644
+index 6a22db4a..cc54bc00 100644
 --- a/tests/host/check-dock-installers.py
 +++ b/tests/host/check-dock-installers.py
 @@ -471,7 +471,7 @@ func pe(_ url: URL, machine: UInt16) throws {
@@ -31732,7 +31732,7 @@ index 6a22db4..cc54bc0 100644
                  "MADEIRA_DOCK_INSTALL_SEPARATE (on by default): a start that runs installers runs only them")
          unsetenv("MADEIRA_DOCK_INSTALL_SERVER_SYNC")
 diff --git a/tests/host/check-dock-reset.py b/tests/host/check-dock-reset.py
-index b1b5f33..c998065 100644
+index b1b5f330..c9980659 100644
 --- a/tests/host/check-dock-reset.py
 +++ b/tests/host/check-dock-reset.py
 @@ -103,7 +103,7 @@ check(re.search(r'if DockInstallers\.installsOnly \{\s*// No host runs in this s
@@ -31745,7 +31745,7 @@ index b1b5f33..c998065 100644
        'the alert in the owner\'s words when every install succeeded; otherwise the count and the failed ones')
  check(re.search(r'if DockInstallers\.installsOnly, running, !offered, let finished = DockInstallers\.finishedAt,\s*'
 diff --git a/tests/host/check-dock-start-screen.py b/tests/host/check-dock-start-screen.py
-index 1eb46ac..6112b19 100644
+index 1eb46acd..6112b19d 100644
 --- a/tests/host/check-dock-start-screen.py
 +++ b/tests/host/check-dock-start-screen.py
 @@ -77,7 +77,7 @@ order = [row.index('L("Close session"), "stop.circle"'), row.index('L("Hide live
@@ -31792,7 +31792,7 @@ index 1eb46ac..6112b19 100644
          require(D.failure(result: 35, words: "words", launching: false) == "words", "a failure keeps the report's words")
  
 diff --git a/tests/host/check-frontend.py b/tests/host/check-frontend.py
-index 7b26368..5561f60 100644
+index 7b263687..5561f600 100644
 --- a/tests/host/check-frontend.py
 +++ b/tests/host/check-frontend.py
 @@ -335,7 +335,7 @@ expect(svcBat.servicesScript?.hasSuffix("call \"C:\\Games\\Tool\\run game.bat\"
@@ -31805,7 +31805,7 @@ index 7b26368..5561f60 100644
  // The details page's command line: upstream's "<program> <arguments>" for a direct
  // start, else what starts the program (explorer.exe, cmd.exe, the services batch).
 diff --git a/tests/host/check-game-recommendations.py b/tests/host/check-game-recommendations.py
-index 6c7afa2..70026b7 100644
+index 6c7afa2e..70026b73 100644
 --- a/tests/host/check-game-recommendations.py
 +++ b/tests/host/check-game-recommendations.py
 @@ -860,7 +860,7 @@ check(R.recommendation(windowsPath: "", steamAppID: nil) == nil && R.recommendat
@@ -31818,7 +31818,7 @@ index 6c7afa2..70026b7 100644
  
  // First sight, the player's changes, newer lists and Reset to Recommended.
 diff --git a/tests/host/check-library-sections.py b/tests/host/check-library-sections.py
-index 63ba961..ef5ef83 100644
+index 63ba9615..ef5ef834 100644
 --- a/tests/host/check-library-sections.py
 +++ b/tests/host/check-library-sections.py
 @@ -67,7 +67,7 @@ require('count: entries.count' in others and 'collapsed: SteamGamesSection.colla

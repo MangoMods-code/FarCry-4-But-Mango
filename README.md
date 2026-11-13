@@ -8,7 +8,7 @@ Mango Port runs **your own copies of Windows PC games** on a non-jailbroken iPho
 
 | Path | What it is |
 | --- | --- |
-| `madeira/` | Madeira, pinned as a submodule at a known-good commit (`401a927`) |
+| `madeira/` | Madeira, pinned as a submodule at a known-good commit (`fbad430`) |
 | `mango/patches/0001-…profiles.patch` | Far Cry 4 + Ubisoft Connect recommended settings, recognition rules and their host tests |
 | `mango/patches/0002-…branding.patch` | App name **Mango Port**, bundle ID `com.mangomods.mangoport` |
 | `mango/patches/0003-…download.patch` | Retries for the toolchain download on GitHub's Macs |
