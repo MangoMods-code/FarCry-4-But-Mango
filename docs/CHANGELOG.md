@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.1
+One-tap JIT.
+
+- Tap the grey bolt beside the Mango Port title to enable JIT straight from your library; it turns green once JIT is on
+
 ## v0.6.0
 New logo, and the mango look everywhere.
 

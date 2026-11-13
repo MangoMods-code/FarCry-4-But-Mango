@@ -1,0 +1,52 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index e763e5a..d51582c 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -2058,11 +2058,13 @@ enum LibraryRendererBadge {
+ /// behind it on iOS 26. LibraryHeaderAlignment lines its first letter up with
+ /// the search field below.
+ struct LibraryLargeTitle: ToolbarContent {
++    /// Mango Port: the bolt beside the title enables JIT (LibraryView's enableJIT).
++    var enableJIT: () -> Void = {}
+     var body: some ToolbarContent {
+         if #available(iOS 26.0, *) {
+-            ToolbarItem(placement: .topBarLeading) { LibraryTitleText() }.sharedBackgroundVisibility(.hidden)
++            ToolbarItem(placement: .topBarLeading) { LibraryTitleText(enableJIT: enableJIT) }.sharedBackgroundVisibility(.hidden)
+         } else {
+-            ToolbarItem(placement: .topBarLeading) { LibraryTitleText() }
++            ToolbarItem(placement: .topBarLeading) { LibraryTitleText(enableJIT: enableJIT) }
+         }
+     }
+ }
+@@ -2073,6 +2075,7 @@ struct LibraryLargeTitle: ToolbarContent {
+ /// The bolt is as tall as the title's capitals and centred on them: an SF
+ /// Symbol at the title's own size is nearly twice the height of its M.
+ struct LibraryTitleText: View {
++    var enableJIT: () -> Void = {}
+     @ObservedObject private var alignment = LibraryHeaderAlignment.shared
+     @ObservedObject private var jitState = LibraryJITState.shared
+     var body: some View {
+@@ -2083,8 +2086,13 @@ struct LibraryTitleText: View {
+                 .accessibilityElement(children: .ignore)
+                 .accessibilityLabel(LibraryHeaderAlignment.title + ", powered by Madeira")
+                 .accessibilityAddTraits(.isHeader)
+-            MangoJITPill(on: jit)
++            // Mango Port: a tap on the grey bolt enables JIT from the library, the way
++            // Settings' Enable JIT button does; once it is green there is nothing to do.
++            Button(action: enableJIT) { MangoJITPill(on: jit) }
++                .buttonStyle(.plain)
++                .disabled(jit)
+                 .accessibilityLabel(jit ? L("JIT enabled") : L("JIT not enabled"))
++                .accessibilityHint(jit ? "" : L("Enables JIT"))
+         }
+         .font(.system(.largeTitle, design: .rounded).weight(.black))
+         .fixedSize()
+@@ -3399,7 +3407,7 @@ struct LibraryView: View {
+         // which iOS 26 draws as a Liquid Glass morph between the two.
+         .navigationTitle("")
+         .toolbar {
+-            LibraryLargeTitle()
++            LibraryLargeTitle(enableJIT: enableJIT)
+             if tab == 0 { libraryToolbar } else { settingsToolbar }
+         }
+         // On the tab view, not inside one tab's page: an alert attached to the Library
