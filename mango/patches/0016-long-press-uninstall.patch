@@ -1,0 +1,85 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index a44d2e0..6ad4774 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -3878,12 +3878,24 @@ struct LibraryView: View {
+ /// closes when a session, an error or a notice takes over.
+ private struct LibrarySheets: ViewModifier {
+     @ObservedObject var model: LibraryModel
++    @ObservedObject private var uninstall = MangoUninstall.shared   // Mango Port: a card's Uninstall
+     @Binding var browser: Bool
+     @Binding var selected: LibraryEntry?
+     var play: (LibraryEntry) -> Void
+     @ObservedObject var jit: JITCoordinator
+     func body(content: Content) -> some View {
+         content
++            // Mango Port: Uninstall from a card's long-press menu (MangoUninstall).
++            .confirmationDialog(uninstall.asking.map { L("Uninstall") + " " + $0.name + "?" } ?? "",
++                                isPresented: Binding(get: { uninstall.asking != nil }, set: { if !$0 { uninstall.asking = nil } }),
++                                titleVisibility: .visible) {
++                Button("Uninstall", role: .destructive) {
++                    if let game = uninstall.asking { uninstall.run(game) }
++                    uninstall.asking = nil
++                }
++            } message: {
++                if let game = uninstall.asking { Text(verbatim: MangoUninstall.question(game)) }
++            }
+             // Mango Port: an add-on's Open on its main game's page shows the add-on's page instead.
+             .onReceive(MangoAddOnRouter.shared.$open) { entry in
+                 guard let entry else { return }
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index c14897c..0b8bc40 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -842,6 +842,14 @@ struct SteamGameCell: View {
+         .foregroundStyle(.primary)
+         .contentShape(Rectangle())   // Mango Port: the whole card, artwork included, opens the game
+         .accessibilityElement(children: .combine)
++        // Mango Port: long-press a card to uninstall the game (or download it) without opening its pages.
++        .contextMenu {
++            if let installed = item.installed, MangoUninstall.canUninstall(installed) {
++                Button(role: .destructive) { MangoUninstall.shared.asking = installed } label: { Label("Uninstall", systemImage: "trash") }
++            } else if item.installed == nil, download == nil, item.owned != nil, MangoUnplayable.reason(item.id) == nil {
++                Button { steam.install(item.id) } label: { Label("Download", systemImage: "arrow.down.circle") }
++            }
++        }
+         // Read once per install folder, build and picked program, and again when Steam's
+         // launch configuration arrives (LibraryModel.refreshSteamMetadata).
+         .task(id: "\(status.showsFormat) \(item.installed?.windowsInstallPath ?? "") \(games.builds[item.id] ?? 0) " +
+@@ -2406,6 +2414,36 @@ struct MangoStatusEditor: View {
+     }
+ }
+ 
++// MARK: - Mango Port: uninstall from the library
++
++/// Uninstall from a game's card (long-press), confirmed once in the library (LibrarySheets).
++/// Apps installed in the same folder (Black Ops II and its Zombies and Multiplayer) go together:
++/// deleting the folder removes all of them, so none is left listed without its files.
++@MainActor final class MangoUninstall: ObservableObject {
++    static let shared = MangoUninstall()
++    @Published var asking: DockGame?
++
++    static func canUninstall(_ game: DockGame) -> Bool { SteamInstallPaths.isManaged(library: game.library) }
++
++    /// The other installed apps in this game's folder.
++    static func sharing(_ game: DockGame) -> [DockGame] {
++        SteamGamesModel.shared.games.filter {
++            $0.id != game.id && $0.library == game.library && $0.installDir.caseInsensitiveCompare(game.installDir) == .orderedSame
++        }
++    }
++
++    static func question(_ game: DockGame) -> String {
++        let others = sharing(game).map(\.name)
++        return others.isEmpty ? L("Its files are deleted, with its settings in Mango Port. You can download it again any time.")
++            : L("Its files are deleted, with its settings in Mango Port. These share its folder and are removed too:") + " " + others.joined(separator: ", ")
++    }
++
++    func run(_ game: DockGame) {
++        UINotificationFeedbackGenerator().notificationOccurred(.warning)
++        for each in [game] + Self.sharing(game) { SteamOwnedLibrary.shared.uninstall(each) }
++    }
++}
++
+ // MARK: - Mango Port: game modes as add-ons
+ 
+ /// Games whose modes Steam sells as apps of their own, by the main game's App ID. In the

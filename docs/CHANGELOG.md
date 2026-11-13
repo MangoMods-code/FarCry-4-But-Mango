@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.0
+Uninstall in one step, and a clearer Can't run list.
+
+- **Long-press** a Steam game's card to uninstall it, without opening its pages. A game that isn't downloaded offers **Download** there instead
+- Uninstalling Black Ops II this way also removes its Zombies and Multiplayer, which share its folder (the app tells you first), so nothing is left listed without its files
+- Game status: 117 Steam games with Easy Anti-Cheat that blocks Wine (Rust, Apex Legends, SCUM and more) are now marked **Can't run on iPhone**, so nobody wastes a download on them. Games whose offline or story modes may still play were left off
+
 ## v0.10.0
 Game modes as add-ons, and cards that open from anywhere.
 

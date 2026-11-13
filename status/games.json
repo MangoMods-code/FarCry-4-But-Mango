@@ -1,62 +1,881 @@
 {
-  "games" : [
+  "games": [
     {
-      "appID" : 42700,
-      "modes" : [
+      "appID": 2304660,
+      "name": "A Twisted Path to Renown",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 971700,
+      "name": "ALARA Prime",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1587100,
+      "name": "Anarchy Legends Online",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1133060,
+      "name": "Anarchy: Wolf's Law",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1172470,
+      "name": "Apex Legends",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 304030,
+      "name": "ArcheAge",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1147660,
+      "name": "Archeage: Unchained",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1133430,
+      "name": "Ashes of Creation Apocalypse",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 889750,
+      "name": "Babylon's Fall",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2287920,
+      "name": "Battle Crush",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 719890,
+      "name": "Beasts of Bermuda",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1313230,
+      "name": "Beautiful Light",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1058650,
+      "name": "Beyond the Wire",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1189800,
+      "name": "Bleeding Edge",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 299360,
+      "name": "Block N Load",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1551810,
+      "name": "Block N Load 2",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2393590,
+      "name": "Blockade",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1922010,
+      "name": "Breachers",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 42700,
+      "modes": [
         {
-          "appID" : 42710,
-          "name" : "Multiplayer",
-          "note" : "Same issue as base game",
-          "status" : "notYet"
+          "appID": 42710,
+          "name": "Multiplayer",
+          "note": "Same issue as base game",
+          "status": "notYet"
         }
       ],
-      "name" : "Call of Duty: Black Ops",
-      "note" : "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira.",
-      "status" : "notYet",
-      "updated" : "2026-11-13"
+      "name": "Call of Duty: Black Ops",
+      "note": "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira.",
+      "status": "notYet",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 202970,
-      "name" : "Call of Duty: Black Ops II",
-      "note" : "Tested on mango port: Full campaign not tested.",
-      "status" : "works",
-      "updated" : "2026-11-13"
+      "appID": 202970,
+      "name": "Call of Duty: Black Ops II",
+      "note": "Tested on mango port: Full campaign not tested.",
+      "status": "works",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 377160,
-      "name" : "Fallout 4",
-      "note" : "Tested in Mango Port: plays well. Busy open-world areas can slow down.",
-      "status" : "works",
-      "updated" : "2026-11-13"
+      "appID": 918570,
+      "name": "Century: Age of Ashes",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 322170,
-      "name" : "Geometry Dash",
-      "note" : "Tested on mango port: Madeira doesn’t support it and I have no motive to work on geometry dash lol",
-      "status" : "notYet",
-      "updated" : "2026-11-13"
+      "appID": 876460,
+      "name": "CityBattle | Virtual_Earth",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 5155360,
-      "name" : "Hood Warfare 2",
-      "note" : "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
-      "status" : "cantRun",
-      "updated" : "2026-11-12"
+      "appID": 993870,
+      "name": "CODE2040",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 1205970,
-      "name" : "MX vs ATV Legends",
-      "note" : "Tested on an iPhone 17 pro max, I could barely run it. I promise you won’t be able to get it to a playable state.",
-      "status" : "issues",
-      "updated" : "2026-11-13"
+      "appID": 907630,
+      "name": "Concord",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
     },
     {
-      "appID" : 489830,
-      "name" : "The Elder Scrolls V: Skyrim Special Edition",
-      "note" : "Tested in Mango Port: plays well.",
-      "status" : "works",
-      "updated" : "2026-11-12"
+      "appID": 2445510,
+      "name": "Contenders: Arena",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 544920,
+      "name": "Darwin Project",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 895400,
+      "name": "Deadside",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1354980,
+      "name": "Decimated",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 499470,
+      "name": "Decksplash",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2175780,
+      "name": "Dominance",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1692200,
+      "name": "DRAGON BALL: THE BREAKERS",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 381990,
+      "name": "Dragon Saga",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1054690,
+      "name": "Dreadlands",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 835860,
+      "name": "Dreadnought",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2000270,
+      "name": "Dual Universe",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2682580,
+      "name": "DUCKSIDE",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2939830,
+      "name": "Dungeon Done",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1562450,
+      "name": "Dysterra",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2705130,
+      "name": "Exoborne",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 377160,
+      "name": "Fallout 4",
+      "note": "Tested in Mango Port: plays well. Busy open-world areas can slow down.",
+      "status": "works",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1106750,
+      "name": "Fault: Elder Orb",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 819500,
+      "name": "Fear the Wolves",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1025560,
+      "name": "Flea Madness",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1765520,
+      "name": "Flippin Misfits",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 751240,
+      "name": "Fractured Lands",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 715400,
+      "name": "Frozen Flame",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 322170,
+      "name": "Geometry Dash",
+      "note": "Tested on mango port: Madeira doesn’t support it and I have no motive to work on geometry dash lol",
+      "status": "notYet",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 656240,
+      "name": "Heat",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 5155360,
+      "name": "Hood Warfare 2",
+      "note": "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
+      "status": "cantRun",
+      "updated": "2026-11-12"
+    },
+    {
+      "appID": 927350,
+      "name": "Hood: Outlaws & Legends",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 520530,
+      "name": "Intershelter",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 922620,
+      "name": "Kingshunt",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 903950,
+      "name": "Last Oasis",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1195460,
+      "name": "Last Year",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 3126860,
+      "name": "Legends of Kailrate",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 950180,
+      "name": "Lemnis Gate",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 700030,
+      "name": "Life is Feudal: MMO",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 419520,
+      "name": "Lifeless",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1635450,
+      "name": "Longvinter",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 331810,
+      "name": "Lost Region",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 314430,
+      "name": "M.A.R.S.",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1469060,
+      "name": "Midair 2",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1877600,
+      "name": "Midnight Guns",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 299740,
+      "name": "Miscreated",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1367080,
+      "name": "Mobile Suit Gundam Battle Operation 2",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1093170,
+      "name": "Monstrum 2",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1205970,
+      "name": "MX vs ATV Legends",
+      "note": "Tested on an iPhone 17 pro max, I could barely run it. I promise you won’t be able to get it to a playable state.",
+      "status": "issues",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1371580,
+      "name": "Myth of Empires",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 519190,
+      "name": "Next Day: Survival",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1504620,
+      "name": "Nine to Five",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 622170,
+      "name": "Offensive Combat: Redux!",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 805110,
+      "name": "P.A.S.",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 939510,
+      "name": "Pandemic Express - Zombie Escape",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 763420,
+      "name": "Panzer Arena: Coop",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2139090,
+      "name": "Project ETHOS",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2257910,
+      "name": "Project Zero",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1227800,
+      "name": "Quantum League",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2073930,
+      "name": "Radikal Fighters",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 215100,
+      "name": "Ragnarok Online",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 660330,
+      "name": "Ragnarok RE:START",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1908530,
+      "name": "Raise Your Tribe",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 813820,
+      "name": "Realm Royale",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1442910,
+      "name": "Reign Of Dwarf",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 344760,
+      "name": "Reign of Kings",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 547860,
+      "name": "Rend",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1759220,
+      "name": "Return Alive",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2247220,
+      "name": "Revenblade",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2077110,
+      "name": "Rise of Agon",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1991140,
+      "name": "Robocraft 2",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 804810,
+      "name": "Robocraft Royale",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 630700,
+      "name": "Rocket Arena",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 653120,
+      "name": "RockShot",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 252490,
+      "name": "Rust",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1183940,
+      "name": "Scavengers",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 513710,
+      "name": "SCUM",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1226470,
+      "name": "Shadow Arena",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1204040,
+      "name": "Shoot on Sight",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1799530,
+      "name": "Smelogs Playground",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 647590,
+      "name": "Space Junkies",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 672890,
+      "name": "Sparkball",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1399780,
+      "name": "Spellbreak",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1268750,
+      "name": "Starship Troopers: Extermination",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1180380,
+      "name": "Stay Out",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 883120,
+      "name": "Stormdivers",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1815230,
+      "name": "Summum Aeterna",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2730410,
+      "name": "Sweet Time",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1245480,
+      "name": "SYNDUALITY Echo of Ada",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 328060,
+      "name": "Tales Runner",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2411280,
+      "name": "The Bornless",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 489830,
+      "name": "The Elder Scrolls V: Skyrim Special Edition",
+      "note": "Tested in Mango Port: plays well.",
+      "status": "works",
+      "updated": "2026-11-12"
+    },
+    {
+      "appID": 2022330,
+      "name": "The Riflemen",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1121710,
+      "name": "Total Lockdown",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2152790,
+      "name": "United 1944",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 760160,
+      "name": "Vampire: The Masquerade - Bloodhunt",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 886250,
+      "name": "Vegas Infinite by PokerStars",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 2790930,
+      "name": "Velev",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 556440,
+      "name": "Vicious Circle",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1123160,
+      "name": "Voids Adrift",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 880850,
+      "name": "War Rock",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1769930,
+      "name": "Warcos",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 375230,
+      "name": "Warhammer 40,000: Eternal Crusade",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1171690,
+      "name": "Wayfinder",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 1206370,
+      "name": "Wild Card Football",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
+    },
+    {
+      "appID": 322780,
+      "name": "Worlds Adrift",
+      "note": "Uses Easy Anti-Cheat, which won't run under Wine (how Mango Port plays Windows games), so it can't start on iPhone. Not tested; from areweanticheatyet.com.",
+      "status": "cantRun",
+      "updated": "2026-11-13"
     }
   ],
-  "version" : 1
+  "version": 1
 }
