@@ -1,0 +1,500 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index ec2286d..9b023a7 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -7150,6 +7150,7 @@ struct MangoContinueHero: View {
+     @ObservedObject private var library = LibraryModel.shared
+     @ObservedObject private var steamGames = SteamGamesModel.shared
+     @ObservedObject private var steam = SteamOwnedLibrary.shared
++    @ObservedObject private var mangoStatus = MangoStatusStore.shared   // the badge follows the online list
+     /// The Continue button's glow breathes slowly (still with Reduce Motion).
+     @State private var glowing = false
+ 
+@@ -7277,6 +7278,7 @@ struct MangoGreeting: View {
+     @ObservedObject private var library = LibraryModel.shared
+     @ObservedObject private var steamGames = SteamGamesModel.shared
+     @ObservedObject private var steam = SteamOwnedLibrary.shared
++    @State private var showStatus = false
+ 
+     private var greeting: String {
+         let hour = Calendar.current.component(.hour, from: Date())
+@@ -7293,6 +7295,7 @@ struct MangoGreeting: View {
+         let added = library.entries.filter { game in game.desktop != true && game.listedInLibrary && game.steamAppID == nil }.count
+         let games = installed.count + added
+         let hours = installed.reduce(0) { $0 + (steam.playtime[$1.id]?.minutes ?? 0) } / 60
++        HStack(alignment: .center, spacing: 12) {
+         VStack(alignment: .leading, spacing: 2) {
+             Text(verbatim: greeting).font(.system(.title3, design: .rounded).weight(.heavy))
+             if games > 0 {
+@@ -7303,5 +7306,24 @@ struct MangoGreeting: View {
+             }
+         }
+         .accessibilityElement(children: .combine)
++            Spacer(minLength: 0)
++            // Mango Port: the tested-games list (SteamGames.swift, MangoStatusPage).
++            Button { showStatus = true } label: {
++                Label(L("Game status"), systemImage: "checkmark.seal.fill")
++                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
++                    .padding(.horizontal, 12).frame(minHeight: 36)
++                    .foregroundStyle(MangoTheme.gold)
++                    .background(Capsule().fill(Color.white.opacity(0.06)))
++                    .overlay(Capsule().strokeBorder(MangoTheme.gold.opacity(0.35), lineWidth: 1))
++            }
++            .buttonStyle(.plain)
++        }
++        .sheet(isPresented: $showStatus) {
++            NavigationStack {
++                MangoStatusPage()
++                    .scrollContentBackground(.hidden).background(MangoBackground())
++                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Done")) { showStatus = false } } }
++            }
++        }
+     }
+ }
+diff --git a/app/Madeira/MadeiraApp.swift b/app/Madeira/MadeiraApp.swift
+index d4ca6a4..7869a29 100644
+--- a/app/Madeira/MadeiraApp.swift
++++ b/app/Madeira/MadeiraApp.swift
+@@ -38,6 +38,7 @@ struct MadeiraApp: App {
+                 .onAppear {
+                     ExternalDrives.shared.mountAll()
+                     MangoPrefixFixes.apply()                      // Mango Port: folders games need (SteamGames.swift)
++                    Task { await MangoStatusStore.shared.refresh() }   // Mango Port: the tested-games list
+                     GamepadInput.shared.start()
+                     HardwareInput.shared.start()
+                     JITNetworkShortcut.shared.restoreLeftover()   // also starts its network path monitor
+diff --git a/app/Madeira/SettingsPages.swift b/app/Madeira/SettingsPages.swift
+index 87a5644..45f89e0 100644
+--- a/app/Madeira/SettingsPages.swift
++++ b/app/Madeira/SettingsPages.swift
+@@ -96,6 +96,12 @@ struct SettingsPagesList: View {
+     var body: some View {
+         Form {
+             Section { LibraryStatus().listRowBackground(Color.clear) }
++            // Mango Port: how each tested game runs (SteamGames.swift, MangoStatusPage).
++            Section {
++                NavigationLink {
++                    MangoStatusPage().scrollContentBackground(.hidden).background(MangoBackground())
++                } label: { Label(L("Game status"), systemImage: "checkmark.seal") }
++            }
+             ForEach(Array(SettingsPages.groups.enumerated()), id: \.offset) { _, group in
+                 let pages = group.1.filter(\.shown)
+                 if !pages.isEmpty {
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index aa76b1d..203a854 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -3,6 +3,7 @@
+ // Madeira Converter Exception: see LICENSE-EXCEPTION.md
+ 
+ import SwiftUI
++import Security   // Mango Port: the owner key in the Keychain (MangoOwnerKey)
+ 
+ // Steam games in the library (docs/LIBRARY.md, "Steam setup", and
+ // docs/STEAM_LIBRARY.md): the games Steam has installed in the prefix, which is
+@@ -762,6 +763,7 @@ struct SteamGameCell: View {
+     let item: SteamGamesRules.Item
+     var list = false
+     var dense = false
++    @ObservedObject private var mangoStatus = MangoStatusStore.shared   // Mango Port: badges follow the online list
+     @ObservedObject private var steam = SteamOwnedLibrary.shared
+     @ObservedObject private var games = SteamGamesModel.shared
+     @ObservedObject private var library = LibraryModel.shared
+@@ -1806,7 +1808,7 @@ enum MangoUnplayable {
+ /// page, its Game details page and Continue playing. Only "Can't run" blocks Install and
+ /// Play; "Currently not playable" still starts, so a fix can be tried as soon as it lands.
+ enum MangoCompat {
+-    enum Status { case works, issues, notYet, cantRun }
++    enum Status: String, CaseIterable { case works, issues, notYet, cantRun }
+     struct Entry { let status: Status; let note: String }
+     static let games: [Int: Entry] = [
+         // The Elder Scrolls V: Skyrim Special Edition (owner's play, 2026-11-12).
+@@ -1823,7 +1825,26 @@ enum MangoCompat {
+         // support needs a Linux-only runtime (owner's test, 2026-11-12).
+         5155360: Entry(status: .cantRun, note: "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone."),
+     ]
+-    static func entry(_ appID: Int?) -> Entry? { appID.flatMap { games[$0] } }
++    /// The online list (MangoStatusStore) once it has been read, even if empty; the
++    /// table above only until then, or with no connection on a first start.
++    static func entry(_ appID: Int?) -> Entry? {
++        guard let appID else { return nil }
++        if let online = MangoStatusStore.shared.remote {
++            guard let game = online.first(where: { $0.appID == appID }), let status = Status(rawValue: game.status) else { return nil }
++            return Entry(status: status, note: game.note)
++        }
++        return games[appID]
++    }
++    static let names: [Int: String] = [
++        489830: "The Elder Scrolls V: Skyrim Special Edition", 377160: "Fallout 4", 1205970: "MX vs ATV Legends",
++        42700: "Call of Duty: Black Ops", 5155360: "Hood Warfare 2",
++    ]
++    /// The table above as the status page's rows, for before the online list is read.
++    static var builtInList: [MangoStatusStore.Game] {
++        games.map { MangoStatusStore.Game(appID: $0.key, name: names[$0.key] ?? "App \($0.key)", status: $0.value.status.rawValue,
++                                          note: $0.value.note, updated: "2026-11-13") }
++            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
++    }
+ }
+ 
+ /// A tested game's status, as a coloured label.
+@@ -1889,3 +1910,360 @@ enum MangoPrefixFixes {
+         }
+     }
+ }
++
++// MARK: - Mango Port: the online status list and the Game status page
++
++/// The tested-games list, kept online as status/games.json in Mango Port's GitHub repo so it
++/// changes without a new build. Everyone reads it (raw.githubusercontent.com, no account);
++/// only the owner, whose GitHub token is in this iPhone's Keychain (MangoOwnerKey), writes it,
++/// through GitHub's contents API. A copy is kept in Documents for offline starts.
++final class MangoStatusStore: ObservableObject {
++    static let shared = MangoStatusStore()
++    struct Game: Codable, Identifiable, Equatable {
++        var appID: Int
++        var name: String
++        var status: String
++        var note: String
++        var updated: String
++        var id: Int { appID }
++    }
++    private struct File: Codable {
++        var version: Int
++        var games: [Game]
++    }
++    enum StatusError: LocalizedError {
++        case noKey, http(Int)
++        var errorDescription: String? {
++            switch self {
++            case .noKey: return L("Add your owner key first: long-press the text at the top of Game status.")
++            case .http(let code) where code == 401 || code == 403 || code == 404:
++                return L("GitHub didn't accept your owner key (\(code)). Check that the token can read and write this repo's contents, and that it hasn't expired.")
++            case .http(409): return L("The list changed while saving. Pull to refresh and try again.")
++            case .http(let code): return L("GitHub answered \(code). Try again in a moment.")
++            }
++        }
++    }
++    static let repo = "MangoMods-code/FarCry-4-But-Mango"
++    static let path = "status/games.json"
++    static let rawURL = URL(string: "https://raw.githubusercontent.com/\(repo)/main/\(path)")!
++    static let apiURL = URL(string: "https://api.github.com/repos/\(repo)/contents/\(path)")!
++    private static var cacheURL: URL { LibraryModel.documents.appendingPathComponent("mango-status.json") }
++
++    /// nil until the list has been read once (then the cached copy is used at start).
++    @Published private(set) var remote: [Game]?
++    @Published private(set) var lastError: String?
++
++    init() {
++        if let data = try? Data(contentsOf: Self.cacheURL), let file = try? JSONDecoder().decode(File.self, from: data) {
++            remote = file.games
++        }
++    }
++
++    @MainActor func refresh() async {
++        do {
++            // The query string keeps the CDN and URLCache from answering with an old copy.
++            var parts = URLComponents(url: Self.rawURL, resolvingAgainstBaseURL: false)!
++            parts.queryItems = [URLQueryItem(name: "t", value: String(Int(Date().timeIntervalSince1970)))]
++            let request = URLRequest(url: parts.url!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
++            let (data, response) = try await URLSession.shared.data(for: request)
++            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
++            guard code == 200 else { throw StatusError.http(code) }
++            let file = try JSONDecoder().decode(File.self, from: data)
++            remote = file.games
++            lastError = nil
++            try? data.write(to: Self.cacheURL, options: .atomic)
++            LogStore.shared.log("[mango-status] list read: \(file.games.count) game(s)")
++        } catch {
++            lastError = error.localizedDescription
++            LogStore.shared.log("[mango-status] list not read: \(error.localizedDescription)")
++        }
++    }
++
++    /// Owner only: reads the file as GitHub has it now, applies `edit`, and writes it back
++    /// (with its sha, so a change made meanwhile is not overwritten).
++    @MainActor func change(message: String, _ edit: (inout [Game]) -> Void) async throws {
++        guard let token = MangoOwnerKey.read() else { throw StatusError.noKey }
++        var get = URLRequest(url: Self.apiURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20)
++        Self.authorize(&get, token)
++        let (data, response) = try await URLSession.shared.data(for: get)
++        let code = (response as? HTTPURLResponse)?.statusCode ?? 0
++        var games: [Game] = []
++        var sha: String?
++        if code == 200 {
++            let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
++            sha = object?["sha"] as? String
++            if let content = object?["content"] as? String,
++               let raw = Data(base64Encoded: content, options: .ignoreUnknownCharacters),
++               let file = try? JSONDecoder().decode(File.self, from: raw) {
++                games = file.games
++            }
++        } else if code != 404 {
++            throw StatusError.http(code)
++        }
++        edit(&games)
++        games.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
++        let encoder = JSONEncoder()
++        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
++        let body = try encoder.encode(File(version: 1, games: games))
++        var payload: [String: Any] = ["message": message, "content": body.base64EncodedString(), "branch": "main"]
++        if let sha { payload["sha"] = sha }
++        var put = URLRequest(url: Self.apiURL, timeoutInterval: 20)
++        put.httpMethod = "PUT"
++        Self.authorize(&put, token)
++        put.setValue("application/json", forHTTPHeaderField: "Content-Type")
++        put.httpBody = try JSONSerialization.data(withJSONObject: payload)
++        let (_, putResponse) = try await URLSession.shared.data(for: put)
++        let putCode = (putResponse as? HTTPURLResponse)?.statusCode ?? 0
++        guard putCode == 200 || putCode == 201 else { throw StatusError.http(putCode) }
++        remote = games
++        lastError = nil
++        try? body.write(to: Self.cacheURL, options: .atomic)
++        LogStore.shared.log("[mango-status] list saved: \(games.count) game(s)")
++    }
++
++    private static func authorize(_ request: inout URLRequest, _ token: String) {
++        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
++        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
++        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
++        request.setValue("MangoPort", forHTTPHeaderField: "User-Agent")
++    }
++}
++
++/// The owner's GitHub token (a fine-grained token for this repo with Contents: read and
++/// write), in this iPhone's Keychain only: never in Documents, never synced.
++enum MangoOwnerKey {
++    private static var base: [String: Any] {
++        [kSecClass as String: kSecClassGenericPassword,
++         kSecAttrService as String: "MangoPortStatusOwner",
++         kSecAttrAccount as String: "github"]
++    }
++    static func read() -> String? {
++        var query = base
++        query[kSecReturnData as String] = true
++        query[kSecMatchLimit as String] = kSecMatchLimitOne
++        var item: CFTypeRef?
++        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess, let data = item as? Data else { return nil }
++        return String(data: data, encoding: .utf8)
++    }
++    @discardableResult static func save(_ key: String) -> Bool {
++        SecItemDelete(base as CFDictionary)
++        var add = base
++        add[kSecValueData as String] = Data(key.utf8)
++        add[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
++        return SecItemAdd(add as CFDictionary, nil) == errSecSuccess
++    }
++    static func remove() { SecItemDelete(base as CFDictionary) }
++}
++
++/// Settings › Game status, and the Game status button on the library: every tested game by
++/// status, with its note and test date. With the owner key on this iPhone: + to add a game,
++/// a tap to change one, a swipe to remove one. Long-press the text at the top for the key.
++struct MangoStatusPage: View {
++    @ObservedObject private var store = MangoStatusStore.shared
++    @State private var search = ""
++    @State private var owner = MangoOwnerKey.read() != nil
++    @State private var keySheet = false
++    @State private var editing: MangoStatusStore.Game?
++    @State private var adding = false
++    @State private var failure: String?
++    @State private var saving = false
++
++    init() {}
++
++    private var shown: [MangoStatusStore.Game] {
++        let all = store.remote ?? MangoCompat.builtInList
++        let query = search.trimmingCharacters(in: .whitespaces)
++        return query.isEmpty ? all : all.filter { $0.name.localizedCaseInsensitiveContains(query) }
++    }
++
++    var body: some View {
++        List {
++            Section {
++                Text(owner ? L("Owner mode: tap a game to change its status, swipe to remove it, or tap + to add one.")
++                           : L("How each game runs in Mango Port, tested by MangoMods. A game that isn't listed hasn't been tested yet."))
++                    .font(.footnote).foregroundStyle(.secondary)
++                    .contentShape(Rectangle())
++                    .onLongPressGesture(minimumDuration: 1.2) { keySheet = true }
++            }
++            ForEach(MangoCompat.Status.allCases, id: \.self) { status in
++                let games = shown.filter { $0.status == status.rawValue }
++                if !games.isEmpty {
++                    Section {
++                        ForEach(games) { game in
++                            row(game)
++                                .contentShape(Rectangle())
++                                .onTapGesture { if owner { editing = game } }
++                                .swipeActions {
++                                    if owner {
++                                        Button(role: .destructive) { remove(game) } label: { Label("Remove", systemImage: "trash") }
++                                    }
++                                }
++                        }
++                    } header: { MangoCompatLabel(status: status) }
++                }
++            }
++            if shown.isEmpty {
++                Section { Text(search.isEmpty ? L("No games tested yet.") : L("No tested game matches your search.")).foregroundStyle(.secondary) }
++            }
++            if let failure { Section { Text(verbatim: failure).foregroundStyle(.red) } }
++            if saving { Section { HStack(spacing: 10) { ProgressView(); Text(verbatim: L("Saving…")) } } }
++        }
++        .searchable(text: $search)
++        .refreshable { await store.refresh() }
++        .navigationTitle(L("Game status"))
++        .toolbar {
++            if owner {
++                ToolbarItem(placement: .topBarTrailing) {
++                    Button { adding = true } label: { Label(L("Add game"), systemImage: "plus") }
++                }
++            }
++        }
++        .sheet(isPresented: $keySheet) { MangoOwnerKeySheet(owner: $owner) }
++        .sheet(item: $editing) { game in MangoStatusEditor(game: game, isNew: false) { save($0) } }
++        .sheet(isPresented: $adding) {
++            MangoStatusEditor(game: MangoStatusStore.Game(appID: 0, name: "", status: MangoCompat.Status.works.rawValue, note: "", updated: ""), isNew: true) { save($0) }
++        }
++        .task { await store.refresh() }
++    }
++
++    private func row(_ game: MangoStatusStore.Game) -> some View {
++        HStack(spacing: 12) {
++            SteamGameArtwork(appID: game.appID).frame(width: 40, height: 60)
++                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
++            VStack(alignment: .leading, spacing: 3) {
++                Text(verbatim: game.name).font(.system(.body, design: .rounded).weight(.heavy))
++                if !game.note.isEmpty { Text(verbatim: game.note).font(.footnote).foregroundStyle(.secondary) }
++                if !game.updated.isEmpty { Text(verbatim: L("Tested") + " " + game.updated).font(.caption2).foregroundStyle(.tertiary) }
++            }
++        }
++        .padding(.vertical, 2)
++    }
++
++    private static var today: String {
++        let formatter = DateFormatter()
++        formatter.locale = Locale(identifier: "en_US_POSIX")
++        formatter.dateFormat = "yyyy-MM-dd"
++        return formatter.string(from: Date())
++    }
++
++    private func save(_ game: MangoStatusStore.Game) {
++        var game = game
++        game.name = game.name.trimmingCharacters(in: .whitespaces)
++        game.updated = Self.today
++        run("Mango Port status: \(game.name) is \(game.status)") { list in
++            list.removeAll { $0.appID == game.appID }
++            list.append(game)
++        }
++    }
++
++    private func remove(_ game: MangoStatusStore.Game) {
++        run("Mango Port status: remove \(game.name)") { list in list.removeAll { $0.appID == game.appID } }
++    }
++
++    private func run(_ message: String, _ edit: @escaping (inout [MangoStatusStore.Game]) -> Void) {
++        saving = true
++        Task { @MainActor in
++            do {
++                try await store.change(message: message, edit)
++                failure = nil
++                UINotificationFeedbackGenerator().notificationOccurred(.success)
++            } catch let error {
++                failure = error.localizedDescription
++                UINotificationFeedbackGenerator().notificationOccurred(.error)
++            }
++            saving = false
++        }
++    }
++}
++
++/// Owner mode: the GitHub token goes into the Keychain, or comes out.
++struct MangoOwnerKeySheet: View {
++    @Binding var owner: Bool
++    @Environment(\.dismiss) private var dismiss
++    @State private var key = ""
++
++    var body: some View {
++        NavigationStack {
++            Form {
++                Section {
++                    SecureField(L("Owner key"), text: $key)
++                } footer: {
++                    Text(verbatim: L("A GitHub fine-grained token for the Mango Port repo with Contents: read and write. It stays in this iPhone's Keychain."))
++                }
++                if owner {
++                    Section {
++                        Button(L("Remove owner key"), role: .destructive) { MangoOwnerKey.remove(); owner = false; dismiss() }
++                    }
++                }
++            }
++            .navigationTitle(L("Owner mode")).navigationBarTitleDisplayMode(.inline)
++            .toolbar {
++                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
++                ToolbarItem(placement: .confirmationAction) {
++                    Button(L("Save")) {
++                        owner = MangoOwnerKey.save(key.trimmingCharacters(in: .whitespacesAndNewlines))
++                        dismiss()
++                    }
++                    .disabled(key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
++                }
++            }
++        }
++    }
++}
++
++/// Adding a game (from the installed Steam games or by App ID) or changing one's status and note.
++struct MangoStatusEditor: View {
++    @State var game: MangoStatusStore.Game
++    let isNew: Bool
++    var save: (MangoStatusStore.Game) -> Void
++    @Environment(\.dismiss) private var dismiss
++    @ObservedObject private var steamGames = SteamGamesModel.shared
++    @State private var appIDText = ""
++
++    var body: some View {
++        NavigationStack {
++            Form {
++                if isNew {
++                    Section {
++                        Menu {
++                            ForEach(steamGames.games) { installed in
++                                Button(installed.name) { game.appID = installed.id; game.name = installed.name; appIDText = String(installed.id) }
++                            }
++                        } label: { Label(L("Pick from your installed Steam games"), systemImage: "gamecontroller") }
++                        TextField(L("Steam App ID"), text: $appIDText)
++                            .keyboardType(.numberPad)
++                            .onChange(of: appIDText) { _, text in game.appID = Int(text.filter(\.isNumber)) ?? 0 }
++                        TextField(L("Name"), text: $game.name)
++                    } footer: {
++                        Text(verbatim: L("The App ID is the number in the game's Steam store link."))
++                    }
++                } else {
++                    Section {
++                        LabeledContent(L("Game"), value: game.name)
++                        LabeledContent(L("Steam App ID"), value: String(game.appID))
++                    }
++                }
++                Section {
++                    Picker(L("Status"), selection: $game.status) {
++                        ForEach(MangoCompat.Status.allCases, id: \.self) { status in
++                            MangoCompatLabel(status: status).tag(status.rawValue)
++                        }
++                    }
++                    .pickerStyle(.inline)
++                    .labelsHidden()
++                } header: { Text(verbatim: L("Status")) }
++                Section {
++                    TextField(L("What works, and what doesn't"), text: $game.note, axis: .vertical).lineLimit(3...8)
++                } header: { Text(verbatim: L("Note")) }
++            }
++            .navigationTitle(isNew ? L("Add a game") : L("Edit status")).navigationBarTitleDisplayMode(.inline)
++            .toolbar {
++                ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
++                ToolbarItem(placement: .confirmationAction) {
++                    Button(L("Save")) { save(game); dismiss() }
++                        .disabled(game.appID <= 0 || game.name.trimmingCharacters(in: .whitespaces).isEmpty)
++                }
++            }
++        }
++    }
++}

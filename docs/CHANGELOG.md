@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.0
+Game status, live.
+
+- New **Game status** page: every game we've tested, grouped into Works, Playable with issues, Currently not playable and Can't run on iPhone, with notes and test dates. Open it from the button beside the greeting, or from Settings
+- Statuses now come from an online list, so they update without a new version of the app; pull down on Game status to refresh
+- Search the list, and see each game's cover art
+
 ## v0.8.0
 Know what works, and a livelier library.
 
