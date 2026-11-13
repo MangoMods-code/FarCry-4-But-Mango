@@ -26,6 +26,7 @@ Mango Port runs **your own copies of Windows PC games** on a non-jailbroken iPho
 | `mango/patches/0014-status-list-fresh-read.patch` | Game status reads the list from GitHub's API (fresh within seconds) instead of the raw CDN (up to five minutes behind), and keeps a just-saved list |
 | `mango/patches/0015-game-modes-add-ons-whole-card-taps.patch` | Game modes sold as separate Steam apps (Black Ops II Zombies/Multiplayer and others) become add-ons of their main game with download switches; Game status lists modes on their game's card; whole cards open games; the pairing Live Activity says Mango Port |
 | `mango/patches/0016-long-press-uninstall.patch` | Long-press a Steam game's card to Uninstall (confirmed once; apps sharing its folder go with it) or Download |
+| `mango/patches/0017-store-switches-steam-accounts.patch` | Settings › Game stores switches GOG, Epic, EA and itch.io off (their madeira.cfg switches); saved Steam accounts (Keychain, this device only) switch in one tap from Settings › Steam |
 | `scripts/apply-mango.sh` | Fetches Madeira and applies the patches (idempotent) |
 | `scripts/test.sh` | Runs the Madeira host checks the patches touch |
 | `docs/` | Roadmap, Far Cry 4 test log, legal notes |

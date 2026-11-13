@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.0
+Only the stores you use, and quick Steam account switching.
+
+- New **Settings › Game stores**: switch GOG, Epic Games, the EA app and itch.io off. Their library sections, sign-ins and settings go away; Steam is always on
+- **Switch Steam accounts in one tap**: every account you sign in to is saved on this iPhone, and Settings › Steam lists the others with **Switch**. **Add another account** signs in a new one without losing the first; swipe an account to forget it, and Sign out forgets the one you're on
+- Each account shows its own Steam library; downloads pause while switching
+
 ## v0.11.0
 Uninstall in one step, and a clearer Can't run list.
 

@@ -1,0 +1,238 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 6ad4774..7171df3 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -3309,6 +3309,7 @@ struct LibraryView: View {
+     @Environment(\.scenePhase) private var scenePhase
+     @Environment(\.colorScheme) private var colorScheme
+     @ObservedObject private var liquidMetal = LiquidMetalSetting.shared
++    @ObservedObject private var mangoStores = MangoStores.shared   // Mango Port: store sections follow their switches
+     var play: (LibraryEntry) -> Void
+     var enableJIT: () -> Void
+     @ObservedObject private var jitState = LibraryJITState.shared
+@@ -3559,6 +3560,7 @@ struct LibraryView: View {
+                     RuntimeMemorySyncSettings(open: { settingsSheet = $0 }, refresh: settingsRefresh)
+                 }
+             }
++            if settingsShow("stores", "platforms", "GOG", "Epic", "EA", "itch.io") { MangoStoresSection() }   // Mango Port
+             if SteamSettingsSection.shown, settingsShow("Steam", "Dock", "sign in", "account", "setup") {
+                 SteamSettingsSection(open: { settingsSheet = $0 })
+             }
+diff --git a/app/Madeira/MadeiraApp.swift b/app/Madeira/MadeiraApp.swift
+index 7869a29..ddcd689 100644
+--- a/app/Madeira/MadeiraApp.swift
++++ b/app/Madeira/MadeiraApp.swift
+@@ -38,6 +38,7 @@ struct MadeiraApp: App {
+                 .onAppear {
+                     ExternalDrives.shared.mountAll()
+                     MangoPrefixFixes.apply()                      // Mango Port: folders games need (SteamGames.swift)
++                    MangoSteamAccounts.shared.start()             // Mango Port: saved Steam accounts (SteamGames.swift)
+                     Task { await MangoStatusStore.shared.refresh() }   // Mango Port: the tested-games list
+                     GamepadInput.shared.start()
+                     HardwareInput.shared.start()
+diff --git a/app/Madeira/Onboarding.swift b/app/Madeira/Onboarding.swift
+index 189d1cf..9c18d0f 100644
+--- a/app/Madeira/Onboarding.swift
++++ b/app/Madeira/Onboarding.swift
+@@ -774,8 +774,10 @@ struct SteamSettingsSection: View {
+         Section {
+             if let name = signIn.accountName {
+                 LabeledContent("Signed in as", value: name)
++                MangoSteamAccountRows(current: name) { open(.steamSignIn) }   // Mango Port: switch accounts in one tap
+                 Button("Sign out of Steam", role: .destructive) { confirmSignOut = true }
+             } else {
++                MangoSteamAccountRows(current: nil) { open(.steamSignIn) }
+                 Button { open(.steamSignIn) } label: { Label("Sign in to Steam", systemImage: "person.crop.circle.badge.plus") }
+             }
+             Picker("Game language", selection: $language) {
+@@ -819,7 +821,10 @@ struct SteamSettingsSection: View {
+             Text("Game language: the language Steam downloads install, and the one Steam tells the game to use. A game without it gets English. Installed games keep their language until you choose Download in their page.\n\nDownloads from PCs on this network: a game's download comes first from a PC on the same network whose Steam has it installed and up to date, through Steam's local network game transfers (Steam on the PC: same account, Settings › Downloads › Game file transfer over local network on, no download or game running). Anything the PC does not have comes from Steam's servers. Mango Port finds the PC through Steam and shows up in the account's devices as \"Mango Port\". PC address: only when the PC is not found; its IP address on this network.\n\nMadeira keeps a Steam sign-in token in this device's Keychain, for this device only. Signing out removes it.")
+         }
+         .confirmationDialog("Sign out of Steam?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+-            Button("Sign out", role: .destructive) { signIn.signOut() }
++            Button("Sign out", role: .destructive) {
++                if let name = signIn.accountName { MangoSteamAccounts.shared.forget(name) }   // Mango Port: not kept for switching
++                signIn.signOut()
++            }
+         }
+         .onAppear { signIn.refresh() }
+         .onReceive(NotificationCenter.default.publisher(for: SteamSignIn.didChange)) { _ in signIn.refresh() }
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index 0b8bc40..f3d5049 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -2444,6 +2444,174 @@ struct MangoStatusEditor: View {
+     }
+ }
+ 
++// MARK: - Mango Port: game stores on and off
++
++/// Settings › Game stores: GOG, Epic Games, the EA app and itch.io each switch off with their
++/// existing madeira.cfg switch (env.MADEIRA_GOG = 0 and so on). Steam is always on.
++@MainActor final class MangoStores: ObservableObject {
++    static let shared = MangoStores()
++    struct Store: Identifiable { let id: String; let name: String; let symbol: String }
++    static let all = [Store(id: "MADEIRA_GOG", name: "GOG", symbol: "bag"),
++                      Store(id: "MADEIRA_EPIC", name: "Epic Games", symbol: "gamecontroller"),
++                      Store(id: "MADEIRA_EA", name: "EA app", symbol: "sportscourt"),
++                      Store(id: "MADEIRA_ITCH", name: "itch.io", symbol: "square.grid.2x2")]
++    func isOn(_ store: Store) -> Bool { SteamSignIn.flag(store.id, default: true) }
++    func set(_ store: Store, _ on: Bool) {
++        objectWillChange.send()
++        MadeiraConfig.set("env." + store.id, on ? nil : "0")
++        LogStore.shared.log("[mango-stores] \(store.name) \(on ? "on" : "off")")
++    }
++}
++
++struct MangoStoresSection: View {
++    @ObservedObject private var stores = MangoStores.shared
++    var body: some View {
++        Section {
++            ForEach(MangoStores.all) { store in
++                Toggle(isOn: Binding(get: { stores.isOn(store) }, set: { stores.set(store, $0) })) {
++                    Label(store.name, systemImage: store.symbol)
++                }
++                .tint(MangoTheme.mango)
++            }
++        } header: {
++            Text("Game stores")
++        } footer: {
++            Text("Steam is always on. Switch off the stores you don't use and their library sections, sign-ins and settings go away. Games already installed from them stay on your iPhone. If a section still shows, close and reopen Mango Port.")
++        }
++    }
++}
++
++// MARK: - Mango Port: saved Steam accounts
++
++/// Every Steam account signed in on this iPhone is kept (its sign-in token, in this device's
++/// Keychain only), so Settings › Steam switches between them in one tap. The account signed in
++/// is the one Madeira's own sign-in holds (SteamTokenStore); switching signs out of it and
++/// stores the other account's token there, and the Steam library reloads for that account.
++/// Signing out forgets the account.
++@MainActor final class MangoSteamAccounts: ObservableObject {
++    static let shared = MangoSteamAccounts()
++    struct Account: Codable, Identifiable, Equatable {
++        var accountName: String
++        var refreshToken: String
++        var accessToken: String
++        var id: String { accountName.lowercased() }
++        var usable: Bool { SteamSignIn.usable(accountName: accountName, refreshToken: refreshToken, now: Date()) != nil }
++    }
++    @Published private(set) var accounts: [Account] = []
++    @Published private(set) var switching = false
++    private var started = false
++    private static let service = "MangoPortSteamAccounts"
++
++    func start() {
++        guard !started else { return }
++        started = true
++        accounts = Self.load()
++        rememberCurrent()
++        NotificationCenter.default.addObserver(forName: SteamSignIn.didChange, object: nil, queue: .main) { _ in
++            MainActor.assumeIsolated { MangoSteamAccounts.shared.rememberCurrent() }
++        }
++    }
++
++    /// The account signed in now joins (or refreshes) the saved list.
++    func rememberCurrent() {
++        guard let tokens = SteamTokenStore().loadTokens(),
++              SteamSignIn.usable(accountName: tokens.accountName, refreshToken: tokens.refreshToken, now: Date()) != nil else { return }
++        let account = Account(accountName: tokens.accountName, refreshToken: tokens.refreshToken, accessToken: tokens.accessToken)
++        guard accounts.first(where: { $0.id == account.id }) != account else { return }
++        accounts.removeAll { $0.id == account.id }
++        accounts.append(account)
++        save()
++    }
++
++    func forget(_ name: String) {
++        accounts.removeAll { $0.id == name.lowercased() }
++        save()
++    }
++
++    /// Signs out of the account in use (it stays saved) and signs in as `account`.
++    func switchTo(_ account: Account) {
++        guard !switching, account.usable else { return }
++        start()
++        rememberCurrent()
++        switching = true
++        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
++        LogStore.shared.log("[mango-accounts] switching Steam account")
++        SteamSignIn.signOut()
++        // After the library has handled the sign-out (SteamOwnedLibrary.signInChanged), so it
++        // logs off and reloads for the other account instead of keeping the first one's session.
++        Task { @MainActor in
++            try? await Task.sleep(nanoseconds: 1_000_000_000)
++            _ = SteamSignIn.store(accountName: account.accountName, refreshToken: account.refreshToken, accessToken: account.accessToken)
++            self.switching = false
++        }
++    }
++
++    /// Signs out of the account in use, keeping it saved, so another one can sign in.
++    func addAnother() {
++        start()
++        rememberCurrent()
++        SteamSignIn.signOut()
++    }
++
++    private static func load() -> [Account] {
++        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
++                                    kSecAttrAccount as String: "accounts", kSecReturnData as String: true,
++                                    kSecMatchLimit as String: kSecMatchLimitOne]
++        var result: AnyObject?
++        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess, let data = result as? Data,
++              let list = try? JSONDecoder().decode([Account].self, from: data) else { return [] }
++        return list
++    }
++
++    private func save() {
++        let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service,
++                                   kSecAttrAccount as String: "accounts"]
++        SecItemDelete(base as CFDictionary)
++        guard !accounts.isEmpty, let data = try? JSONEncoder().encode(accounts) else { return }
++        var add = base
++        add[kSecValueData as String] = data
++        add[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
++        SecItemAdd(add as CFDictionary, nil)
++    }
++}
++
++/// Settings › Steam: the other saved accounts, one tap to switch, and Add another account.
++struct MangoSteamAccountRows: View {
++    let current: String?
++    /// Opens Steam sign-in (the library presents it).
++    var signIn: () -> Void
++    @ObservedObject private var store = MangoSteamAccounts.shared
++
++    var body: some View {
++        let others = store.accounts.filter { $0.id != current?.lowercased() }
++        ForEach(others) { account in
++            Button { store.switchTo(account) } label: {
++                HStack {
++                    Label(account.accountName, systemImage: "person.crop.circle")
++                    Spacer()
++                    Text(account.usable ? L("Switch") : L("Sign in again")).font(.caption.weight(.semibold))
++                        .foregroundStyle(account.usable ? MangoTheme.mango : .secondary)
++                }
++            }
++            .disabled(store.switching || !account.usable)
++            .swipeActions {
++                Button(role: .destructive) { store.forget(account.accountName) } label: { Label("Forget", systemImage: "trash") }
++            }
++        }
++        if store.switching {
++            HStack(spacing: 10) { ProgressView(); Text("Switching account…").foregroundStyle(.secondary) }
++        }
++        if current != nil {
++            Button { store.addAnother(); signIn() } label: { Label("Add another account", systemImage: "person.badge.plus") }
++                .disabled(store.switching)
++        }
++        if !others.isEmpty {
++            Text("Saved accounts stay on this iPhone so you can switch in one tap. Swipe one to forget it. Downloads pause while switching, and each account sees only its own games.")
++                .font(.caption).foregroundStyle(.secondary)
++        }
++    }
++}
++
+ // MARK: - Mango Port: game modes as add-ons
+ 
+ /// Games whose modes Steam sells as apps of their own, by the main game's App ID. In the
