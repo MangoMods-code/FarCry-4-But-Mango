@@ -8,6 +8,13 @@
       "updated" : "2026-11-13"
     },
     {
+      "appID" : 42710,
+      "name" : "Call of Duty: Black Ops - Multiplayer",
+      "note" : "Same as Base Black Ops Issue",
+      "status" : "notYet",
+      "updated" : "2026-11-13"
+    },
+    {
       "appID" : 202970,
       "name" : "Call of Duty: Black Ops II",
       "note" : "Tested on mango port: Full campaign not tested.",
