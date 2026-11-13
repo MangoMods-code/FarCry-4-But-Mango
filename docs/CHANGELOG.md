@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.1
+Less to set up by hand.
+
+- Black Ops, Black Ops II, Borderlands 2 and other older Activision and 2K games no longer hang on "Steam is preparing this game's executable": Mango Port now makes the two Windows folders that step needs, by itself
+- The DirectX installer's "exit -9" during one-time installs is expected and harmless; games run without it
+
 ## v0.7.0
 Know before you download.
 

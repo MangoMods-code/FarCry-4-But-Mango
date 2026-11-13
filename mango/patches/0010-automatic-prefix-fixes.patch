@@ -1,0 +1,60 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 140192c..eac6c95 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -1672,6 +1672,7 @@ final class LibraryModel: ObservableObject {
+     /// When the starting screen went up, for its elapsed-time line.
+     var startingSince: Date { launching ? launchStarted : preparingSince }
+     func prepare(_ entry: LibraryEntry) {
++        MangoPrefixFixes.apply()   // Mango Port: before every start too, in case Windows was just made
+         guard MadeiraConfig.flag("MADEIRA_LAUNCH_EARLY"), current == nil else { return }   // 0: Play keeps the Game details page up until the session begins
+         preparingSince = Date(); preparing = entry
+         // The starting screen draws in the controls window (LibraryHUD), which otherwise
+diff --git a/app/Madeira/MadeiraApp.swift b/app/Madeira/MadeiraApp.swift
+index 0679214..d4ca6a4 100644
+--- a/app/Madeira/MadeiraApp.swift
++++ b/app/Madeira/MadeiraApp.swift
+@@ -37,6 +37,7 @@ struct MadeiraApp: App {
+                 .modifier(ClaimGamepadEvents())
+                 .onAppear {
+                     ExternalDrives.shared.mountAll()
++                    MangoPrefixFixes.apply()                      // Mango Port: folders games need (SteamGames.swift)
+                     GamepadInput.shared.start()
+                     HardwareInput.shared.start()
+                     JITNetworkShortcut.shared.restoreLeftover()   // also starts its network path monitor
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index 6bf1b46..bd645fd 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -1821,3 +1821,31 @@ struct MangoUnplayableCover: View {
+         .accessibilityHidden(true)
+     }
+ }
++
++// MARK: - Mango Port: automatic prefix fixes
++
++/// Fixes to Mango Port's Windows that games need and nobody should have to make by hand.
++/// Run at every app start and before every game start; each one is cheap and does nothing
++/// once it is in place. Not main-actor bound: LibraryModel.prepare calls it too.
++enum MangoPrefixFixes {
++    /// Steam's custom-executable step (CEG, in older Activision and 2K games such as Black Ops,
++    /// Black Ops II and Borderlands 2) waits forever on "Steam is preparing this game's
++    /// executable" unless the empty folders C:\windows\system32\mui and C:\windows\syswow64\mui
++    /// exist, as they do on Windows (Madeira's Black Ops notes; the help guide, section 6).
++    static func apply() {
++        let fm = FileManager.default
++        let windows = MadeiraDock.drive.appendingPathComponent("windows", isDirectory: true)
++        guard fm.fileExists(atPath: windows.path) else { return }   // no Windows yet: the first start makes it, the next one these
++        for sub in ["system32/mui", "syswow64/mui"] {
++            let dir = windows.appendingPathComponent(sub, isDirectory: true)
++            guard !fm.fileExists(atPath: dir.path) else { continue }
++            let name = "C:\\windows\\" + sub.replacingOccurrences(of: "/", with: "\\")
++            do {
++                try fm.createDirectory(at: dir, withIntermediateDirectories: true)
++                LogStore.shared.log("[mango-prefix] made \(name) (Steam's CEG step needs it)")
++            } catch {
++                LogStore.shared.log("[mango-prefix] could not make \(name): \(error.localizedDescription)")
++            }
++        }
++    }
++}
