@@ -1,0 +1,76 @@
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index 203a854..20c2893 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -1959,26 +1959,52 @@ final class MangoStatusStore: ObservableObject {
+         }
+     }
+ 
++    /// When this phone last saved the list. For a few minutes after, a copy from the raw CDN
++    /// (which can lag behind a new commit by up to five minutes) is not applied.
++    private var savedAt: Date?
++
+     @MainActor func refresh() async {
+         do {
+-            // The query string keeps the CDN and URLCache from answering with an old copy.
+-            var parts = URLComponents(url: Self.rawURL, resolvingAgainstBaseURL: false)!
+-            parts.queryItems = [URLQueryItem(name: "t", value: String(Int(Date().timeIntervalSince1970)))]
+-            let request = URLRequest(url: parts.url!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+-            let (data, response) = try await URLSession.shared.data(for: request)
+-            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+-            guard code == 200 else { throw StatusError.http(code) }
+-            let file = try JSONDecoder().decode(File.self, from: data)
+-            remote = file.games
++            let (games, fresh) = try await Self.fetch()
++            if !fresh, let savedAt, Date().timeIntervalSince(savedAt) < 360 {
++                LogStore.shared.log("[mango-status] kept the list just saved; the CDN copy may be older")
++                return
++            }
++            remote = games
+             lastError = nil
+-            try? data.write(to: Self.cacheURL, options: .atomic)
+-            LogStore.shared.log("[mango-status] list read: \(file.games.count) game(s)")
++            if let body = try? JSONEncoder().encode(File(version: 1, games: games)) { try? body.write(to: Self.cacheURL, options: .atomic) }
++            LogStore.shared.log("[mango-status] list read: \(games.count) game(s) from \(fresh ? "GitHub" : "the CDN")")
+         } catch {
+             lastError = error.localizedDescription
+             LogStore.shared.log("[mango-status] list not read: \(error.localizedDescription)")
+         }
+     }
+ 
++    /// The list as GitHub has it now: the contents API answers from the repository itself
++    /// (the owner's token when there is one, for the higher limit); without an answer from it
++    /// (no connection to it, or the hourly limit for this network), the raw CDN copy.
++    /// `fresh` is false for the CDN copy.
++    private static func fetch() async throws -> ([Game], Bool) {
++        var api = URLRequest(url: apiURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
++        if let token = MangoOwnerKey.read() { authorize(&api, token) } else {
++            api.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
++            api.setValue("MangoPort", forHTTPHeaderField: "User-Agent")
++        }
++        api.setValue("application/vnd.github.raw+json", forHTTPHeaderField: "Accept")
++        if let answer = try? await URLSession.shared.data(for: api),
++           (answer.1 as? HTTPURLResponse)?.statusCode == 200,
++           let file = try? JSONDecoder().decode(File.self, from: answer.0) {
++            return (file.games, true)
++        }
++        var parts = URLComponents(url: rawURL, resolvingAgainstBaseURL: false)!
++        parts.queryItems = [URLQueryItem(name: "t", value: String(Int(Date().timeIntervalSince1970)))]
++        let request = URLRequest(url: parts.url!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
++        let (data, response) = try await URLSession.shared.data(for: request)
++        let code = (response as? HTTPURLResponse)?.statusCode ?? 0
++        guard code == 200 else { throw StatusError.http(code) }
++        return (try JSONDecoder().decode(File.self, from: data).games, false)
++    }
++
+     /// Owner only: reads the file as GitHub has it now, applies `edit`, and writes it back
+     /// (with its sha, so a change made meanwhile is not overwritten).
+     @MainActor func change(message: String, _ edit: (inout [Game]) -> Void) async throws {
+@@ -2017,6 +2043,7 @@ final class MangoStatusStore: ObservableObject {
+         guard putCode == 200 || putCode == 201 else { throw StatusError.http(putCode) }
+         remote = games
+         lastError = nil
++        savedAt = Date()
+         try? body.write(to: Self.cacheURL, options: .atomic)
+         LogStore.shared.log("[mango-status] list saved: \(games.count) game(s)")
+     }

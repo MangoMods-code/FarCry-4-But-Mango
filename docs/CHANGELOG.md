@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.2
+Game status keeps your changes.
+
+- Fixed: games you added or changed on Game status seemed to go back to how they were when you reopened the page. Your changes were saved; the page was reading an older copy of the list. It now reads the newest one
+
 ## v0.9.1
 Easier JIT setup.
 

@@ -23,6 +23,7 @@ Mango Port runs **your own copies of Windows PC games** on a non-jailbroken iPho
 | `mango/patches/0012-game-status-page.patch` | The online tested-games list (`status/games.json`, read at every start) and the **Game status** page, editable in the app with the owner key ([`docs/STATUS.md`](docs/STATUS.md)) |
 | `status/games.json` | The tested-games list itself |
 | `mango/patches/0013-paste-pairing-file-host-name.patch` | **Paste pairing file** in JIT setup and first-run setup (for copies whose certificate can't open the file picker), and iOS's pairing row reads "Pair with Mango Port" |
+| `mango/patches/0014-status-list-fresh-read.patch` | Game status reads the list from GitHub's API (fresh within seconds) instead of the raw CDN (up to five minutes behind), and keeps a just-saved list |
 | `scripts/apply-mango.sh` | Fetches Madeira and applies the patches (idempotent) |
 | `scripts/test.sh` | Runs the Madeira host checks the patches touch |
 | `docs/` | Roadmap, Far Cry 4 test log, legal notes |
