@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.12.1
+Smoother in-game video and audio.
+
+- Updated to the latest Madeira, which brings FFmpeg 7.1.5 (the part that plays in-game videos and audio) with its bug fixes
+
 ## v0.12.0
 Only the stores you use, and quick Steam account switching.
 
