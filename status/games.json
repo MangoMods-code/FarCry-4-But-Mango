@@ -8,6 +8,13 @@
       "updated" : "2026-11-13"
     },
     {
+      "appID" : 202970,
+      "name" : "Call of Duty: Black Ops II",
+      "note" : "Tested In Mango Port: Full Campaign Not Tested",
+      "status" : "works",
+      "updated" : "2026-11-13"
+    },
+    {
       "appID" : 377160,
       "name" : "Fallout 4",
       "note" : "Tested in Mango Port: plays well. Busy open-world areas can slow down.",
