@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.1
+Easier JIT setup.
+
+- New **Paste pairing file**: copy your pairing file's text and paste it in, for when the file picker won't open (Settings › JIT › JIT setup, or first-run setup)
+- Pairing on the phone now shows **Pair with Mango Port** in iOS Settings
+
 ## v0.9.0
 Game status, live.
 

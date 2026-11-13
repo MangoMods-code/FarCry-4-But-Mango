@@ -1,0 +1,90 @@
+diff --git a/app/Madeira/JITPairing.swift b/app/Madeira/JITPairing.swift
+index 42ff804..a0b3b27 100644
+--- a/app/Madeira/JITPairing.swift
++++ b/app/Madeira/JITPairing.swift
+@@ -33,7 +33,7 @@ import UserNotifications
+     static let shared = OnDevicePairing()
+ 
+     /// Shown on the iPhone as "Pair with Madeira"; the host identifier is derived from it.
+-    static let hostName = "Madeira"
++    static let hostName = "Mango Port"   // Mango Port: the name iOS shows ("Pair with Mango Port")
+     static let timeout: TimeInterval = 300
+ 
+     enum Phase: Equatable {
+diff --git a/app/Madeira/JITSetup.swift b/app/Madeira/JITSetup.swift
+index abcec07..46b508f 100644
+--- a/app/Madeira/JITSetup.swift
++++ b/app/Madeira/JITSetup.swift
+@@ -341,6 +341,30 @@ final class JITCoordinator: ObservableObject {
+         }
+     }
+ 
++    /// Mango Port: the pairing file pasted instead of picked. A sideloaded copy whose
++    /// certificate was made for another app can't open the file picker, but the
++    /// clipboard works: copy the file's contents (StikDebug, Files, a note) and paste.
++    func pastePairingFile() {
++        let board = UIPasteboard.general
++        let data = board.data(forPasteboardType: "com.apple.property-list")
++            ?? board.data(forPasteboardType: "public.xml")
++            ?? board.string.map { Data($0.trimmingCharacters(in: .whitespacesAndNewlines).utf8) }
++        guard let data, !data.isEmpty else {
++            error = L("Nothing to paste. Copy the whole pairing file's text first, then tap Paste pairing file.")
++            return
++        }
++        do {
++            try JITPairingFileStore.store(data, source: .imported)
++            OnDevicePairing.shared.cancel()
++            refreshPairingStatus()
++            status = L("Pairing file pasted.")
++            error = nil
++            LogStore.shared.log("[jit-built-in] pairing file pasted (\(data.count) bytes)")
++        } catch {
++            self.error = error.localizedDescription
++        }
++    }
++
+     func importPairingFile(_ source: URL) {
+         do {
+             try JITPairingFileStore.importFile(from: source)
+@@ -629,6 +653,7 @@ struct JITSetupView: View {
+                             OnDevicePairingPanel()
+                         }
+                         Button("Import pairing file") { importing = true }
++                        Button(L("Paste pairing file")) { coordinator.pastePairingFile() }   // Mango Port
+                         Link("How to create a pairing file",
+                              destination: URL(string: "https://github.com/StikDebug/StikDebug-Guide/blob/main/pairing_file.md")!)
+                         Button(LocalDevVPN.actionTitle) { LocalDevVPN.open() }
+diff --git a/app/Madeira/Onboarding.swift b/app/Madeira/Onboarding.swift
+index 884379a..189d1cf 100644
+--- a/app/Madeira/Onboarding.swift
++++ b/app/Madeira/Onboarding.swift
+@@ -445,8 +445,10 @@ struct OnboardingView: View {
+                 vpnNote
+                 primary("Continue", symbol: "arrow.right") { useBuiltIn() }
+                 secondary("Choose another pairing file") { importPairingFile() }
++                secondary(L("Paste another pairing file")) { pastePairingFile() }
+             } else {
+                 primary("Choose pairing file", symbol: "folder") { importPairingFile() }
++                secondary(L("Paste pairing file")) { pastePairingFile() }   // Mango Port: when the file picker can't open
+             }
+             if let error = pairingImportError ?? jit.error {
+                 Label(error, systemImage: "exclamationmark.circle.fill").foregroundStyle(.red)
+@@ -534,6 +536,18 @@ struct OnboardingView: View {
+         importingPairingFile = true
+     }
+ 
++    /// Mango Port: the pairing file from the clipboard (see JITCoordinator.pastePairingFile).
++    private func pastePairingFile() {
++        pairingImportError = nil
++        jit.pastePairingFile()
++        if jit.pairingImported {
++            jit.method = .builtIn
++            LogStore.shared.log("[onboarding] JIT method=built-in pairing=pasted")
++        } else if let error = jit.error {
++            pairingImportError = error
++        }
++    }
++
+     private func useBuiltIn() {
+         jit.method = .builtIn
+         LogStore.shared.log("[onboarding] JIT method=built-in")
