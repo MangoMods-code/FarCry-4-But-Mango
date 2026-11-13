@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.0
+Know before you download.
+
+- Games we've tested that can't run on iPhone now show a red "Can't run on iPhone" label, and their Steam page explains why instead of offering Install
+- First on the list: Hood Warfare 2, whose Easy Anti-Cheat only runs on Windows and Linux
+
 ## v0.6.3
 A smoother Settings tab.
 

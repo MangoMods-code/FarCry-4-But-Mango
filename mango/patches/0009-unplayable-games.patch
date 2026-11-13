@@ -1,0 +1,95 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 8925c91..140192c 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -4042,6 +4042,8 @@ struct LibraryDetail: View {
+     }
+     private func start() {
+         guard !leaving else { return }
++        // Mango Port: a game tested and found unable to run (SteamGames.swift, MangoUnplayable).
++        if let why = MangoUnplayable.reason(entry.steamAppID) { error = why; return }
+         // A Steam game starts through Madeira Dock (ContentView.launchLibraryEntry)
+         // once its files are complete and Dock can sign in; "The game" once its
+         // program is chosen (no client or sign-in involved).
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index b537094..6bf1b46 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -800,6 +800,7 @@ struct SteamGameCell: View {
+                         .clipShape(RoundedRectangle(cornerRadius: 8))
+                     VStack(alignment: .leading, spacing: 8) {
+                         Text(item.name).font(.headline).lineLimit(2)
++                        if MangoUnplayable.reason(item.id) != nil { MangoUnplayableLabel() }   // Mango Port
+                         if let download { SteamDownloadStatus(download: download) } else { pills(status, entry) }
+                         if download == nil, let summary = steam.playtime[item.id]?.summary {
+                             Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+@@ -815,11 +816,13 @@ struct SteamGameCell: View {
+                         .overlay { if notDownloaded { notDownloadedFace(.largeTitle) } }
+                         .clipShape(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous))
+                         .overlay(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
++                        .overlay { if MangoUnplayable.reason(item.id) != nil { MangoUnplayableCover() } }   // Mango Port
+                         .modifier(LibraryCardArtworkPress { pressed, bounds in
+                             AmbientGlowItem(id: "steam-\(item.id)", seed: item.id, art: .steam(item.id), dimmed: notDownloaded,
+                                             pressed: pressed, bounds: bounds)
+                         })
+                     Text(item.name).font(.system(.subheadline, design: .rounded).weight(.heavy)).lineLimit(2)
++                    if MangoUnplayable.reason(item.id) != nil { MangoUnplayableLabel() }   // Mango Port
+                     pills(status, entry)
+                     if let played = steam.playtime[item.id]?.played {
+                         Text(played).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+@@ -1261,7 +1264,13 @@ struct SteamGameSheet: View {
+     static let downloadNote = "Games download directly from Steam with your account, to this iPhone or to the drive picked under Install on. You can leave Mango Port while it downloads: on iOS 26 and later iOS shows the download's progress and keeps it going; on earlier versions it pauses after a short while and continues when you return. A download pauses while a game is running and continues afterwards."
+ 
+     @ViewBuilder private func primaryAction(_ item: SteamGamesRules.Item) -> some View {
+-        if let installed = item.installed {
++        if let why = MangoUnplayable.reason(appID) {
++            // Mango Port: a game tested and found unable to run gets no Install, Open or Resume.
++            VStack(alignment: .leading, spacing: 6) {
++                MangoUnplayableLabel()
++                Text(why).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++            }
++        } else if let installed = item.installed {
+             // The download finished (or Steam's client installed the game): its Game details page.
+             Button {
+                 let entry = LibraryModel.shared.steamEntry(installed, title: item.name)
+@@ -1775,3 +1784,40 @@ struct SteamEntrySection: View {
+         LogStore.shared.log("[steam-start] app=\(appID) launch-entries=\(options.count) programs=\(found.count) source=\(entry.steamProgramSource ?? "none")")
+     }
+ }
++
++// MARK: - Mango Port: games that cannot run
++
++/// Steam games tested in Mango Port and found unable to run on iPhone, by App ID, with
++/// the reason. They get a red label in the library, their Steam page offers no Install,
++/// and Play refuses to start them (LibraryDetail.start). Add a game here once a test
++/// shows it cannot run, for a reason no setting can change (kernel anti-cheat, for one).
++enum MangoUnplayable {
++    static let games: [Int: String] = [
++        // Easy Anti-Cheat stops at "Failed to initialize Wine helper buffer": its Wine
++        // support needs a Linux-only runtime (owner's test, 2026-11-12).
++        5155360: "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
++    ]
++    static func reason(_ appID: Int?) -> String? { appID.flatMap { games[$0] } }
++}
++
++/// "Can't run on iPhone" in red.
++struct MangoUnplayableLabel: View {
++    var body: some View {
++        Label("Can't run on iPhone", systemImage: "xmark.octagon.fill")
++            .font(.system(.caption, design: .rounded).weight(.heavy))
++            .foregroundStyle(.red)
++            .lineLimit(1).minimumScaleFactor(0.8)
++    }
++}
++
++/// A grid card's artwork, dimmed with a red mark, for a game that cannot run.
++struct MangoUnplayableCover: View {
++    var body: some View {
++        ZStack {
++            Color.black.opacity(0.55)
++            Image(systemName: "xmark.octagon.fill").font(.system(size: 34, weight: .bold)).foregroundStyle(.red)
++        }
++        .clipShape(RoundedRectangle(cornerRadius: MangoTheme.cardRadius, style: .continuous))
++        .accessibilityHidden(true)
++    }
++}
