@@ -1,0 +1,232 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index eac6c95..ec2286d 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -3637,7 +3637,10 @@ struct LibraryView: View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 24) {
+                 // Mango Port: the last game played, a tap from its Game details page.
+-                if search.isEmpty { MangoContinueHero(open: { selected = $0 }) }
++                if search.isEmpty {
++                    MangoGreeting()
++                    MangoContinueHero(open: { selected = $0 })
++                }
+                 if !storeTabs.isEmpty { LibraryStoreTabBar(tabs: storeTabs, selection: $storeTab) }
+                 desktopButton
+                 // The library's sections, as in the fork: Steam (installed and downloading
+@@ -4507,6 +4510,10 @@ struct LibraryDetail: View {
+                             .shadow(color: MangoTheme.mango.opacity(0.3), radius: 16, y: 8)
+                         VStack(alignment: .leading, spacing: 12) {
+                             Text(entry.title).font(.system(.title2, design: .rounded).weight(.heavy))
++                            if let tested = MangoCompat.entry(entry.steamAppID) {   // Mango Port
++                                MangoCompatLabel(status: tested.status)
++                                Text(tested.note).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                            }
+                             LibraryBadges(entry: entry)
+                             if let appID = entry.steamAppID, let summary = SteamOwnedLibrary.shared.playtime[appID]?.summary {
+                                 Text(summary).font(.subheadline).foregroundStyle(.secondary)
+@@ -4517,7 +4524,7 @@ struct LibraryDetail: View {
+                             if DockOffline.enabled, let appID = entry.steamAppID, !entry.startsSteamGameDirectly {
+                                 DockOfflineMark(appID: appID)
+                             }
+-                            Button(action: start) {
++                            Button { UIImpactFeedbackGenerator(style: .heavy).impactOccurred(); start() } label: {   // Mango Port: a firm tap
+                                 HStack(spacing: 10) {
+                                     // Enabling JIT can take seconds with nothing else on screen.
+                                     if model.startingJIT == entry.id {
+@@ -7143,6 +7150,8 @@ struct MangoContinueHero: View {
+     @ObservedObject private var library = LibraryModel.shared
+     @ObservedObject private var steamGames = SteamGamesModel.shared
+     @ObservedObject private var steam = SteamOwnedLibrary.shared
++    /// The Continue button's glow breathes slowly (still with Reduce Motion).
++    @State private var glowing = false
+ 
+     private enum Pick {
+         case entry(LibraryEntry)
+@@ -7171,7 +7180,10 @@ struct MangoContinueHero: View {
+ 
+     var body: some View {
+         if let latest {
+-            Button { open(entry(for: latest.pick)) } label: { card(latest.pick, played: latest.played) }
++            Button {
++                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
++                open(entry(for: latest.pick))
++            } label: { card(latest.pick, played: latest.played) }
+                 .buttonStyle(.plain)
+                 .accessibilityElement(children: .combine)
+                 .accessibilityHint(L("Opens the game's details"))
+@@ -7185,6 +7197,13 @@ struct MangoContinueHero: View {
+         }
+     }
+ 
++    private func appID(_ pick: Pick) -> Int? {
++        switch pick {
++        case .entry(let entry): return entry.steamAppID
++        case .steam(let game, _): return game.id
++        }
++    }
++
+     private func title(_ pick: Pick) -> String {
+         switch pick {
+         case .entry(let entry): return entry.title
+@@ -7221,6 +7240,7 @@ struct MangoContinueHero: View {
+                 Text(title(pick)).font(.system(size: 30, weight: .black, design: .rounded))
+                     .foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.6)
+                     .shadow(color: .black.opacity(0.5), radius: 6, y: 2)
++                if let tested = MangoCompat.entry(appID(pick)) { MangoCompatLabel(status: tested.status) }
+                 HStack(spacing: 12) {
+                     HStack(spacing: 8) {
+                         Image(systemName: "play.fill")
+@@ -7230,7 +7250,11 @@ struct MangoContinueHero: View {
+                     .foregroundStyle(MangoTheme.onAccent)
+                     .padding(.horizontal, 22).frame(height: 46)
+                     .background(Capsule().fill(MangoTheme.buttonGradient))
+-                    .shadow(color: MangoTheme.mango.opacity(0.5), radius: 12, y: 6)
++                    .shadow(color: MangoTheme.mango.opacity(glowing ? 0.75 : 0.4), radius: glowing ? 18 : 10, y: 6)
++                    .onAppear {
++                        guard !UIAccessibility.isReduceMotionEnabled else { return }
++                        withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { glowing = true }
++                    }
+                     Text(played, format: .relative(presentation: .named))
+                         .font(.system(size: 13, weight: .bold, design: .rounded))
+                         .foregroundStyle(MangoTheme.soft).lineLimit(1)
+@@ -7246,3 +7270,38 @@ struct MangoContinueHero: View {
+         .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+     }
+ }
++
++/// Above Continue playing: a greeting for the time of day, and the library in one line
++/// (games ready to play, and the hours Steam counted on the installed ones).
++struct MangoGreeting: View {
++    @ObservedObject private var library = LibraryModel.shared
++    @ObservedObject private var steamGames = SteamGamesModel.shared
++    @ObservedObject private var steam = SteamOwnedLibrary.shared
++
++    private var greeting: String {
++        let hour = Calendar.current.component(.hour, from: Date())
++        switch hour {
++        case 5..<12: return L("Good morning")
++        case 12..<17: return L("Good afternoon")
++        case 17..<22: return L("Good evening")
++        default: return L("Late-night session")
++        }
++    }
++
++    var body: some View {
++        let installed = steamGames.games.filter(\.installed)
++        let added = library.entries.filter { game in game.desktop != true && game.listedInLibrary && game.steamAppID == nil }.count
++        let games = installed.count + added
++        let hours = installed.reduce(0) { $0 + (steam.playtime[$1.id]?.minutes ?? 0) } / 60
++        VStack(alignment: .leading, spacing: 2) {
++            Text(verbatim: greeting).font(.system(.title3, design: .rounded).weight(.heavy))
++            if games > 0 {
++                Text(verbatim: games == 1 ? L("1 game ready") + (hours > 0 ? " · \(hours) " + L("hrs played") : "")
++                                          : "\(games) " + L("games ready") + (hours > 0 ? " · \(hours) " + L("hrs played") : ""))
++                    .font(.system(.subheadline, design: .rounded).weight(.bold))
++                    .foregroundStyle(MangoTheme.muted)
++            }
++        }
++        .accessibilityElement(children: .combine)
++    }
++}
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index bd645fd..aa76b1d 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -800,7 +800,7 @@ struct SteamGameCell: View {
+                         .clipShape(RoundedRectangle(cornerRadius: 8))
+                     VStack(alignment: .leading, spacing: 8) {
+                         Text(item.name).font(.headline).lineLimit(2)
+-                        if MangoUnplayable.reason(item.id) != nil { MangoUnplayableLabel() }   // Mango Port
++                        if let tested = MangoCompat.entry(item.id) { MangoCompatLabel(status: tested.status) }   // Mango Port
+                         if let download { SteamDownloadStatus(download: download) } else { pills(status, entry) }
+                         if download == nil, let summary = steam.playtime[item.id]?.summary {
+                             Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+@@ -822,7 +822,7 @@ struct SteamGameCell: View {
+                                             pressed: pressed, bounds: bounds)
+                         })
+                     Text(item.name).font(.system(.subheadline, design: .rounded).weight(.heavy)).lineLimit(2)
+-                    if MangoUnplayable.reason(item.id) != nil { MangoUnplayableLabel() }   // Mango Port
++                    if let tested = MangoCompat.entry(item.id) { MangoCompatLabel(status: tested.status) }   // Mango Port
+                     pills(status, entry)
+                     if let played = steam.playtime[item.id]?.played {
+                         Text(played).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+@@ -1181,6 +1181,10 @@ struct SteamGameSheet: View {
+                                 if let summary = steam.playtime[appID]?.summary {
+                                     Text(summary).font(.subheadline).foregroundStyle(.secondary)
+                                 }
++                                if let tested = MangoCompat.entry(appID), tested.status != .cantRun {   // Mango Port
++                                    MangoCompatLabel(status: tested.status)
++                                    Text(tested.note).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
++                                }
+                                 primaryAction(item)
+                             }
+                         }.padding(.vertical, 24)
+@@ -1792,24 +1796,60 @@ struct SteamEntrySection: View {
+ /// and Play refuses to start them (LibraryDetail.start). Add a game here once a test
+ /// shows it cannot run, for a reason no setting can change (kernel anti-cheat, for one).
+ enum MangoUnplayable {
+-    static let games: [Int: String] = [
++    static func reason(_ appID: Int?) -> String? {
++        guard let entry = MangoCompat.entry(appID), entry.status == .cantRun else { return nil }
++        return entry.note
++    }
++}
++
++/// Mango Port's own test results, by Steam App ID: a badge on the game's card, its Steam
++/// page, its Game details page and Continue playing. Only "Can't run" blocks Install and
++/// Play; "Currently not playable" still starts, so a fix can be tried as soon as it lands.
++enum MangoCompat {
++    enum Status { case works, issues, notYet, cantRun }
++    struct Entry { let status: Status; let note: String }
++    static let games: [Int: Entry] = [
++        // The Elder Scrolls V: Skyrim Special Edition (owner's play, 2026-11-12).
++        489830: Entry(status: .works, note: "Tested in Mango Port: plays well."),
++        // Fallout 4: 108 FPS in the opening (owner's test, 2026-11-12); open-world areas are heavier.
++        377160: Entry(status: .works, note: "Tested in Mango Port: plays well. Busy open-world areas can slow down."),
++        // MX vs ATV Legends (owner's test, 2026-11-13).
++        1205970: Entry(status: .issues, note: "Tested in Mango Port: plays, with some issues."),
++        // Call of Duty: Black Ops: Steam's CEG job ends RemoteCallFailed (55) because Valve's
++        // client service does not start under the Dock (ceg-service-start=0; owner's log,
++        // 2026-11-13). Waits on a Madeira Dock fix.
++        42700: Entry(status: .notYet, note: "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira."),
+         // Easy Anti-Cheat stops at "Failed to initialize Wine helper buffer": its Wine
+         // support needs a Linux-only runtime (owner's test, 2026-11-12).
+-        5155360: "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone.",
++        5155360: Entry(status: .cantRun, note: "Hood Warfare 2 uses Easy Anti-Cheat, which only runs on Windows and Linux. It can't start on iPhone."),
+     ]
+-    static func reason(_ appID: Int?) -> String? { appID.flatMap { games[$0] } }
++    static func entry(_ appID: Int?) -> Entry? { appID.flatMap { games[$0] } }
+ }
+ 
+-/// "Can't run on iPhone" in red.
+-struct MangoUnplayableLabel: View {
++/// A tested game's status, as a coloured label.
++struct MangoCompatLabel: View {
++    let status: MangoCompat.Status
+     var body: some View {
+-        Label("Can't run on iPhone", systemImage: "xmark.octagon.fill")
++        let (title, symbol, color): (String, String, Color) = {
++            switch status {
++            case .works: return (L("Works"), "checkmark.seal.fill", MangoTheme.leafText)
++            case .issues: return (L("Playable with issues"), "exclamationmark.triangle.fill", MangoTheme.gold)
++            case .notYet: return (L("Currently not playable"), "clock.badge.xmark", Color.orange)
++            case .cantRun: return (L("Can't run on iPhone"), "xmark.octagon.fill", Color.red)
++            }
++        }()
++        Label(title, systemImage: symbol)
+             .font(.system(.caption, design: .rounded).weight(.heavy))
+-            .foregroundStyle(.red)
++            .foregroundStyle(color)
+             .lineLimit(1).minimumScaleFactor(0.8)
+     }
+ }
+ 
++/// "Can't run on iPhone" in red.
++struct MangoUnplayableLabel: View {
++    var body: some View { MangoCompatLabel(status: .cantRun) }
++}
++
+ /// A grid card's artwork, dimmed with a red mark, for a game that cannot run.
+ struct MangoUnplayableCover: View {
+     var body: some View {

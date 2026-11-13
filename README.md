@@ -19,6 +19,7 @@ Mango Port runs **your own copies of Windows PC games** on a non-jailbroken iPho
 | `mango/patches/0008-tap-bolt-to-enable-jit.patch` | The grey JIT bolt beside the title enables JIT when tapped |
 | `mango/patches/0009-unplayable-games.patch` | Games tested and found unable to run (MangoUnplayable in SteamGames.swift, by Steam App ID): a red "Can't run on iPhone" label, no Install on their Steam page, and Play refuses them |
 | `mango/patches/0010-automatic-prefix-fixes.patch` | Fixes Mango Port makes to Windows by itself (MangoPrefixFixes): the empty `system32\mui` and `syswow64\mui` folders Steam's CEG step needs (Black Ops, Black Ops II, Borderlands 2), at every app start and game start |
+| `mango/patches/0011-tested-status-greeting-haptics.patch` | Mango Port's tested status per Steam game (MangoCompat: Works, Playable with issues, Currently not playable, Can't run) on cards, Steam pages, Game details and Continue playing; a greeting with library stats; haptics on Play and Continue; a breathing glow on Continue |
 | `scripts/apply-mango.sh` | Fetches Madeira and applies the patches (idempotent) |
 | `scripts/test.sh` | Runs the Madeira host checks the patches touch |
 | `docs/` | Roadmap, Far Cry 4 test log, legal notes |

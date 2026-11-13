@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.0
+Know what works, and a livelier library.
+
+- Tested games now carry a badge on their card, Steam page and details page: **Works** (green), **Playable with issues** (gold), **Currently not playable** (orange) and **Can't run on iPhone** (red)
+- Skyrim and Fallout 4: Works. MX vs ATV Legends: Playable with issues. Black Ops: Currently not playable, waiting on a fix in Madeira (you can still try it)
+- A greeting for the time of day above Continue playing, with how many games you have ready and the hours you've played
+- Continue playing shows the game's badge, and its button glows gently
+- Play and Continue give a little tap of haptic feedback
+
 ## v0.7.1
 Less to set up by hand.
 
