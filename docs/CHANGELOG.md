@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.3
+A smoother Settings tab.
+
+- Fixed the Mango Port title smearing into a glass bubble when you open or leave a Settings page: the title now shows on the Library tab only, and Settings opens its pages cleanly
+
 ## v0.6.2
 A smoother top bar.
 

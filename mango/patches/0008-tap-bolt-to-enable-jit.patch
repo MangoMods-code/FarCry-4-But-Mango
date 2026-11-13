@@ -1,5 +1,5 @@
 diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
-index e763e5a..62a399f 100644
+index e763e5a..8925c91 100644
 --- a/app/Madeira/Library.swift
 +++ b/app/Madeira/Library.swift
 @@ -2058,11 +2058,13 @@ enum LibraryRendererBadge {
@@ -26,15 +26,13 @@ index e763e5a..62a399f 100644
      @ObservedObject private var alignment = LibraryHeaderAlignment.shared
      @ObservedObject private var jitState = LibraryJITState.shared
      var body: some View {
-@@ -2083,8 +2086,17 @@ struct LibraryTitleText: View {
+@@ -2083,8 +2086,15 @@ struct LibraryTitleText: View {
                  .accessibilityElement(children: .ignore)
                  .accessibilityLabel(LibraryHeaderAlignment.title + ", powered by Madeira")
                  .accessibilityAddTraits(.isHeader)
 +            // Mango Port: a tap on the grey bolt enables JIT from the library, the way
 +            // Settings' Enable JIT button does; once it is green there is nothing to do.
-+            // A tap gesture, not a Button: a button made this toolbar item interactive, and
-+            // iOS 26 then gave the whole title a Liquid Glass platter that smeared into the
-+            // back button on every push and pop (v0.6.1).
++            // A tap gesture rather than a Button, so the title item holds no control of its own.
              MangoJITPill(on: jit)
 +                .contentShape(Circle())
 +                .onTapGesture { if !jit { enableJIT() } }
@@ -44,12 +42,23 @@ index e763e5a..62a399f 100644
          }
          .font(.system(.largeTitle, design: .rounded).weight(.black))
          .fixedSize()
-@@ -3399,7 +3411,7 @@ struct LibraryView: View {
+@@ -3399,8 +3409,17 @@ struct LibraryView: View {
          // which iOS 26 draws as a Liquid Glass morph between the two.
          .navigationTitle("")
          .toolbar {
 -            LibraryLargeTitle()
-+            LibraryLargeTitle(enableJIT: enableJIT)
-             if tab == 0 { libraryToolbar } else { settingsToolbar }
+-            if tab == 0 { libraryToolbar } else { settingsToolbar }
++            // Mango Port: the wordmark only on the Library tab. On iOS 26 a leading toolbar
++            // item is wrapped in Liquid Glass while the bar morphs into a pushed page's back
++            // button, and Settings pushes its pages, so there the title smeared into a glass
++            // bubble on every push and pop (v0.6.1, v0.6.2). The Library opens its pages as
++            // sheets, which never morph the bar.
++            if tab == 0 {
++                LibraryLargeTitle(enableJIT: enableJIT)
++                libraryToolbar
++            } else {
++                settingsToolbar
++            }
          }
          // On the tab view, not inside one tab's page: an alert attached to the Library
+         // page cannot present while Settings is showing, so an error raised there (its
