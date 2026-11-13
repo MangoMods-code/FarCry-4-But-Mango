@@ -2,6 +2,14 @@
   "games" : [
     {
       "appID" : 42700,
+      "modes" : [
+        {
+          "appID" : 42710,
+          "name" : "Multiplayer",
+          "note" : "Same issue as base game",
+          "status" : "notYet"
+        }
+      ],
       "name" : "Call of Duty: Black Ops",
       "note" : "Currently not playable: Steam can't prepare this game's copy protection on iPhone yet. It's waiting on a fix in Madeira.",
       "status" : "notYet",
