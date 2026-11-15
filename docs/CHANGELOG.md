@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.13.0
+Games on your Home Screen.
+
+- New **Make Home Screen app** on a game's Library details page: Mango Port makes a small app with the game's name and its Steam art (with a little mango) as the icon, and opens the share sheet. Send it to Mango Signer to sign and install it; tapping it opens the game in Mango Port
+- The game itself still runs in Mango Port, so keep Mango Port installed (and JIT on, as usual). Each Home Screen app uses one app on your certificate
+
 ## v0.12.1
 Smoother in-game video and audio.
 

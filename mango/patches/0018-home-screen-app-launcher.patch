@@ -1,0 +1,250 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 7171df37..7852431b 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -4481,6 +4481,7 @@ struct LibraryDetail: View {
+                     Label(copiedLink ? L("Link copied") : L("Copy Home Screen shortcut link"),
+                           systemImage: copiedLink ? "checkmark" : "link")
+                 }
++                MangoLauncherButton(entry: entry)   // Mango Port: the game as its own Home Screen app
+             } header: { Text("Home Screen") } footer: {
+                 Text("Shortcuts › Open URLs › paste › Add to Home Screen.")
+             }
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index f3d5049f..ad2258a7 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -2612,6 +2612,216 @@ struct MangoSteamAccountRows: View {
+     }
+ }
+ 
++// MARK: - Mango Port: a game as its own Home Screen app
++
++/// "Make Home Screen app" on a game's Library details page: an unsigned IPA made on the phone
++/// from the launcher Mango Port carries (MangoLauncher.b64, mango/launcher), with the game's
++/// name, its Steam art as the icon and its start link (ShortcutRouter) in Info.plist. The share
++/// sheet hands it to Mango Signer, which signs and installs it. The game still runs in Mango Port.
++enum MangoLauncherMaker {
++    struct Failure: LocalizedError {
++        let message: String
++        var errorDescription: String? { message }
++    }
++
++    private static var templateURL: URL? { Bundle.main.url(forResource: "MangoLauncher", withExtension: "b64") }
++    static var available: Bool { templateURL != nil }
++
++    static func make(title: String, link: String, steamAppID: Int?) async throws -> URL {
++        guard let url = templateURL, let text = try? String(contentsOf: url, encoding: .utf8),
++              let binary = Data(base64Encoded: text, options: .ignoreUnknownCharacters), !binary.isEmpty else {
++            throw Failure(message: L("This build of Mango Port has no launcher to copy."))
++        }
++        let art = await artwork(steamAppID)
++        let name = fileName(title)
++        let folder = "Payload/\(name).app/"
++        let suffix = steamAppID.map { "steam\($0)" } ?? slug(title)
++        let plist: [String: Any] = [
++            "CFBundleDevelopmentRegion": "en",
++            "CFBundleExecutable": "MangoLauncher",
++            "CFBundleIdentifier": "com.mangomods.mangoport.launcher.\(suffix)",
++            "CFBundleInfoDictionaryVersion": "6.0",
++            "CFBundleName": String(title.prefix(15)),
++            "CFBundleDisplayName": title,
++            "CFBundlePackageType": "APPL",
++            "CFBundleShortVersionString": "1.0",
++            "CFBundleVersion": "1",
++            "CFBundleSupportedPlatforms": ["iPhoneOS"],
++            "DTPlatformName": "iphoneos",
++            "MinimumOSVersion": "16.0",
++            "LSRequiresIPhoneOS": true,
++            "UIDeviceFamily": [1, 2],
++            "UIRequiredDeviceCapabilities": ["arm64"],
++            "UILaunchScreen": [String: Any](),
++            "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft",
++                                                 "UIInterfaceOrientationLandscapeRight"],
++            "UIApplicationSceneManifest": [
++                "UIApplicationSupportsMultipleScenes": false,
++                "UISceneConfigurations": ["UIWindowSceneSessionRoleApplication": [
++                    ["UISceneConfigurationName": "Default", "UISceneDelegateClassName": "MangoSceneDelegate"],
++                ]],
++            ],
++            "CFBundleIcons": ["CFBundlePrimaryIcon": ["CFBundleIconFiles": ["AppIcon60x60"]]],
++            "CFBundleIcons~ipad": ["CFBundlePrimaryIcon": ["CFBundleIconFiles": ["AppIcon60x60", "AppIcon76x76"]]],
++            "LSApplicationQueriesSchemes": ["madeira"],
++            "MangoLaunchURL": link,
++        ]
++        let info = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
++        let entries: [(String, Data, UInt32)] = [
++            ("Payload/", Data(), 0o40755),
++            (folder, Data(), 0o40755),
++            (folder + "MangoLauncher", binary, 0o100755),
++            (folder + "Info.plist", info, 0o100644),
++            (folder + "PkgInfo", Data("APPL????".utf8), 0o100644),
++            (folder + "AppIcon60x60@2x.png", icon(art, side: 120), 0o100644),
++            (folder + "AppIcon60x60@3x.png", icon(art, side: 180), 0o100644),
++            (folder + "AppIcon76x76@2x.png", icon(art, side: 152), 0o100644),
++        ]
++        let out = FileManager.default.temporaryDirectory.appendingPathComponent("\(name).ipa")
++        try zip(entries).write(to: out, options: .atomic)
++        LogStore.shared.log("[mango-launcher] made \(out.lastPathComponent) (\(suffix))")
++        return out
++    }
++
++    /// The game's Steam cover (or its header when there is no cover).
++    private static func artwork(_ appID: Int?) async -> UIImage? {
++        guard let appID else { return nil }
++        for file in ["library_600x900.jpg", "header.jpg"] {
++            guard let url = URL(string: "https://cdn.cloudflare.steamstatic.com/steam/apps/\(appID)/\(file)"),
++                  let (data, response) = try? await URLSession.shared.data(from: url),
++                  (response as? HTTPURLResponse)?.statusCode == 200, let image = UIImage(data: data) else { continue }
++            return image
++        }
++        return nil
++    }
++
++    /// A square icon: the art filling it, with Mango Port's mango in the corner.
++    private static func icon(_ art: UIImage?, side: CGFloat) -> Data {
++        let format = UIGraphicsImageRendererFormat()
++        format.scale = 1
++        format.opaque = true
++        return UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format).pngData { context in
++            UIColor(red: 0.09, green: 0.06, blue: 0.03, alpha: 1).setFill()
++            context.fill(CGRect(x: 0, y: 0, width: side, height: side))
++            let glyph = UIImage(named: "MangoGlyph")
++            if let art, art.size.width > 0, art.size.height > 0 {
++                let scale = max(side / art.size.width, side / art.size.height)
++                let w = art.size.width * scale, h = art.size.height * scale
++                art.draw(in: CGRect(x: (side - w) / 2, y: (side - h) / 2, width: w, height: h))
++                let g = side * 0.3, inset = side * 0.05
++                glyph?.draw(in: CGRect(x: side - g - inset, y: side - g - inset, width: g, height: g))
++            } else {
++                let g = side * 0.6
++                glyph?.draw(in: CGRect(x: (side - g) / 2, y: (side - g) / 2, width: g, height: g))
++            }
++        }
++    }
++
++    private static func fileName(_ title: String) -> String {
++        let kept = title.unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) || $0 == " " || $0 == "-" }
++        let name = String(String.UnicodeScalarView(kept)).trimmingCharacters(in: .whitespaces)
++        return name.isEmpty ? "Game" : String(name.prefix(60))
++    }
++
++    private static func slug(_ title: String) -> String {
++        let kept = title.lowercased().unicodeScalars.filter { ("a"..."z").contains($0) || ("0"..."9").contains($0) }
++        let text = String(String.UnicodeScalarView(kept))
++        return text.isEmpty ? "game" : String(text.prefix(40))
++    }
++
++    // A stored (uncompressed) zip with Unix modes, so the launcher stays executable.
++    private static let crcTable: [UInt32] = (0..<256).map { index -> UInt32 in
++        var c = UInt32(index)
++        for _ in 0..<8 { c = (c & 1) != 0 ? 0xEDB8_8320 ^ (c >> 1) : c >> 1 }
++        return c
++    }
++
++    private static func crc32(_ data: Data) -> UInt32 {
++        var c: UInt32 = 0xFFFF_FFFF
++        for byte in data { c = crcTable[Int((c ^ UInt32(byte)) & 0xFF)] ^ (c >> 8) }
++        return c ^ 0xFFFF_FFFF
++    }
++
++    private static func zip(_ entries: [(String, Data, UInt32)]) -> Data {
++        func put16(_ value: UInt16, _ data: inout Data) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
++        func put32(_ value: UInt32, _ data: inout Data) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
++        let date: UInt16 = UInt16((2026 - 1980) << 9 | 1 << 5 | 1)
++        var out = Data(), central = Data()
++        for entry in entries {
++            let name = Data(entry.0.utf8), body = entry.1, mode = entry.2
++            let directory = entry.0.hasSuffix("/")
++            let crc = crc32(body), offset = UInt32(out.count), size = UInt32(body.count)
++            put32(0x0403_4b50, &out); put16(20, &out); put16(0x0800, &out); put16(0, &out)
++            put16(0, &out); put16(date, &out); put32(crc, &out); put32(size, &out); put32(size, &out)
++            put16(UInt16(name.count), &out); put16(0, &out)
++            out.append(name); out.append(body)
++            put32(0x0201_4b50, &central); put16(0x0314, &central); put16(20, &central); put16(0x0800, &central); put16(0, &central)
++            put16(0, &central); put16(date, &central); put32(crc, &central); put32(size, &central); put32(size, &central)
++            put16(UInt16(name.count), &central); put16(0, &central); put16(0, &central); put16(0, &central); put16(0, &central)
++            put32(mode << 16 | (directory ? 0x10 : 0), &central); put32(offset, &central)
++            central.append(name)
++        }
++        let start = UInt32(out.count)
++        out.append(central)
++        put32(0x0605_4b50, &out); put16(0, &out); put16(0, &out)
++        put16(UInt16(entries.count), &out); put16(UInt16(entries.count), &out)
++        put32(UInt32(central.count), &out); put32(start, &out); put16(0, &out)
++        return out
++    }
++
++    /// The share sheet, presented from the top of the app (a sheet in a Form can close itself
++    /// when the Form rebuilds its rows).
++    @MainActor static func share(_ file: URL) {
++        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
++        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first,
++              var top = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController ?? scene.windows.first?.rootViewController else { return }
++        while let next = top.presentedViewController { top = next }
++        let sheet = UIActivityViewController(activityItems: [file], applicationActivities: nil)
++        sheet.popoverPresentationController?.sourceView = top.view
++        sheet.popoverPresentationController?.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 1, height: 1)
++        top.present(sheet, animated: true)
++    }
++}
++
++/// The Library details page's "Make Home Screen app".
++struct MangoLauncherButton: View {
++    let entry: LibraryEntry
++    @State private var busy = false
++    @State private var failure: String?
++
++    var body: some View {
++        if MangoLauncherMaker.available {
++            Button { make() } label: {
++                HStack {
++                    Label(busy ? L("Making the app…") : L("Make Home Screen app"), systemImage: "apps.iphone.badge.plus")
++                    if busy { Spacer(); ProgressView() }
++                }
++            }
++            .disabled(busy)
++            Text("An app with this game's name and art, to sign in Mango Signer. It opens the game in Mango Port.")
++                .font(.caption).foregroundStyle(.secondary)
++            if let failure { Text(verbatim: failure).font(.caption).foregroundStyle(.red) }
++        }
++    }
++
++    private func make() {
++        busy = true
++        failure = nil
++        LibraryModel.shared.save(entry)   // the link finds the game by its library entry
++        Task { @MainActor in
++            do {
++                let file = try await MangoLauncherMaker.make(title: entry.title, link: ShortcutRouter.link(for: entry.windowsPath),
++                                                             steamAppID: entry.steamAppID)
++                UINotificationFeedbackGenerator().notificationOccurred(.success)
++                MangoLauncherMaker.share(file)
++            } catch let error {
++                failure = error.localizedDescription
++            }
++            busy = false
++        }
++    }
++}
++
+ // MARK: - Mango Port: game modes as add-ons
+ 
+ /// Games whose modes Steam sells as apps of their own, by the main game's App ID. In the
+diff --git a/tools/build/package-ipa.sh b/tools/build/package-ipa.sh
+index 65b000ca..48ec9d95 100755
+--- a/tools/build/package-ipa.sh
++++ b/tools/build/package-ipa.sh
+@@ -45,6 +45,12 @@ xcodebuild
+ 
+ python3 "$ROOT/tools/build/runtime-components.py" bundle "$APP"
+ 
++# Mango Port: the Home Screen launcher template, before the bundle is signed (scripts/build-launcher.sh).
++if [[ -x "$ROOT/../scripts/build-launcher.sh" ]]; then
++  "$ROOT/../scripts/build-launcher.sh" "$APP/MangoLauncher.b64" ||
++    { echo "::warning::Mango Port: Home Screen launcher not built"; rm -f "$APP/MangoLauncher.b64"; }
++fi
++
+ # Preserve Madeira's requested JIT/debug entitlements in the IPA. SideStore will
+ # replace this ad-hoc signature with the user's development signature while
+ # retaining the supported entitlements.
