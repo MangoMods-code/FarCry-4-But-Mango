@@ -1,0 +1,174 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 7852431b..e9a3c13d 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -3865,6 +3865,7 @@ struct LibraryView: View {
+                             })
+                         Text(entry.title).font(.system(.subheadline, design: .rounded).weight(.heavy)).lineLimit(2)
+                         LibraryBadges(entry: entry).foregroundStyle(.secondary)
++                        MangoPlaytimeText(key: MangoPlaytime.key(entry))   // Mango Port
+                     }.padding(4)
+                 }
+             }.foregroundStyle(.primary)
+diff --git a/app/Madeira/MadeiraApp.swift b/app/Madeira/MadeiraApp.swift
+index ddcd689b..048e67c5 100644
+--- a/app/Madeira/MadeiraApp.swift
++++ b/app/Madeira/MadeiraApp.swift
+@@ -39,6 +39,7 @@ struct MadeiraApp: App {
+                     ExternalDrives.shared.mountAll()
+                     MangoPrefixFixes.apply()                      // Mango Port: folders games need (SteamGames.swift)
+                     MangoSteamAccounts.shared.start()             // Mango Port: saved Steam accounts (SteamGames.swift)
++                    MangoPlaytime.shared.start()                  // Mango Port: time played in Mango Port (SteamGames.swift)
+                     Task { await MangoStatusStore.shared.refresh() }   // Mango Port: the tested-games list
+                     GamepadInput.shared.start()
+                     HardwareInput.shared.start()
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index ad2258a7..b932a53e 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -814,6 +814,7 @@ struct SteamGameCell: View {
+                         if download == nil, let summary = steam.playtime[item.id]?.summary {
+                             Text(summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                         }
++                        if download == nil { MangoPlaytimeText(key: "steam:\(item.id)", font: .caption) }   // Mango Port
+                     }
+                     Spacer(minLength: 0)
+                     Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+@@ -836,6 +837,7 @@ struct SteamGameCell: View {
+                     if let played = steam.playtime[item.id]?.played {
+                         Text(played).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                     }
++                    MangoPlaytimeText(key: "steam:\(item.id)")   // Mango Port: time played here
+                 }.padding(4)
+             }
+         }
+@@ -1423,6 +1425,7 @@ struct SteamCloudSection: View {
+             } footer: {
+                 Text("Syncs when Mango Port starts and when this page opens, not while you play. Use Upload saves when you stop. Replaced saves go to Files › Mango Port › Steam Cloud Backups.")
+             }
++            MangoCloudKeepSection(appID: appID)   // Mango Port
+         }
+     }
+ 
+@@ -2822,6 +2825,104 @@ struct MangoLauncherButton: View {
+     }
+ }
+ 
++// MARK: - Mango Port: keep this iPhone's saves
++
++/// Per game: when Steam Cloud and this iPhone have different saves, this iPhone's win without
++/// asking (SteamOwnedLibrary.syncCloud), as Keep this device's saves would. For games played only
++/// here, where Valve's client in a session can leave the cloud a step behind the last save.
++enum MangoCloudKeep {
++    private static let key = "mango.cloudKeepDevice"
++    static func isOn(_ appID: Int) -> Bool { (UserDefaults.standard.array(forKey: key) as? [Int] ?? []).contains(appID) }
++    static func set(_ appID: Int, _ on: Bool) {
++        var ids = Set(UserDefaults.standard.array(forKey: key) as? [Int] ?? [])
++        if on { ids.insert(appID) } else { ids.remove(appID) }
++        UserDefaults.standard.set(ids.sorted(), forKey: key)
++        LogStore.shared.log("[mango-cloud] app=\(appID) keep-device=\(on ? 1 : 0)")
++    }
++}
++
++struct MangoCloudKeepSection: View {
++    let appID: Int
++    @State private var on: Bool
++    @ObservedObject private var steam = SteamOwnedLibrary.shared
++
++    init(appID: Int) {
++        self.appID = appID
++        _on = State(initialValue: MangoCloudKeep.isOn(appID))
++    }
++
++    var body: some View {
++        Section {
++            Toggle("Always keep this iPhone's saves", isOn: $on)
++                .tint(MangoTheme.mango)
++                .onChange(of: on) { _, value in
++                    MangoCloudKeep.set(appID, value)
++                    if value { Task { await steam.resolveCloud(appID, useCloud: false) } }
++                }
++        } footer: {
++            Text("For games you only play on this iPhone. When saves differ, this iPhone's are kept and go up to Steam Cloud without asking; the cloud's copies are backed up first, in Files › Mango Port › Steam Cloud Backups.")
++        }
++    }
++}
++
++// MARK: - Mango Port: time played in Mango Port
++
++/// Minutes each game has run in Mango Port, counted while it is the session's game (checked every
++/// 30 seconds, so an app that is closed suddenly loses less than that). Steam games are counted by
++/// App ID ("steam:<id>"), other games by their library entry.
++@MainActor final class MangoPlaytime: ObservableObject {
++    static let shared = MangoPlaytime()
++    @Published private(set) var seconds: [String: Int]
++    private static let storeKey = "mango.playtime"
++    private static let step = 30
++    private var timer: Timer?
++
++    init() {
++        seconds = UserDefaults.standard.dictionary(forKey: Self.storeKey) as? [String: Int] ?? [:]
++    }
++
++    nonisolated static func key(_ entry: LibraryEntry) -> String {
++        entry.steamAppID.map { "steam:\($0)" } ?? "entry:\(entry.id.uuidString)"
++    }
++
++    func start() {
++        guard timer == nil else { return }
++        timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(Self.step), repeats: true) { _ in
++            MainActor.assumeIsolated { MangoPlaytime.shared.tick() }
++        }
++    }
++
++    private func tick() {
++        let library = LibraryModel.shared
++        guard library.current != nil, let entry = library.activeEntry, entry.desktop != true,
++              UIApplication.shared.applicationState == .active else { return }
++        let key = Self.key(entry)
++        seconds[key, default: 0] += Self.step
++        UserDefaults.standard.set(seconds, forKey: Self.storeKey)
++    }
++
++    func text(_ key: String) -> String? {
++        guard let total = seconds[key], total >= 60 else { return nil }
++        let minutes = total / 60
++        if minutes < 60 { return L("%lld min on Mango Port").replacingOccurrences(of: "%lld", with: String(minutes)) }
++        return String(format: L("%.1f hrs on Mango Port"), Double(total) / 3600)
++    }
++}
++
++/// "2.3 hrs on Mango Port", under a game's hours on Steam.
++struct MangoPlaytimeText: View {
++    let key: String
++    var font: Font = .caption2
++    @ObservedObject private var playtime = MangoPlaytime.shared
++
++    var body: some View {
++        if let text = playtime.text(key) {
++            Label(text, systemImage: "iphone").labelStyle(.titleAndIcon)
++                .font(font).foregroundStyle(MangoTheme.mango.opacity(0.9)).lineLimit(1)
++        }
++    }
++}
++
+ // MARK: - Mango Port: game modes as add-ons
+ 
+ /// Games whose modes Steam sells as apps of their own, by the main game's App ID. In the
+diff --git a/app/Madeira/SteamOwnedLibrary.swift b/app/Madeira/SteamOwnedLibrary.swift
+index 58a82c6f..1ce0ab84 100644
+--- a/app/Madeira/SteamOwnedLibrary.swift
++++ b/app/Madeira/SteamOwnedLibrary.swift
+@@ -825,6 +825,12 @@ final class SteamOwnedLibrary: ObservableObject {
+         if !plan.download.isEmpty { changed = await download(appID, plan.download) || changed }
+         if !plan.upload.isEmpty, !inSession { changed = await upload(appID, plan.upload) || changed }
+         if changed { await checkCloud(appID) }
++        // Mango Port: a game set to always keep this device's saves settles what differs here (MangoCloudKeep).
++        if MangoCloudKeep.isOn(appID), cloud[appID]?.conflicts.isEmpty == false, !inSession {
++            cloudBusy.remove(appID)
++            await resolveCloud(appID, useCloud: false)
++            cloudBusy.insert(appID)   // the defer above clears it
++        }
+     }
+ 
+     /// The user's choice for the saves that differ: the cloud's replace the

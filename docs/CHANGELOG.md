@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.14.0
+No more save tug-of-war, and your Mango Port hours.
+
+- New **Always keep this iPhone's saves**, per game, on its Steam Cloud page. For games you only play here: when Steam Cloud and your iPhone disagree, your iPhone's saves win automatically instead of blocking Play (the cloud's copies are backed up first)
+- Each game's card now shows how long you've played it **on Mango Port**, under its Steam hours. It starts counting from this version
+
 ## v0.13.0
 Games on your Home Screen.
 
