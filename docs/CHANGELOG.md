@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.15.0
+A mod menu for Moon Sweepers.
+
+- New **Mods** page and **Launch with mods** switch on Moon Sweepers' details page, off by default. With it on, Mango Port changes one save slot (you pick which, slot 2 by default) right before the game starts; every other slot stays legit
+- **Suit upgrades:** set Payout (tested: more money per load), Belt, Lamp and Clean width to any level from 1 to 10
+- **Money changer (experimental):** a first test at changing your money
+- **Copy slot 1 into another slot**, so your modded slot starts from your real progress
+- Every modded launch backs the slot up first (Files › Mango Port › Mango Mod Backups, newest five kept), and **Restore** puts the last one back
+- The page shows the slot's money and upgrade levels as they are now
+
 ## v0.14.0
 No more save tug-of-war, and your Mango Port hours.
 

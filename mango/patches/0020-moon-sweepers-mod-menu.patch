@@ -1,0 +1,480 @@
+diff --git a/app/Madeira/ContentView.swift b/app/Madeira/ContentView.swift
+index a48b9b54..15c0f9f2 100644
+--- a/app/Madeira/ContentView.swift
++++ b/app/Madeira/ContentView.swift
+@@ -2565,6 +2565,7 @@ struct ContentView: View {
+     /// applies the entry's launch profile and runs the same full sequence as the
+     /// developer interface's buttons.
+     private func launchLibraryEntry(_ entry: LibraryEntry) {
++        MangoMoonMods.shared.beforeLaunch(entry)   // Mango Port: Moon Sweepers' mods, when Launch with mods is on
+         // madeira-bcd: a game seen for the first time starts with Madeira's recommended
+         // settings (GameRecommendationsApply.swift).
+         var entry = entry
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index e9a3c13d..568c8846 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -3993,6 +3993,7 @@ struct LibraryDetail: View {
+     var play: (LibraryEntry) -> Void
+     @Environment(\.dismiss) private var dismiss
+     @ObservedObject private var model = LibraryModel.shared
++    @ObservedObject private var moonMods = MangoMoonMods.shared   // Mango Port: Moon Sweepers' mod menu
+     @State private var importCover = false
+     /// madeira-bcd: this game's own switches as the fork stores them (reloadBCD).
+     @State private var bcd = BCDGameValues()
+@@ -4581,6 +4582,15 @@ struct LibraryDetail: View {
+                 if let appID = entry.steamAppID, MangoGameFamily.modes[appID] != nil {
+                     MangoAddOnsSection(appID: appID, opens: true)
+                 }
++                // Mango Port: Moon Sweepers' mod menu (SteamGames.swift, MangoMoonMods).
++                if entry.steamAppID == MangoMoonSave.appID {
++                    Section {
++                        Toggle("Launch with mods", isOn: $moonMods.enabled).tint(MangoTheme.mango)
++                        NavigationLink { MangoMoonModsPage() } label: { Label("Mods", systemImage: "wand.and.stars") }
++                    } footer: {
++                        Text(moonMods.enabled ? "Mods go into slot \(moonMods.slot) when you press Play." : "Off: the game starts with its saves untouched.")
++                    }
++                }
+                 if let appName = entry.epicAppName {
+                     EpicEntrySection(entry: $entry) { leaving = true; dismiss() }
+                     EpicCloudSection(appName: appName)
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index b932a53e..229d8ccf 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -4,6 +4,8 @@
+ 
+ import SwiftUI
+ import Security   // Mango Port: the owner key in the Keychain (MangoOwnerKey)
++import Compression   // Mango Port: Moon Sweepers' saves (MangoMoonSave)
++import CryptoKit
+ 
+ // Steam games in the library (docs/LIBRARY.md, "Steam setup", and
+ // docs/STEAM_LIBRARY.md): the games Steam has installed in the prefix, which is
+@@ -2923,6 +2925,426 @@ struct MangoPlaytimeText: View {
+     }
+ }
+ 
++// MARK: - Mango Port: Moon Sweepers mod menu
++
++/// Moon Sweepers' save files, read and written the way the game does. A slot's session.moon is
++/// "1PCM", the uncompressed length (UInt32), a 64-character SHA-256 of the uncompressed data
++/// (length-prefixed) and the data gzipped; slot.json beside it is the save-slot summary.
++enum MangoMoonSave {
++    static let appID = 5335510
++
++    struct Session {
++        var raw: Data
++        let magic: Data
++    }
++
++    enum SaveError: LocalizedError {
++        case notFound(String), badFile(String)
++        var errorDescription: String? {
++            switch self {
++            case .notFound(let what): return what
++            case .badFile(let what): return "This save isn't in the format Mango Port knows (\(what)). Nothing was changed."
++            }
++        }
++    }
++
++    /// The game's save folder: C:\users\<you>\AppData\LocalLow\DragDropGames\MoonSweepers.
++    static func root() -> URL? {
++        let users = MadeiraDock.drive.appendingPathComponent("users", isDirectory: true)
++        let names = (try? FileManager.default.contentsOfDirectory(atPath: users.path)) ?? []
++        for name in names {
++            let folder = users.appendingPathComponent(name).appendingPathComponent("AppData/LocalLow/DragDropGames/MoonSweepers", isDirectory: true)
++            if FileManager.default.fileExists(atPath: folder.path) { return folder }
++        }
++        return nil
++    }
++
++    /// A slot's folder ("slot-2"), wherever the game keeps it under its save folder.
++    static func slotFolder(_ slot: Int) -> URL? {
++        guard let root = root() else { return nil }
++        let want = "slot-\(slot)"
++        if let walker = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isDirectoryKey]) {
++            for case let url as URL in walker where url.lastPathComponent == want {
++                if (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true { return url }
++            }
++        }
++        return nil
++    }
++
++    /// The slot's session.moon (inside its world folder).
++    static func sessionFile(in slotFolder: URL) -> URL? {
++        guard let walker = FileManager.default.enumerator(at: slotFolder, includingPropertiesForKeys: nil) else { return nil }
++        for case let url as URL in walker where url.lastPathComponent == "session.moon" && url.deletingLastPathComponent().lastPathComponent != "backups" {
++            return url
++        }
++        return nil
++    }
++
++    static func read(_ url: URL) throws -> Session {
++        let file = try Data(contentsOf: url)
++        guard file.count > 83, file.prefix(4) == Data("1PCM".utf8), file[file.startIndex + 8] == 64 else { throw SaveError.badFile("header") }
++        let bytes = [UInt8](file)
++        let length = Int(UInt32(bytes[4]) | UInt32(bytes[5]) << 8 | UInt32(bytes[6]) << 16 | UInt32(bytes[7]) << 24)
++        let hash = String(decoding: bytes[9..<73], as: UTF8.self)
++        guard length > 0, length < 64 << 20 else { throw SaveError.badFile("size") }
++        let raw = try gunzip(Array(bytes[73...]), length: length)
++        guard sha256Hex(raw) == hash else { throw SaveError.badFile("checksum") }
++        return Session(raw: Data(raw), magic: file.prefix(4))
++    }
++
++    static func write(_ session: Session, to url: URL) throws {
++        let raw = [UInt8](session.raw)
++        var out = Data(session.magic)
++        var length = UInt32(raw.count).littleEndian
++        withUnsafeBytes(of: &length) { out.append(contentsOf: $0) }
++        out.append(64)
++        out.append(Data(sha256Hex(raw).utf8))
++        out.append(try gzip(raw))
++        // Read back before replacing the real file: a bad write never reaches the game.
++        let check = url.deletingLastPathComponent().appendingPathComponent(".mango-check.moon")
++        try out.write(to: check, options: .atomic)
++        defer { try? FileManager.default.removeItem(at: check) }
++        _ = try read(check)
++        try out.write(to: url, options: .atomic)
++    }
++
++    static func sha256Hex(_ bytes: [UInt8]) -> String {
++        SHA256.hash(data: Data(bytes)).map { String(format: "%02x", $0) }.joined()
++    }
++
++    private static func gunzip(_ bytes: [UInt8], length: Int) throws -> [UInt8] {
++        guard bytes.count > 18, bytes[0] == 0x1f, bytes[1] == 0x8b, bytes[2] == 8 else { throw SaveError.badFile("compression") }
++        let flags = bytes[3]
++        var p = 10
++        if flags & 4 != 0 { p += 2 + Int(bytes[p]) + Int(bytes[p + 1]) << 8 }
++        if flags & 8 != 0 { while p < bytes.count, bytes[p] != 0 { p += 1 }; p += 1 }
++        if flags & 16 != 0 { while p < bytes.count, bytes[p] != 0 { p += 1 }; p += 1 }
++        if flags & 2 != 0 { p += 2 }
++        guard p < bytes.count - 8 else { throw SaveError.badFile("compression") }
++        var out = [UInt8](repeating: 0, count: length)
++        let deflated = Array(bytes[p..<(bytes.count - 8)])
++        let written = out.withUnsafeMutableBufferPointer { dst in
++            deflated.withUnsafeBufferPointer { src in
++                compression_decode_buffer(dst.baseAddress!, length, src.baseAddress!, deflated.count, nil, COMPRESSION_ZLIB)
++            }
++        }
++        guard written == length else { throw SaveError.badFile("compressed data") }
++        return out
++    }
++
++    private static func gzip(_ raw: [UInt8]) throws -> Data {
++        let capacity = raw.count + raw.count / 8 + 4096
++        var deflated = [UInt8](repeating: 0, count: capacity)
++        let written = deflated.withUnsafeMutableBufferPointer { dst in
++            raw.withUnsafeBufferPointer { src in
++                compression_encode_buffer(dst.baseAddress!, capacity, src.baseAddress!, raw.count, nil, COMPRESSION_ZLIB)
++            }
++        }
++        guard written > 0 else { throw SaveError.badFile("compressing") }
++        var out = Data([0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 0x0a])
++        out.append(contentsOf: deflated[0..<written])
++        var crc = crc32(raw).littleEndian, size = UInt32(truncatingIfNeeded: raw.count).littleEndian
++        withUnsafeBytes(of: &crc) { out.append(contentsOf: $0) }
++        withUnsafeBytes(of: &size) { out.append(contentsOf: $0) }
++        return out
++    }
++
++    private static let crcTable: [UInt32] = (0..<256).map { index -> UInt32 in
++        var c = UInt32(index)
++        for _ in 0..<8 { c = (c & 1) != 0 ? 0xEDB8_8320 ^ (c >> 1) : c >> 1 }
++        return c
++    }
++    private static func crc32(_ bytes: [UInt8]) -> UInt32 {
++        var c: UInt32 = 0xFFFF_FFFF
++        for byte in bytes { c = crcTable[Int((c ^ UInt32(byte)) & 0xFF)] ^ (c >> 8) }
++        return c ^ 0xFFFF_FFFF
++    }
++
++    // MARK: Values inside a session
++
++    /// An upgrade's level: its name (length-prefixed) followed by an Int32.
++    static func level(_ name: String, in raw: Data) -> Int? {
++        guard let at = position(after: name, in: raw), at + 4 <= raw.count else { return nil }
++        return Int(raw.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: at, as: Int32.self) }.littleEndian)
++    }
++
++    static func setLevel(_ name: String, _ value: Int, in raw: inout Data) -> Bool {
++        guard let at = position(after: name, in: raw), at + 4 <= raw.count else { return false }
++        var v = Int32(value).littleEndian
++        withUnsafeBytes(of: &v) { raw.replaceSubrange(at..<(at + 4), with: $0) }
++        return true
++    }
++
++    private static func position(after name: String, in raw: Data) -> Int? {
++        var needle = Data([UInt8(name.utf8.count)])
++        needle.append(Data(name.utf8))
++        guard let range = raw.range(of: needle) else { return nil }
++        return range.upperBound - raw.startIndex
++    }
++
++    /// Lifetime earnings, stored as a Double right before the team's name ("<earned> 01000000 04 team"),
++    /// with a second copy in the player's entry just before it.
++    static func earnings(in raw: Data) -> [Int] {
++        guard let team = raw.range(of: Data([4] + Array("team".utf8))) else { return [] }
++        let t = team.lowerBound - raw.startIndex
++        var spots: [Int] = []
++        if t >= 12 { spots.append(t - 12) }
++        if t >= 24, raw.subdata(in: (t - 24)..<(t - 16)) == raw.subdata(in: (t - 12)..<(t - 4)) { spots.append(t - 24) }
++        return spots
++    }
++
++    static func double(at offset: Int, in raw: Data) -> Double {
++        Double(bitPattern: raw.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset, as: UInt64.self) }.littleEndian)
++    }
++
++    static func setDouble(_ value: Double, at offset: Int, in raw: inout Data) {
++        var bits = value.bitPattern.littleEndian
++        withUnsafeBytes(of: &bits) { raw.replaceSubrange(offset..<(offset + 8), with: $0) }
++    }
++
++    /// slot.json's money (the save-slot screen).
++    static func slotDollars(_ slotFolder: URL) -> Double? {
++        guard let data = try? Data(contentsOf: slotFolder.appendingPathComponent("slot.json")),
++              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
++        return (object["dollars"] as? NSNumber)?.doubleValue
++    }
++
++    static func setSlotDollars(_ value: Double, _ slotFolder: URL) {
++        for name in ["slot.json", "slot.json.bak"] {
++            let url = slotFolder.appendingPathComponent(name)
++            guard let text = try? String(contentsOf: url, encoding: .utf8),
++                  let regex = try? NSRegularExpression(pattern: "\"dollars\":[-0-9.eE+]+") else { continue }
++            let range = NSRange(text.startIndex..., in: text)
++            let replaced = regex.stringByReplacingMatches(in: text, range: range, withTemplate: "\"dollars\":\(value)")
++            try? replaced.write(to: url, atomically: true, encoding: .utf8)
++        }
++    }
++}
++
++/// The mods chosen on Moon Sweepers' Mods page, kept on this iPhone.
++final class MangoMoonMods: ObservableObject {
++    static let shared = MangoMoonMods()
++    struct Upgrade: Hashable { let key: String; let title: String; let note: String }
++    static let upgrades: [Upgrade] = [
++        Upgrade(key: "eco.payout", title: "Payout", note: "More money for each load of dust. Tested: works."),
++        Upgrade(key: "gear.belt", title: "Belt", note: "Carry capacity. Not tested yet."),
++        Upgrade(key: "suit.lamp", title: "Lamp", note: "Suit lamp. Not tested yet."),
++        Upgrade(key: "clean.width", title: "Clean width", note: "How wide a sweep cleans. Not tested yet."),
++    ]
++
++    @Published var enabled: Bool { didSet { save() } }
++    @Published var slot: Int { didSet { save() } }
++    /// Upgrade key -> level to set (missing: left as the game has it).
++    @Published var levels: [String: Int] { didSet { save() } }
++    @Published var moneyOn: Bool { didSet { save() } }
++    @Published var money: Double { didSet { save() } }
++    @Published private(set) var lastResult: String?
++
++    private static let key = "mango.moonMods"
++
++    init() {
++        let saved = UserDefaults.standard.dictionary(forKey: Self.key) ?? [:]
++        enabled = saved["enabled"] as? Bool ?? false
++        slot = saved["slot"] as? Int ?? 2
++        levels = saved["levels"] as? [String: Int] ?? [:]
++        moneyOn = saved["moneyOn"] as? Bool ?? false
++        money = saved["money"] as? Double ?? 10_000
++        lastResult = saved["lastResult"] as? String
++    }
++
++    private func save() {
++        var all: [String: Any] = ["enabled": enabled, "slot": slot, "levels": levels, "moneyOn": moneyOn, "money": money]
++        if let lastResult { all["lastResult"] = lastResult }
++        UserDefaults.standard.set(all, forKey: Self.key)
++    }
++
++    private func finish(_ text: String) {
++        lastResult = text
++        save()
++        LogStore.shared.log("[mango-mods] \(text)")
++    }
++
++    /// Where this slot's untouched copies go before each modded launch (outside the game's folder,
++    /// so Steam Cloud doesn't carry them): Documents/Mango Mod Backups/Moon Sweepers/slot-N/<time>.
++    static func backupRoot(_ slot: Int) -> URL {
++        LibraryModel.documents.appendingPathComponent("Mango Mod Backups/Moon Sweepers/slot-\(slot)", isDirectory: true)
++    }
++
++    private func backup(_ slotFolder: URL) throws -> URL {
++        let fm = FileManager.default
++        let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
++        let target = Self.backupRoot(slot).appendingPathComponent(stamp, isDirectory: true)
++        try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
++        try fm.copyItem(at: slotFolder, to: target)
++        // Keep the newest five.
++        let all = ((try? fm.contentsOfDirectory(at: Self.backupRoot(slot), includingPropertiesForKeys: nil)) ?? []).sorted { $0.lastPathComponent > $1.lastPathComponent }
++        for old in all.dropFirst(5) { try? fm.removeItem(at: old) }
++        return target
++    }
++
++    /// Before Moon Sweepers starts (ContentView.launchLibraryEntry): with Launch with mods on, the chosen
++    /// slot gets the chosen mods. Any problem leaves the save as it was and the game starts anyway.
++    func beforeLaunch(_ entry: LibraryEntry) {
++        guard enabled, entry.steamAppID == MangoMoonSave.appID else { return }
++        do {
++            guard let folder = MangoMoonSave.slotFolder(slot) else {
++                throw MangoMoonSave.SaveError.notFound("Slot \(slot) has no save yet. Start a game in slot \(slot), or copy slot 1 into it, then try again.")
++            }
++            guard let file = MangoMoonSave.sessionFile(in: folder) else { throw MangoMoonSave.SaveError.notFound("Slot \(slot) has no session.moon.") }
++            var session = try MangoMoonSave.read(file)
++            var done: [String] = []
++            for (key, level) in levels.sorted(by: { $0.key < $1.key }) where level > 0 {
++                if MangoMoonSave.setLevel(key, level, in: &session.raw) { done.append("\(key) \(level)") }
++                else { done.append("\(key) not bought yet, skipped") }
++            }
++            if moneyOn {
++                let current = MangoMoonSave.slotDollars(folder) ?? 0
++                let spots = MangoMoonSave.earnings(in: session.raw)
++                for spot in spots {
++                    let earned = MangoMoonSave.double(at: spot, in: session.raw)
++                    MangoMoonSave.setDouble(earned + (money - current), at: spot, in: &session.raw)
++                }
++                done.append("money test \(Int(money)) (\(spots.count) spot\(spots.count == 1 ? "" : "s"))")
++            }
++            guard !done.isEmpty else { finish("Launch with mods is on, but no mod is chosen."); return }
++            let saved = try backup(folder)
++            try MangoMoonSave.write(session, to: file)
++            if moneyOn { MangoMoonSave.setSlotDollars(money, folder) }
++            finish("Slot \(slot): " + done.joined(separator: ", ") + ". Backup: \(saved.lastPathComponent)")
++        } catch {
++            finish("Mods not applied: \(error.localizedDescription)")
++        }
++    }
++
++    /// Copies slot 1 over the chosen slot (that slot's old files are backed up first).
++    func copySlotOne() -> String {
++        let fm = FileManager.default
++        guard slot != 1, let one = MangoMoonSave.slotFolder(1) else { return "Slot 1 has no save to copy." }
++        let target = one.deletingLastPathComponent().appendingPathComponent("slot-\(slot)", isDirectory: true)
++        do {
++            if fm.fileExists(atPath: target.path) {
++                _ = try backup(target)
++                try fm.removeItem(at: target)
++            }
++            try fm.copyItem(at: one, to: target)
++            finish("Copied slot 1 into slot \(slot).")
++            return "Slot 1 is now copied into slot \(slot). Pick slot \(slot) in the game for modded play."
++        } catch {
++            return "Couldn't copy: \(error.localizedDescription)"
++        }
++    }
++
++    /// Puts the newest backup of the chosen slot back.
++    func restoreLatest() -> String {
++        let fm = FileManager.default
++        guard let newest = ((try? fm.contentsOfDirectory(at: Self.backupRoot(slot), includingPropertiesForKeys: nil)) ?? [])
++            .sorted(by: { $0.lastPathComponent > $1.lastPathComponent }).first,
++              let target = MangoMoonSave.slotFolder(slot) ?? MangoMoonSave.slotFolder(1).map({ $0.deletingLastPathComponent().appendingPathComponent("slot-\(slot)") })
++        else { return "No backup of slot \(slot) yet." }
++        do {
++            if fm.fileExists(atPath: target.path) { try fm.removeItem(at: target) }
++            try fm.copyItem(at: newest, to: target)
++            finish("Restored slot \(slot) from \(newest.lastPathComponent).")
++            return "Slot \(slot) is back to how it was before \(newest.lastPathComponent)."
++        } catch {
++            return "Couldn't restore: \(error.localizedDescription)"
++        }
++    }
++
++    /// What the chosen slot holds now, for the page.
++    func readout() -> [String] {
++        guard let folder = MangoMoonSave.slotFolder(slot) else { return ["Slot \(slot): no save yet"] }
++        var lines: [String] = []
++        if let dollars = MangoMoonSave.slotDollars(folder) { lines.append(String(format: "Money: $%.2f", dollars)) }
++        if let file = MangoMoonSave.sessionFile(in: folder), let session = try? MangoMoonSave.read(file) {
++            for upgrade in Self.upgrades {
++                lines.append("\(upgrade.title): " + (MangoMoonSave.level(upgrade.key, in: session.raw).map { "level \($0)" } ?? "not bought"))
++            }
++        } else {
++            lines.append("The slot's save couldn't be read.")
++        }
++        return lines
++    }
++}
++
++/// Game details › Mods (Moon Sweepers).
++struct MangoMoonModsPage: View {
++    @ObservedObject private var mods = MangoMoonMods.shared
++    @State private var readout: [String] = []
++    @State private var notice: String?
++    @State private var confirmCopy = false
++    @State private var moneyText = ""
++
++    var body: some View {
++        Form {
++            Section {
++                Toggle("Launch with mods", isOn: $mods.enabled).tint(MangoTheme.mango)
++                Picker("Modded save slot", selection: $mods.slot) {
++                    ForEach(1...4, id: \.self) { Text("Slot \($0)").tag($0) }
++                }
++                if mods.slot != 1 {
++                    Button("Copy slot 1 into slot \(mods.slot)…") { confirmCopy = true }
++                }
++            } footer: {
++                Text("Mods only change the slot picked here, and only when Launch with mods is on. Every other slot stays legit. Before each modded launch, the slot is backed up in Files › Mango Port › Mango Mod Backups. Play solo: keep mods out of co-op.")
++            }
++
++            Section {
++                ForEach(MangoMoonMods.upgrades, id: \.key) { upgrade in
++                    Picker(selection: Binding(get: { mods.levels[upgrade.key] ?? 0 },
++                                              set: { mods.levels[upgrade.key] = $0 == 0 ? nil : $0 })) {
++                        Text("Leave as is").tag(0)
++                        ForEach(1...10, id: \.self) { Text("Level \($0)").tag($0) }
++                    } label: {
++                        VStack(alignment: .leading, spacing: 2) {
++                            Text(upgrade.title)
++                            Text(upgrade.note).font(.caption).foregroundStyle(.secondary)
++                        }
++                    }
++                }
++            } header: { Text("Suit upgrades") } footer: {
++                Text("Only upgrades you've bought at least once can be changed. If a slot won't load after a big level, restore it below and pick a lower one.")
++            }
++
++            Section {
++                Toggle("Money changer (experimental)", isOn: $mods.moneyOn).tint(MangoTheme.mango)
++                if mods.moneyOn {
++                    LabeledContent("Money") {
++                        TextField("10000", text: $moneyText)
++                            .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
++                            .onChange(of: moneyText) { _, text in if let value = Double(text) { mods.money = max(0, min(value, 1_000_000_000)) } }
++                    }
++                }
++            } header: { Text("Test mods") } footer: {
++                Text("The game scrambles its money, so this test sets your earnings total and the save-slot screen to the amount instead. It may not change the money shown in the game yet; tell Claude what you see.")
++            }
++
++            Section {
++                ForEach(readout, id: \.self) { Text($0).font(.callout) }
++                Button("Read slot \(mods.slot) again") { readout = mods.readout() }
++            } header: { Text("Slot \(mods.slot) now") }
++
++            Section {
++                if let last = mods.lastResult { Text(last).font(.caption).foregroundStyle(.secondary) }
++                Button("Restore slot \(mods.slot)'s last backup", role: .destructive) { notice = mods.restoreLatest(); readout = mods.readout() }
++            } header: { Text("Last modded launch") }
++
++            if let notice { Section { Text(notice).font(.callout) } }
++        }
++        .navigationTitle("Mods")
++        .onAppear {
++            readout = mods.readout()
++            moneyText = String(Int(mods.money))
++        }
++        .onChange(of: mods.slot) { _, _ in readout = mods.readout() }
++        .confirmationDialog("Copy slot 1 into slot \(mods.slot)?", isPresented: $confirmCopy, titleVisibility: .visible) {
++            Button("Copy", role: .destructive) { notice = mods.copySlotOne(); readout = mods.readout() }
++        } message: {
++            Text("Slot \(mods.slot)'s current save is backed up first, then replaced by a copy of slot 1. Slot 1 isn't changed.")
++        }
++    }
++}
++
+ // MARK: - Mango Port: game modes as add-ons
+ 
+ /// Games whose modes Steam sells as apps of their own, by the main game's App ID. In the
