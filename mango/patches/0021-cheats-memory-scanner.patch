@@ -1,0 +1,735 @@
+diff --git a/app/Madeira/JITAllocator.c b/app/Madeira/JITAllocator.c
+index b73123b4..61527ed5 100644
+--- a/app/Madeira/JITAllocator.c
++++ b/app/Madeira/JITAllocator.c
+@@ -986,3 +986,6 @@ __attribute__((constructor(102), used)) static void madeira_metal_validation_opt
+     setenv("MTL_DEBUG_LAYER_WARNING_MODE", "nslog", 1);
+     setenv("CFLOG_FORCE_STDERR", "1", 1);
+ }
++
++/* Mango Port: Cheats (memory scanner for single-player games). */
++#include "MangoCheat.inc.c"
+diff --git a/app/Madeira/JITAllocator.h b/app/Madeira/JITAllocator.h
+index de79253b..43ccde67 100644
+--- a/app/Madeira/JITAllocator.h
++++ b/app/Madeira/JITAllocator.h
+@@ -127,4 +127,22 @@ extern unsigned long madeira_early_pool_size;
+ void madeira_early_pool_placeholder(unsigned long *base, unsigned long *size);
+ void madeira_early_pool_intruder(unsigned long *base, unsigned long *size, unsigned *tag);
+ 
++/* Mango Port: Cheats (MangoCheat.inc.c). kind: 0 any number (int32, float and
++ * double together), 1 int32, 2 float, 3 double, 4 int64. Next scan modes:
++ * 0 exact value, 1 increased, 2 decreased, 3 changed, 4 unchanged. A scan
++ * blocks: run it off the main thread and poll mango_cheat_progress (0...1000). */
++long mango_cheat_first_scan(int kind, double value, int decimals);
++long mango_cheat_next_scan(int mode, double value, int decimals);
++long mango_cheat_count(void);
++int mango_cheat_truncated(void);
++int mango_cheat_progress(void);
++void mango_cheat_cancel(void);
++void mango_cheat_reset(void);
++int mango_cheat_result(long i, uint64_t *addr, int *kind, double *value);
++int mango_cheat_peek(uint64_t addr, int kind, double *value);
++int mango_cheat_set(uint64_t addr, int kind, double value);
++int mango_cheat_freeze(uint64_t addr, int kind, double value, int on);
++int mango_cheat_is_frozen(uint64_t addr);
++void mango_cheat_end_session(void);
++
+ #endif // JIT_ALLOCATOR_H
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 568c8846..14457d90 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -1922,6 +1922,7 @@ final class LibraryModel: ObservableObject {
+         GestureZonesModel.shared.selected = nil; GestureZonesModel.shared.zones = savedZones
+         if ControlPresetsModel.enabled { controls.layoutID = savedLayout }
+         current = nil; activeEntry = nil; menu = false; sessionMessage = ""
++        mango_cheat_end_session()   // Mango Port: nothing stays frozen into the next game
+         quitRequestedAt = nil; forceCloseOffered = false; dockGameEnded = false; dockGameEndedAt = nil
+         displayMode = .fit
+         LogStore.shared.setDisplayActive(true)
+@@ -5684,6 +5685,8 @@ struct LibraryHUD: View {
+     /// The Session menu's Controller binds page (keyboard-and-mouse mode).
+     @State private var bindsPage = false
+     @State private var assistPage = false
++    /// Mango Port: the Session menu's Cheats page (MangoCheatsPage).
++    @State private var cheatsPage = false
+     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+     var body: some View {
+         GeometryReader { geo in
+@@ -5710,7 +5713,7 @@ struct LibraryHUD: View {
+                 if !model.startingScreen { LibraryFloatingItem(isMenu: true, viewport: geo.size, insets: geo.safeAreaInsets) }
+                 if model.menu {
+                     Color.black.opacity(SessionMenuBackground.blur ? 0.3 : 0.5).ignoresSafeArea().onTapGesture { model.menu = false }.transition(.opacity)
+-                    (bindsPage ? AnyView(bindsMenu) : assistPage ? AnyView(assistMenu) : AnyView(menu))
++                    (cheatsPage ? AnyView(MangoCheatsPage(back: { cheatsPage = false }, done: { model.menu = false })) : bindsPage ? AnyView(bindsMenu) : assistPage ? AnyView(assistMenu) : AnyView(menu))
+                         .frame(width: min(460, geo.size.width - 32), height: min(650, geo.size.height - geo.safeAreaInsets.top - geo.safeAreaInsets.bottom - 24))
+                         .modifier(SessionMenuBackground())
+                         .clipShape(RoundedRectangle(cornerRadius: 28))
+@@ -5747,7 +5750,7 @@ struct LibraryHUD: View {
+         .onAppear { model.saveCurrentProfile() }
+         .onChange(of: model.menu) { _, open in
+             LibraryController.shared.configure(enabled: model.enabled, ownsInput: open)
+-            if !open { bindsPage = false; assistPage = false }
++            if !open { bindsPage = false; assistPage = false; cheatsPage = false }
+             if !open { model.saveCurrentProfile() }
+             if open { eco = madeira_get_eco() != 0; fenceMode = FPSOverlayFenceMode.current }
+         }
+@@ -6060,6 +6063,7 @@ struct LibraryHUD: View {
+                     Button("Gyro aim & turbo", systemImage: "gyroscope") { assistPage = true }
+                 }
+                 Button("Keyboard", systemImage: "keyboard") { model.menu = false; LibraryKeyboard.show() }
++                Button("Cheats", systemImage: "wand.and.stars") { cheatsPage = true }
+                 Divider()
+                 FPSChoice(mode: Binding(get: { model.fpsMode }, set: { model.setFPS($0) }))
+                 // Saved to the game with the rest of the session's profile.
+@@ -6151,6 +6155,256 @@ struct LibraryHUD: View {
+     }
+ }
+ 
++// MARK: - Mango Port: Cheats
++
++/// Mango Port's memory scanner (MangoCheat.inc.c), driven from the Session menu.
++/// The game runs inside Mango Port's own memory, so a number the game shows
++/// (money, ammo, health) can be found, set and frozen while it runs, the way a
++/// desktop memory scanner does it. Kept for the app's life; a session's end
++/// clears the results and unfreezes everything.
++///
++/// Typed numbers stay text here and are turned into numbers only inside the
++/// scan (on its own thread's stack, which the scan skips), so the scan never
++/// finds Mango Port's own copy of the number.
++@MainActor
++final class MangoCheats: ObservableObject {
++    static let shared = MangoCheats()
++
++    struct Row: Identifiable { let id: Int; let address: UInt64; let kind: Int32; let text: String }
++    struct Saved: Identifiable { let id = UUID(); var name: String; let address: UInt64; let kind: Int32; var valueText: String }
++
++    static let kinds: [(Int32, String)] = [(0, "Any number"), (1, "Whole number"), (2, "Decimal (float)"), (3, "Decimal (double)"), (4, "Big whole number")]
++    static let modes: [(Int32, String)] = [(0, "Exact value"), (1, "Went up"), (2, "Went down"), (3, "Changed"), (4, "Didn't change")]
++
++    @Published var valueText = ""
++    @Published var kind: Int32 = 0
++    @Published var mode: Int32 = 0
++    @Published var scanning = false
++    @Published var progress = 0.0
++    @Published var count = 0
++    @Published var scanned = false
++    @Published var truncated = false
++    @Published var rows: [Row] = []
++    @Published var saved: [Saved] = []
++    @Published var setAllText = ""
++    @Published var note = ""
++
++    static let shownMax = 100
++
++    static func kindName(_ kind: Int32) -> String {
++        switch kind { case 1: return "int32"; case 2: return "float"; case 3: return "double"; case 4: return "int64"; default: return "?" }
++    }
++
++    static func format(_ value: Double, kind: Int32) -> String {
++        if kind == 1 || kind == 4 { return String(Int64(value)) }
++        return String(format: abs(value) >= 1e7 ? "%.0f" : "%.4f", value)
++            .replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
++    }
++
++    /// "167.47" → 2 decimals; "1,250" → 1250. Nil when it isn't a number.
++    nonisolated static func parse(_ text: String) -> (Double, Int32)? {
++        let t = text.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: "$", with: "")
++            .trimmingCharacters(in: .whitespaces)
++        guard let v = Double(t), v.isFinite else { return nil }
++        let decimals = t.split(separator: ".", omittingEmptySubsequences: false).dropFirst().first.map { Int32($0.count) } ?? 0
++        return (v, decimals)
++    }
++
++    var needsValue: Bool { !scanned || mode == 0 }
++    var canScan: Bool { !scanning && (!needsValue || Self.parse(valueText) != nil) }
++
++    func scan(first: Bool) {
++        guard canScan else { return }
++        scanning = true; progress = 0; note = ""
++        let text = valueText, kind = self.kind, mode = self.mode
++        let poll = Task { @MainActor in
++            while !Task.isCancelled { progress = Double(mango_cheat_progress()) / 1000; try? await Task.sleep(for: .milliseconds(150)) }
++        }
++        Task {
++            let n = await Task.detached(priority: .userInitiated) { () -> Int in
++                let parsed = MangoCheats.parse(text)
++                if first { return mango_cheat_first_scan(kind, parsed?.0 ?? 0, parsed?.1 ?? 0) }
++                return mango_cheat_next_scan(mode, parsed?.0 ?? 0, parsed?.1 ?? 0)
++            }.value
++            poll.cancel()
++            scanning = false
++            if n < 0 { note = "Mango Port couldn't reserve memory for the scan."; return }
++            scanned = true; count = n; truncated = mango_cheat_truncated() != 0
++            if first { self.mode = 0 }
++            if n == 0 { note = first ? "Nothing found. Check the number and the type, or try Any number." : "Nothing left. Start a new scan: the number may be stored differently (some games hide it)." }
++            refresh()
++            LogStore.shared.log("[cheats] \(first ? "scan" : "next scan") → \(n) results")
++        }
++    }
++
++    func reset() {
++        mango_cheat_reset(); scanned = false; count = 0; rows = []; truncated = false; note = ""; mode = 0
++    }
++
++    /// Reads the shown results' current values again.
++    func refresh() {
++        guard count > 0 && count <= Self.shownMax else { if !rows.isEmpty { rows = [] }; if !saved.isEmpty { objectWillChange.send() }; return }
++        var out: [Row] = []
++        for i in 0..<count {
++            var address: UInt64 = 0, kind: Int32 = 0, value = 0.0
++            if mango_cheat_result(i, &address, &kind, &value) != 0 {
++                out.append(Row(id: i, address: address, kind: kind, text: Self.format(value, kind: kind)))
++            }
++        }
++        rows = out
++        if !saved.isEmpty { objectWillChange.send() }   // the kept numbers' current values
++    }
++
++    /// A kept number's current value, or "gone" once the game freed it.
++    static func read(_ address: UInt64, kind: Int32) -> String {
++        var v = 0.0
++        guard mango_cheat_peek(address, kind, &v) != 0 else { return "gone" }
++        return format(v, kind: kind)
++    }
++
++    func save(_ row: Row) {
++        guard !saved.contains(where: { $0.address == row.address }) else { return }
++        saved.append(Saved(name: "Value \(saved.count + 1)", address: row.address, kind: row.kind, valueText: row.text))
++    }
++
++    @discardableResult
++    func set(_ address: UInt64, kind: Int32, text: String) -> Bool {
++        guard let (v, _) = Self.parse(text) else { note = "That isn't a number."; return false }
++        let ok = mango_cheat_set(address, kind, v) != 0
++        if mango_cheat_is_frozen(address) != 0 { _ = mango_cheat_freeze(address, kind, v, 1) }
++        note = ok ? "" : "The game freed that number. Scan again."
++        refresh()
++        return ok
++    }
++
++    func setAll() {
++        guard let (v, _) = Self.parse(setAllText) else { note = "That isn't a number."; return }
++        var done = 0
++        for row in rows where mango_cheat_set(row.address, row.kind, v) != 0 { done += 1 }
++        note = "Set \(done) of \(rows.count)."
++        refresh()
++    }
++
++    func freeze(_ item: Saved, on: Bool) {
++        guard let (v, _) = Self.parse(item.valueText) else { note = "That isn't a number."; return }
++        if mango_cheat_freeze(item.address, item.kind, v, on ? 1 : 0) == 0 { note = "Too many frozen numbers (64 at most)." }
++        objectWillChange.send()
++    }
++}
++
++/// The Session menu's Cheats page.
++struct MangoCheatsPage: View {
++    let back: () -> Void
++    let done: () -> Void
++    @ObservedObject private var cheats = MangoCheats.shared
++    private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
++
++    var body: some View {
++        VStack(spacing: 0) {
++            HStack {
++                Button("Session", systemImage: "chevron.left", action: back).buttonStyle(.borderless)
++                Spacer()
++                Text("Cheats").font(.headline)
++                Spacer()
++                Button("Done", action: done).buttonStyle(.bordered)
++            }.padding(.horizontal, 22).padding(.top, 22).padding(.bottom, 8)
++            Form {
++                Section {
++                    TextField(cheats.needsValue ? "Number the game shows, e.g. 167.47" : "No number needed", text: $cheats.valueText)
++                        .keyboardType(.numbersAndPunctuation)
++                        .disabled(!cheats.needsValue)
++                    if !cheats.scanned {
++                        Picker("Type", selection: $cheats.kind) {
++                            ForEach(MangoCheats.kinds, id: \.0) { Text($0.1).tag($0.0) }
++                        }
++                    } else {
++                        Picker("Next scan", selection: $cheats.mode) {
++                            ForEach(MangoCheats.modes, id: \.0) { Text($0.1).tag($0.0) }
++                        }
++                    }
++                    if cheats.scanning {
++                        ProgressView(value: cheats.progress) { Text("Scanning…") }
++                    } else {
++                        HStack {
++                            Button(cheats.scanned ? "New scan" : "Scan") { cheats.scan(first: true) }
++                                .buttonStyle(.bordered).disabled(!cheats.canScan || (cheats.scanned && cheats.mode != 0 && MangoCheats.parse(cheats.valueText) == nil))
++                            if cheats.scanned {
++                                Button("Next scan") { cheats.scan(first: false) }
++                                    .buttonStyle(.borderedProminent).disabled(!cheats.canScan || cheats.count == 0)
++                                Spacer()
++                                Button("Clear", role: .destructive) { cheats.reset() }.buttonStyle(.borderless)
++                            }
++                        }
++                    }
++                    if cheats.scanned {
++                        Text(cheats.count == 1 ? "1 result" : "\(cheats.count.formatted()) results\(cheats.truncated ? " (the first ones only)" : "")")
++                            .font(.subheadline.monospacedDigit())
++                    }
++                    if !cheats.note.isEmpty { Text(cheats.note).font(.caption).foregroundStyle(.orange) }
++                } header: { Text("Find a number") } footer: {
++                    Text("Type the number the game shows and tap Scan. Then change it in the game (spend or earn some), type the new number and tap Next scan. Repeat until only a few results are left, and set them. Went up, Went down, Changed and Didn't change need no number.")
++                }
++
++                if cheats.scanned && cheats.count > MangoCheats.shownMax {
++                    Section { Text("Results show here once \(MangoCheats.shownMax) or fewer are left. Change the number in the game and use Next scan.").font(.caption).foregroundStyle(.secondary) }
++                }
++
++                if !cheats.rows.isEmpty {
++                    Section {
++                        ForEach(cheats.rows) { row in
++                            HStack {
++                                VStack(alignment: .leading, spacing: 2) {
++                                    Text(row.text).font(.body.monospacedDigit())
++                                    Text("\(MangoCheats.kindName(row.kind)) · 0x\(String(row.address, radix: 16))").font(.caption2.monospaced()).foregroundStyle(.secondary)
++                                }
++                                Spacer()
++                                Button("Keep", systemImage: "plus.circle") { cheats.save(row) }.labelStyle(.iconOnly).buttonStyle(.borderless)
++                            }
++                        }
++                        HStack {
++                            TextField("New value", text: $cheats.setAllText).keyboardType(.numbersAndPunctuation)
++                            Button("Set all") { cheats.setAll() }.buttonStyle(.bordered).disabled(MangoCheats.parse(cheats.setAllText) == nil)
++                        }
++                    } header: { Text("Results") } footer: {
++                        Text("A game often keeps the same number in more than one place: Set all changes every result. Keep (+) adds one to the list below, to set or freeze on its own.")
++                    }
++                }
++
++                if !cheats.saved.isEmpty {
++                    Section {
++                        ForEach($cheats.saved) { $item in
++                            VStack(alignment: .leading, spacing: 6) {
++                                HStack {
++                                    TextField("Name", text: $item.name).font(.subheadline.bold())
++                                    Text(MangoCheats.read(item.address, kind: item.kind)).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
++                                }
++                                HStack {
++                                    TextField("Value", text: $item.valueText).keyboardType(.numbersAndPunctuation)
++                                    Button("Set") { cheats.set(item.address, kind: item.kind, text: item.valueText) }.buttonStyle(.bordered)
++                                    Toggle("Freeze", isOn: Binding(get: { mango_cheat_is_frozen(item.address) != 0 },
++                                                                   set: { cheats.freeze(item, on: $0) })).fixedSize()
++                                }
++                            }
++                        }
++                        .onDelete { set in
++                            for i in set { _ = mango_cheat_freeze(cheats.saved[i].address, cheats.saved[i].kind, 0, 0) }
++                            cheats.saved.remove(atOffsets: set)
++                        }
++                    } header: { Text("Kept numbers") } footer: {
++                        Text("Freeze writes the value again ten times a second, so the game can't change it. Nothing stays frozen after the game closes, and addresses change every launch, so scan again next time.")
++                    }
++                }
++
++                Section {
++                    Text("For single-player games. Mango Port doesn't run games with anti-cheat, and using cheats online can get an account banned. Setting a wrong result can crash the game: save first.")
++                        .font(.caption).foregroundStyle(.secondary)
++                }
++            }.scrollContentBackground(.hidden)
++        }
++        .onReceive(tick) { _ in if !cheats.scanning { cheats.refresh() } }
++    }
++}
++
+ struct LibraryLiveLogs: View {
+     @ObservedObject private var logs = LogStore.shared
+     var body: some View {
+diff --git a/app/Madeira/MangoCheat.inc.c b/app/Madeira/MangoCheat.inc.c
+new file mode 100644
+index 00000000..0d96bd0f
+--- /dev/null
++++ b/app/Madeira/MangoCheat.inc.c
+@@ -0,0 +1,387 @@
++/* Mango Port: Cheats, a memory scanner for single-player games.
++ *
++ * Every Windows program runs as a pseudo-process inside this one Mach task
++ * (docs/WOW64.md), so the game's numbers live in our own address space. This
++ * finds a number the way a desktop memory scanner does (scan, then narrow it
++ * with next scans while the number changes in the game), and sets or freezes
++ * it. Reads and writes go through mach_vm_read_overwrite / mach_vm_write, so a
++ * page that goes away mid-scan returns an error instead of crashing.
++ *
++ * What it scans: readable and writable regions with pages in memory, minus
++ * thread stacks, IOKit/graphics memory, the JIT pool (translated code and PE
++ * images) and its own buffers. Everything it keeps (results, old values,
++ * frozen values) lives in memory tagged MANGO_CHEAT_TAG, which the scan skips,
++ * so it never finds its own copies.
++ *
++ * Included at the end of JITAllocator.c (one file, no project change). The
++ * #ifndef MANGO_CHEAT_TEST part is the Mach layer; the test build in
++ * mango/tests supplies its own.
++ */
++
++#include <math.h>
++#include <stdatomic.h>
++
++#define MANGO_CHEAT_TAG 253            /* VM_MEMORY_APPLICATION_SPECIFIC_14 */
++#define MANGO_CHEAT_MAX (4u << 20)     /* results kept at most */
++#define MANGO_CHEAT_CHUNK (4u << 20)   /* bytes read at a time */
++#define MANGO_CHEAT_FREEZE_MAX 64
++
++/* Value kinds. 0 in a scan means "any number": float, double and int32 together. */
++enum { MC_ANY = 0, MC_I32 = 1, MC_F32 = 2, MC_F64 = 3, MC_I64 = 4 };
++/* Next scan modes. */
++enum { MC_EXACT = 0, MC_UP = 1, MC_DOWN = 2, MC_CHANGED = 3, MC_SAME = 4 };
++
++typedef struct { uint64_t addr; uint64_t old; } mc_hit;   /* addr: kind in the top byte */
++
++typedef struct {
++    uint64_t addr; uint32_t kind; uint32_t on; uint64_t bits;
++} mc_freeze;
++
++static mc_hit *mc_hits;            /* MANGO_CHEAT_MAX entries, tagged memory */
++static uint64_t mc_count;
++static int mc_truncated;
++static uint8_t *mc_buf;            /* one chunk, tagged memory */
++static mc_freeze *mc_frozen;       /* MANGO_CHEAT_FREEZE_MAX, tagged memory */
++static pthread_mutex_t mc_lock = PTHREAD_MUTEX_INITIALIZER;
++static pthread_mutex_t mc_freeze_lock = PTHREAD_MUTEX_INITIALIZER;
++static _Atomic int mc_progress;    /* 0...1000 while a scan runs */
++static _Atomic int mc_cancel;
++static int mc_freeze_thread;
++
++static int mc_size(int kind) { return (kind == MC_F64 || kind == MC_I64) ? 8 : 4; }
++
++/* ---- platform layer -------------------------------------------------- */
++#ifndef MANGO_CHEAT_TEST
++
++extern kern_return_t mach_vm_read_overwrite(vm_map_t, mach_vm_address_t, mach_vm_size_t,
++                                            mach_vm_address_t, mach_vm_size_t *);
++extern kern_return_t mach_vm_write(vm_map_t, mach_vm_address_t, vm_offset_t, mach_msg_type_number_t);
++extern kern_return_t mach_vm_allocate(vm_map_t, mach_vm_address_t *, mach_vm_size_t, int);
++#include <dlfcn.h>
++
++static void *mc_alloc(size_t size)
++{
++    mach_vm_address_t a = 0;
++    if (mach_vm_allocate(mach_task_self(), &a, size, VM_FLAGS_ANYWHERE | VM_MAKE_TAG(MANGO_CHEAT_TAG)) != KERN_SUCCESS)
++        return NULL;
++    return (void *)(uintptr_t)a;
++}
++
++static int mc_read(uint64_t addr, void *out, size_t size)
++{
++    mach_vm_size_t got = 0;
++    return mach_vm_read_overwrite(mach_task_self(), addr, size, (mach_vm_address_t)(uintptr_t)out, &got) == KERN_SUCCESS
++        && got == size;
++}
++
++static int mc_write(uint64_t addr, const void *src, size_t size)
++{
++    return mach_vm_write(mach_task_self(), addr, (vm_offset_t)(uintptr_t)src, (mach_msg_type_number_t)size) == KERN_SUCCESS;
++}
++
++/* Ranges never scanned: the JIT pool's RW alias and its low part (code and
++ * PE images; virtual_ios.c skips the same ranges). Looked up by name, since
++ * the pool lives in Wine's unix side. */
++static int mc_excluded(uint64_t a, uint64_t size)
++{
++    static int looked;
++    static void **rw; static size_t *ps; static uintptr_t *low_rw; static size_t *low;
++    if (!looked) {
++        looked = 1;
++        rw = dlsym(RTLD_DEFAULT, "ios_jit_rw_base_global");
++        ps = dlsym(RTLD_DEFAULT, "ios_jit_pool_size_global");
++        low_rw = dlsym(RTLD_DEFAULT, "ios_jit_low_rw_global");
++        low = dlsym(RTLD_DEFAULT, "ios_jit_low_size_global");
++    }
++    if (rw && ps && *rw && *ps) {
++        uint64_t b = (uintptr_t)*rw;
++        if (a < b + *ps && a + size > b) return 1;
++        if (low_rw && low && *low && *low_rw && a < b && a + size > *low_rw) return 1;
++    }
++    return 0;
++}
++
++/* Calls back for every region worth scanning, in address order. */
++static void mc_regions(void (*fn)(uint64_t, uint64_t, void *), void *ctx, uint64_t *total)
++{
++    mach_vm_address_t a = 0;
++    *total = 0;
++    for (;;) {
++        mach_vm_size_t size = 0;
++        vm_region_extended_info_data_t info;
++        mach_msg_type_number_t cnt = VM_REGION_EXTENDED_INFO_COUNT;
++        mach_port_t obj = MACH_PORT_NULL;
++        if (mach_vm_region(mach_task_self(), &a, &size, VM_REGION_EXTENDED_INFO,
++                           (vm_region_info_t)&info, &cnt, &obj) != KERN_SUCCESS) break;
++        int tag = info.user_tag;
++        int ok = (info.protection & (VM_PROT_READ | VM_PROT_WRITE)) == (VM_PROT_READ | VM_PROT_WRITE)
++              && info.share_mode != SM_EMPTY
++              && (info.pages_resident + info.pages_swapped_out) > 0
++              && (tag == 0 || (tag >= 1 && tag <= 13) || (tag >= 240 && tag <= 252))
++              && !mc_excluded(a, size);
++        if (ok) {
++            if (fn) fn(a, size, ctx);
++            else *total += size;
++        }
++        a += size;
++    }
++}
++
++#endif /* MANGO_CHEAT_TEST */
++
++/* ---- matching -------------------------------------------------------- */
++
++/* A typed number matches what the game shows: "167.47" is 167.465 up to
++ * 167.48 (the game may round or cut the last digit); "167" is 166.5 up to 168. */
++typedef struct { double lo, hi; int64_t ival; int integral; } mc_want;
++
++static mc_want mc_target(double v, int decimals)
++{
++    mc_want w;
++    double unit = pow(10.0, -(decimals < 0 ? 0 : decimals > 6 ? 6 : decimals));
++    w.lo = v - unit / 2; w.hi = v + unit;
++    if (v < 0) { w.lo = v - unit; w.hi = v + unit / 2; }
++    w.integral = decimals <= 0 && v == floor(v) && fabs(v) < 9.2e18;
++    w.ival = w.integral ? (int64_t)v : 0;
++    return w;
++}
++
++static double mc_value(int kind, const void *p)
++{
++    switch (kind) {
++    case MC_I32: { int32_t x; memcpy(&x, p, 4); return x; }
++    case MC_F32: { float x; memcpy(&x, p, 4); return x; }
++    case MC_F64: { double x; memcpy(&x, p, 8); return x; }
++    case MC_I64: { int64_t x; memcpy(&x, p, 8); return (double)x; }
++    }
++    return 0;
++}
++
++static uint64_t mc_bits(int kind, const void *p)
++{
++    uint64_t b = 0; memcpy(&b, p, mc_size(kind)); return b;
++}
++
++static int mc_match(int kind, const void *p, const mc_want *w)
++{
++    if (kind == MC_I32) { int32_t x; memcpy(&x, p, 4); return w->integral && x == w->ival; }
++    if (kind == MC_I64) { int64_t x; memcpy(&x, p, 8); return w->integral && x == w->ival; }
++    double x = mc_value(kind, p);
++    /* Tiny denormals are random bits, not numbers a game shows. */
++    if (!isfinite(x) || (x != 0 && fabs(x) < 1e-6)) return 0;
++    return x >= w->lo && x < w->hi;
++}
++
++static int mc_ensure_buffers(void)
++{
++    if (!mc_buf) mc_buf = mc_alloc(MANGO_CHEAT_CHUNK + 8);
++    if (!mc_hits) mc_hits = mc_alloc((size_t)MANGO_CHEAT_MAX * sizeof(mc_hit));
++    if (!mc_frozen) mc_frozen = mc_alloc(MANGO_CHEAT_FREEZE_MAX * sizeof(mc_freeze));
++    return mc_buf && mc_hits && mc_frozen;
++}
++
++/* ---- first scan ------------------------------------------------------ */
++
++typedef struct { int kind; mc_want want; uint64_t done, total; } mc_first_ctx;
++
++static void mc_add(uint64_t addr, int kind, uint64_t bits)
++{
++    if (mc_count >= MANGO_CHEAT_MAX) { mc_truncated = 1; return; }
++    mc_hits[mc_count].addr = addr | ((uint64_t)kind << 56);
++    mc_hits[mc_count].old = bits;
++    mc_count++;
++}
++
++static void mc_first_region(uint64_t base, uint64_t size, void *vctx)
++{
++    mc_first_ctx *c = vctx;
++    for (uint64_t off = 0; off < size && !atomic_load(&mc_cancel); off += MANGO_CHEAT_CHUNK) {
++        uint64_t n = size - off < MANGO_CHEAT_CHUNK ? size - off : MANGO_CHEAT_CHUNK;
++        if (mc_read(base + off, mc_buf, n)) {
++            for (uint64_t i = 0; i + 4 <= n; i += 4) {
++                const uint8_t *p = mc_buf + i;
++                uint64_t addr = base + off + i;
++                if (c->kind == MC_ANY || c->kind == MC_I32) if (mc_match(MC_I32, p, &c->want)) mc_add(addr, MC_I32, mc_bits(MC_I32, p));
++                if (c->kind == MC_ANY || c->kind == MC_F32) if (mc_match(MC_F32, p, &c->want)) mc_add(addr, MC_F32, mc_bits(MC_F32, p));
++                if (i + 8 <= n) {
++                    if (c->kind == MC_ANY || c->kind == MC_F64) if (mc_match(MC_F64, p, &c->want)) mc_add(addr, MC_F64, mc_bits(MC_F64, p));
++                    if (c->kind == MC_I64) if (mc_match(MC_I64, p, &c->want)) mc_add(addr, MC_I64, mc_bits(MC_I64, p));
++                }
++            }
++        }
++        c->done += n;
++        if (c->total) atomic_store(&mc_progress, (int)(c->done * 1000 / c->total));
++    }
++}
++
++/* Returns the number of results, or -1 when the buffers cannot be made. */
++long mango_cheat_first_scan(int kind, double value, int decimals)
++{
++    pthread_mutex_lock(&mc_lock);
++    if (!mc_ensure_buffers()) { pthread_mutex_unlock(&mc_lock); return -1; }
++    mc_count = 0; mc_truncated = 0;
++    atomic_store(&mc_cancel, 0);
++    atomic_store(&mc_progress, 0);
++    mc_first_ctx c = { kind, mc_target(value, decimals), 0, 0 };
++    mc_regions(NULL, NULL, &c.total);
++    uint64_t dummy;
++    mc_regions(mc_first_region, &c, &dummy);
++    atomic_store(&mc_progress, 1000);
++    long n = (long)mc_count;
++    pthread_mutex_unlock(&mc_lock);
++    return n;
++}
++
++/* ---- next scan ------------------------------------------------------- */
++
++long mango_cheat_next_scan(int mode, double value, int decimals)
++{
++    pthread_mutex_lock(&mc_lock);
++    if (!mc_hits) { pthread_mutex_unlock(&mc_lock); return 0; }
++    atomic_store(&mc_cancel, 0);
++    mc_want w = mc_target(value, decimals);
++    uint64_t keep = 0;
++    uint8_t now[8];
++    for (uint64_t i = 0; i < mc_count; i++) {
++        if ((i & 0xfff) == 0) atomic_store(&mc_progress, (int)(i * 1000 / (mc_count ? mc_count : 1)));
++        int kind = (int)(mc_hits[i].addr >> 56);
++        uint64_t addr = mc_hits[i].addr & 0x00ffffffffffffffULL;
++        if (!mc_read(addr, now, mc_size(kind))) continue;
++        uint64_t bits = mc_bits(kind, now);
++        double a = mc_value(kind, &mc_hits[i].old), b = mc_value(kind, now);
++        int ok = 0;
++        switch (mode) {
++        case MC_EXACT: ok = mc_match(kind, now, &w); break;
++        case MC_UP: ok = b > a; break;
++        case MC_DOWN: ok = b < a; break;
++        case MC_CHANGED: ok = bits != mc_hits[i].old; break;
++        case MC_SAME: ok = bits == mc_hits[i].old; break;
++        }
++        if (ok) { mc_hits[keep].addr = mc_hits[i].addr; mc_hits[keep].old = bits; keep++; }
++    }
++    mc_count = keep;
++    atomic_store(&mc_progress, 1000);
++    pthread_mutex_unlock(&mc_lock);
++    return (long)keep;
++}
++
++/* ---- results, setting and freezing ----------------------------------- */
++
++long mango_cheat_count(void) { return (long)mc_count; }
++int mango_cheat_truncated(void) { return mc_truncated; }
++int mango_cheat_progress(void) { return atomic_load(&mc_progress); }
++void mango_cheat_cancel(void) { atomic_store(&mc_cancel, 1); }
++
++void mango_cheat_reset(void)
++{
++    pthread_mutex_lock(&mc_lock);
++    mc_count = 0; mc_truncated = 0;
++    pthread_mutex_unlock(&mc_lock);
++}
++
++/* Result i: its address, kind and current value. Returns 0 past the end or
++ * when the address cannot be read any more. */
++int mango_cheat_result(long i, uint64_t *addr, int *kind, double *value)
++{
++    uint8_t now[8];
++    if (i < 0 || (uint64_t)i >= mc_count) return 0;
++    int k = (int)(mc_hits[i].addr >> 56);
++    uint64_t a = mc_hits[i].addr & 0x00ffffffffffffffULL;
++    *addr = a; *kind = k;
++    if (!mc_read(a, now, mc_size(k))) return 0;
++    *value = mc_value(k, now);
++    return 1;
++}
++
++/* Any address's current value (kept numbers). Returns 0 when it cannot be read. */
++int mango_cheat_peek(uint64_t addr, int kind, double *value)
++{
++    uint8_t now[8];
++    if (kind < MC_I32 || kind > MC_I64 || !mc_read(addr, now, mc_size(kind))) return 0;
++    *value = mc_value(kind, now);
++    return 1;
++}
++
++/* The bits for value as kind, in tagged memory so the scan never finds them. */
++static void mc_encode(int kind, double v, uint64_t *out)
++{
++    *out = 0;
++    switch (kind) {
++    case MC_I32: { int32_t x = (int32_t)llround(v); memcpy(out, &x, 4); break; }
++    case MC_F32: { float x = (float)v; memcpy(out, &x, 4); break; }
++    case MC_F64: memcpy(out, &v, 8); break;
++    case MC_I64: { int64_t x = (int64_t)llround(v); memcpy(out, &x, 8); break; }
++    }
++}
++
++int mango_cheat_set(uint64_t addr, int kind, double value)
++{
++    if (!mc_ensure_buffers()) return 0;
++    uint64_t *bits = (uint64_t *)(mc_buf + MANGO_CHEAT_CHUNK);   /* tagged scratch */
++    pthread_mutex_lock(&mc_lock);
++    mc_encode(kind, value, bits);
++    int ok = mc_write(addr, bits, mc_size(kind));
++    pthread_mutex_unlock(&mc_lock);
++    return ok;
++}
++
++static void *mc_freeze_loop(void *unused)
++{
++    (void)unused;
++    for (;;) {
++        pthread_mutex_lock(&mc_freeze_lock);
++        for (int i = 0; i < MANGO_CHEAT_FREEZE_MAX; i++)
++            if (mc_frozen[i].on && !mc_write(mc_frozen[i].addr, &mc_frozen[i].bits, mc_size(mc_frozen[i].kind)))
++                mc_frozen[i].on = 0;   /* gone: the game freed it */
++        pthread_mutex_unlock(&mc_freeze_lock);
++        usleep(100 * 1000);
++    }
++    return NULL;
++}
++
++/* Freezes (on) or releases (off) addr at value. Returns 0 when the table is full. */
++int mango_cheat_freeze(uint64_t addr, int kind, double value, int on)
++{
++    if (!mc_ensure_buffers()) return 0;
++    int ok = !on;
++    pthread_mutex_lock(&mc_freeze_lock);
++    for (int i = 0; i < MANGO_CHEAT_FREEZE_MAX; i++)
++        if (mc_frozen[i].on && mc_frozen[i].addr == addr) mc_frozen[i].on = 0;
++    if (on) {
++        for (int i = 0; i < MANGO_CHEAT_FREEZE_MAX; i++)
++            if (!mc_frozen[i].on) {
++                mc_frozen[i].addr = addr; mc_frozen[i].kind = (uint32_t)kind;
++                mc_encode(kind, value, &mc_frozen[i].bits);
++                mc_frozen[i].on = 1; ok = 1;
++                break;
++            }
++        if (ok && !mc_freeze_thread) {
++            pthread_t t;
++            if (pthread_create(&t, NULL, mc_freeze_loop, NULL) == 0) { pthread_detach(t); mc_freeze_thread = 1; }
++        }
++    }
++    pthread_mutex_unlock(&mc_freeze_lock);
++    return ok;
++}
++
++int mango_cheat_is_frozen(uint64_t addr)
++{
++    if (!mc_frozen) return 0;
++    pthread_mutex_lock(&mc_freeze_lock);
++    int on = 0;
++    for (int i = 0; i < MANGO_CHEAT_FREEZE_MAX; i++)
++        if (mc_frozen[i].on && mc_frozen[i].addr == addr) on = 1;
++    pthread_mutex_unlock(&mc_freeze_lock);
++    return on;
++}
++
++/* Called when a session ends: nothing stays frozen into the next game. */
++void mango_cheat_end_session(void)
++{
++    if (mc_frozen) {
++        pthread_mutex_lock(&mc_freeze_lock);
++        for (int i = 0; i < MANGO_CHEAT_FREEZE_MAX; i++) mc_frozen[i].on = 0;
++        pthread_mutex_unlock(&mc_freeze_lock);
++    }
++    mango_cheat_reset();
++}

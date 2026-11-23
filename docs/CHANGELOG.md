@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.16.0
+A real cheat engine, built in.
+
+- New **Cheats** page in the in-game menu (tap the menu button while a game runs). It scans the running game's memory, like Cheat Engine on PC, no save editing
+- **Scan** for the number the game shows (money, ammo, health). Change it in the game, type the new number and tap **Next scan** until only a few results are left. Went up, Went down, Changed and Didn't change work without a number
+- **Set all** changes every result at once; **Keep** a result to name it, **Set** it or **Freeze** it so the game can't change it
+- Any number (whole and decimal together), or just whole numbers, floats, doubles or 64-bit numbers
+- For single-player games. Nothing stays frozen after the game closes
+
 ## v0.15.0
 A mod menu for Moon Sweepers.
 
