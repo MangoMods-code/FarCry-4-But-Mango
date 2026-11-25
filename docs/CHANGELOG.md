@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.18.3
+Moon Sweepers money: the real wallet, not the on-screen copy.
+
+- **Find my money** now reads the game's own names for its numbers (Unity keeps every class and field name in memory) and lists the fields that hold money, like the wallet's balance, each with its value right now. The one matching your balance is picked for you
+- That fixes the last version's mix-up: it could grab the HUD's display copy, so the counter jumped around while the Garage kept your real balance
+- Reads money hidden by anti-cheat (ObscuredDouble and friends) from the game's own layout of it
+- If no field matches, pick one from the list, or tap Scan memory instead
+
 ## v0.18.2
 Moon Sweepers money without the stuck step, and fixes from Madeira Nightly 0.2.101.
 

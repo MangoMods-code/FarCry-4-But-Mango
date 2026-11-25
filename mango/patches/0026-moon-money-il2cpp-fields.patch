@@ -1,0 +1,465 @@
+diff --git a/app/Madeira/JITAllocator.h b/app/Madeira/JITAllocator.h
+index d4aa7af3..7b7c55ed 100644
+--- a/app/Madeira/JITAllocator.h
++++ b/app/Madeira/JITAllocator.h
+@@ -161,5 +161,11 @@ int mango_cheat_il2cpp_class_at(uint64_t base, uint64_t rva, const char *name, u
+ int mango_cheat_il2cpp_static_object(uint64_t klass, uint32_t static_off, uint32_t slot, uint64_t *obj);
+ int mango_cheat_il2cpp_instances(uint64_t klass, uint64_t *out, int cap);
+ int mango_cheat_find_word(uint64_t base, uint64_t size, uint64_t value, uint64_t *out, int cap);
++/* Unity IL2CPP: fields whose names sound like money, from the game's own class data, as lines
++ * "F <class*> <self> <class> <field> <offset> <type> <attrs> <struct>" and "S <struct> <field> <offset> <type>". */
++long mango_cheat_il2cpp_money_fields(const uint64_t *mods, int nmods, uint64_t mod_size, char *out, long out_cap);
++int mango_cheat_read(uint64_t addr, void *out, int n);
++int mango_cheat_il2cpp_singletons(uint64_t k, int self, uint64_t *out, int cap);
++uint64_t mango_cheat_il2cpp_statics(uint64_t k, int self);
+ 
+ #endif // JIT_ALLOCATOR_H
+diff --git a/app/Madeira/MangoCheat.inc.c b/app/Madeira/MangoCheat.inc.c
+index e5c3c9a9..c59a3716 100644
+--- a/app/Madeira/MangoCheat.inc.c
++++ b/app/Madeira/MangoCheat.inc.c
+@@ -30,6 +30,7 @@
+  */
+ 
+ #include <math.h>
++#include <stdarg.h>
+ #include <stdatomic.h>
+ #include <sys/mman.h>
+ #ifdef __APPLE__
+@@ -118,6 +119,12 @@ static void *mc_alloc(size_t size)
+     return (void *)(uintptr_t)a;
+ }
+ 
++extern kern_return_t mach_vm_deallocate(vm_map_t, mach_vm_address_t, mach_vm_size_t);
++static void mach_vm_deallocate_compat(void *p, size_t size)
++{
++    mach_vm_deallocate(mach_task_self(), (mach_vm_address_t)(uintptr_t)p, size);
++}
++
+ static int mc_read(uint64_t addr, void *out, size_t size)
+ {
+     mach_vm_size_t got = 0;
+@@ -940,3 +947,211 @@ int mango_cheat_il2cpp_static_object(uint64_t klass, uint32_t static_off, uint32
+     *obj = o;
+     return 1;
+ }
++
++/* ---- IL2CPP fields: the game's own names for its numbers -------------- */
++
++/* Every class the module's static data points at (its TypeInfo slots): each
++ * pointer-looking word inside the module, unique, kept when it is an
++ * Il2CppClass. Then each class's fields (FieldInfo: name, type, parent,
++ * offset, token; 0x20 each, the array at the class's `fields`, 8 after its
++ * self pointer) whose name sounds like money, as text lines:
++ *   F <class*> <self> <class> <field> <offset> <type> <attrs> <struct class>
++ * and, for each struct a money field is made of (ObscuredDouble, Decimal...),
++ *   S <struct class> <field> <offset> <type>
++ * Type is Il2CppTypeEnum (0x8 I4, 0xa I8, 0xc R4, 0xd R8, 0x11 a struct);
++ * attrs 0x10 is static. Offsets are as IL2CPP keeps them (an instance's
++ * include the 16-byte object header; a struct's fields too). */
++
++#define MC_CLASSES_MAX 65536
++static uint64_t *mc_class_list;
++static uint32_t mc_nclasses;
++
++typedef struct { uint64_t lo, hi; uint64_t *cand; uint32_t n, cap; } mc_cls_ctx;
++static void mc_cls_run(uint64_t at, const uint8_t *p, uint64_t len, void *vctx)
++{
++    mc_cls_ctx *c = vctx;
++    for (uint64_t i = (8 - (at & 7)) & 7; i + 8 <= len && c->n < c->cap; i += 8) {
++        uint64_t v = mc_u64(p + i);
++        if (mc_ptr(v) && (v < c->lo || v >= c->hi)) c->cand[c->n++] = v;
++    }
++}
++typedef struct { const uint64_t *mods; int nmods; uint64_t size; mc_cls_ctx *c; } mc_cls_reg;
++static void mc_cls_region(const mc_region *r, void *vctx)
++{
++    mc_cls_reg *g = vctx;
++    if (!r->readable || r->ours || !r->writable) return;   /* TypeInfo slots live in writable data */
++    for (int m = 0; m < g->nmods; m++) {
++        uint64_t lo = g->mods[m], hi = lo + g->size;
++        if (r->base >= hi || r->base + r->size <= lo) continue;
++        uint64_t s = r->base > lo ? r->base : lo, e = r->base + r->size < hi ? r->base + r->size : hi;
++        g->c->lo = lo; g->c->hi = hi;
++        for (uint64_t a = s; a < e; a += MANGO_CHEAT_CHUNK) {
++            uint64_t n = e - a < MANGO_CHEAT_CHUNK ? e - a : MANGO_CHEAT_CHUNK;
++            mc_read_resident_into(r->external, a, n, mc_buf, mc_cls_run, g->c);
++        }
++    }
++}
++static int mc_u64_cmp(const void *a, const void *b)
++{
++    uint64_t x = *(const uint64_t *)a, y = *(const uint64_t *)b;
++    return x < y ? -1 : x > y;
++}
++
++static int mc_money_name(const char *s)
++{
++    static const char *words[] = { "money", "cash", "coin", "dollar", "credit", "balance", "wallet", "currency",
++                                   "fund", "gold", "bank", "earn", "profit", "budget", NULL };
++    char low[96]; int i = 0;
++    for (; s[i] && i < 95; i++) low[i] = (s[i] >= 'A' && s[i] <= 'Z') ? s[i] + 32 : s[i];
++    low[i] = 0;
++    for (int w = 0; words[w]; w++) if (strstr(low, words[w])) return 1;
++    return 0;
++}
++
++static int mc_field_ok(uint8_t t)
++{
++    return t == 0x08 || t == 0x09 || t == 0x0a || t == 0x0b || t == 0x0c || t == 0x0d || t == 0x11;
++}
++
++/* The class whose byval_arg (Il2CppType at 0x20) carries this type's data, for a struct field. */
++static int mc_struct_name(uint64_t data, char *name, int cap)
++{
++    for (uint32_t i = 0; i < mc_nclasses; i++) {
++        uint64_t d;
++        if (mc_read(mc_class_list[i] + 0x20, &d, 8) && d == data) return mc_class(mc_class_list[i], name, cap) != 0;
++    }
++    return 0;
++}
++
++static int mc_appendf(char *out, long cap, long *used, const char *fmt, ...)
++    __attribute__((format(printf, 4, 5)));
++static int mc_appendf(char *out, long cap, long *used, const char *fmt, ...)
++{
++    if (*used >= cap - 1) return 0;
++    va_list ap; va_start(ap, fmt);
++    int n = vsnprintf(out + *used, (size_t)(cap - *used), fmt, ap);
++    va_end(ap);
++    if (n < 0 || *used + n >= cap) { out[*used] = 0; return 0; }
++    *used += n;
++    return 1;
++}
++
++/* Reads a class's fields: calls fn for each (name, type, attrs, offset, type data). */
++static int mc_fields(uint64_t k, int self, void (*fn)(const char *, uint8_t, uint16_t, int32_t, uint64_t, void *), void *ctx)
++{
++    uint64_t fields;
++    if (!mc_read(k + self + 8, &fields, 8) || !mc_ptr(fields)) return 0;
++    int n = 0;
++    for (int i = 0; i < 1024; i++) {
++        uint64_t fi[4];   /* name, type, parent, offset|token */
++        if (!mc_read(fields + (uint64_t)i * 0x20, fi, sizeof fi) || fi[2] != k || !mc_ptr(fi[0]) || !mc_ptr(fi[1])) break;
++        char name[96] = {0};
++        if (!mc_read(fi[0], name, sizeof name - 1)) break;
++        name[95] = 0;
++        if (!mc_ident(name)) break;
++        uint64_t ty[2];
++        if (!mc_read(fi[1], ty, sizeof ty)) break;
++        uint32_t bits = (uint32_t)ty[1];
++        fn(name, (uint8_t)(bits >> 16), (uint16_t)bits, (int32_t)(uint32_t)fi[3], ty[0], ctx);
++        n++;
++    }
++    return n;
++}
++
++typedef struct { char *out; long cap; long *used; uint64_t k; int self; const char *cls;
++                 uint64_t structs[64]; int nstructs; } mc_mf_ctx;
++static void mc_money_field(const char *name, uint8_t type, uint16_t attrs, int32_t off, uint64_t data, void *vctx)
++{
++    mc_mf_ctx *c = vctx;
++    if (!mc_field_ok(type) || (attrs & 0x40) || off < 0) return;   /* literals and thread statics have no storage */
++    if (!mc_money_name(name) && !mc_money_name(c->cls)) return;
++    char sname[96] = "-";
++    if (type == 0x11) {
++        if (!mc_struct_name(data, sname, sizeof sname)) strcpy(sname, "?");
++        int seen = 0;
++        for (int i = 0; i < c->nstructs; i++) if (c->structs[i] == data) seen = 1;
++        if (!seen && c->nstructs < 64) c->structs[c->nstructs++] = data;
++    }
++    mc_appendf(c->out, c->cap, c->used, "F %llx %x %s %s %x %x %x %s\n", (unsigned long long)c->k, c->self, c->cls, name,
++               (unsigned)off, type, attrs, sname);
++}
++typedef struct { char *out; long cap; long *used; const char *cls; } mc_sf_ctx;
++static void mc_struct_field(const char *name, uint8_t type, uint16_t attrs, int32_t off, uint64_t data, void *vctx)
++{
++    (void)data;
++    mc_sf_ctx *c = vctx;
++    if (attrs & 0x50) return;   /* statics and literals are not part of the struct */
++    mc_appendf(c->out, c->cap, c->used, "S %s %s %x %x\n", c->cls, name, (unsigned)off, type);
++}
++
++/* Returns the number of classes read; the lines in out. */
++long mango_cheat_il2cpp_money_fields(const uint64_t *mods, int nmods, uint64_t mod_size, char *out, long out_cap)
++{
++    if (!mc_ensure_buffers()) return -1;
++    pthread_mutex_lock(&mc_lock);
++    if (!mc_class_list) mc_class_list = mc_alloc(MC_CLASSES_MAX * 8);
++    uint64_t *cand = (uint64_t *)mc_alloc(8u << 20);   /* up to 1M pointer words, freed below */
++    long used = 0;
++    if (out && out_cap) out[0] = 0;
++    if (!mc_class_list || !cand) { pthread_mutex_unlock(&mc_lock); return -1; }
++    mc_cls_ctx c = { 0, 0, cand, 0, 1u << 20 };
++    mc_cls_reg g = { mods, nmods, mod_size, &c };
++    mc_each_region(mc_cls_region, &g);
++    qsort(cand, c.n, 8, mc_u64_cmp);
++    mc_nclasses = 0;
++    for (uint32_t i = 0; i < c.n && mc_nclasses < MC_CLASSES_MAX; i++) {
++        if (i && cand[i] == cand[i - 1]) continue;
++        if (mc_class(cand[i], NULL, 0)) mc_class_list[mc_nclasses++] = cand[i];
++    }
++    for (uint32_t i = 0; i < mc_nclasses; i++) {
++        char cls[96];
++        int self = mc_class(mc_class_list[i], cls, sizeof cls);
++        if (!self) continue;
++        mc_mf_ctx f; memset(&f, 0, sizeof f);
++        f.out = out; f.cap = out_cap; f.used = &used; f.k = mc_class_list[i]; f.self = self; f.cls = cls;
++        mc_fields(mc_class_list[i], self, mc_money_field, &f);
++        for (int s = 0; s < f.nstructs; s++)
++            for (uint32_t j = 0; j < mc_nclasses; j++) {
++                uint64_t d;
++                if (!mc_read(mc_class_list[j] + 0x20, &d, 8) || d != f.structs[s]) continue;
++                char sn[96]; int sself = mc_class(mc_class_list[j], sn, sizeof sn);
++                if (!sself) break;
++                /* once per struct class */
++                char tag[110]; snprintf(tag, sizeof tag, "S %s ", sn);
++                if (out && strstr(out, tag)) break;
++                mc_sf_ctx sc = { out, out_cap, &used, sn };
++                mc_fields(mc_class_list[j], sself, mc_struct_field, &sc);
++                break;
++            }
++    }
++    long n = mc_nclasses;
++    mach_vm_deallocate_compat(cand, 8u << 20);
++    pthread_mutex_unlock(&mc_lock);
++    return n;
++}
++
++/* Raw bytes of the game's memory (a struct's parts), 0 when unreadable. */
++int mango_cheat_read(uint64_t addr, void *out, int n)
++{
++    return n > 0 && n <= 64 && mc_read(addr, out, (size_t)n);
++}
++
++/* Objects of class k held by k's own static fields (singletons: Instance). Up to cap. */
++int mango_cheat_il2cpp_singletons(uint64_t k, int self, uint64_t *out, int cap)
++{
++    uint64_t statics, block[0x800 / 8];
++    if (!mc_read(k + self + 0x40, &statics, 8) || !mc_ptr(statics) || !mc_read(statics, block, sizeof block)) return 0;
++    int n = 0;
++    for (int i = 0; i < (int)(sizeof block / 8) && n < cap; i++) {
++        uint64_t hdr;
++        if (mc_ptr(block[i]) && mc_read(block[i], &hdr, 8) && hdr == k) out[n++] = block[i];
++    }
++    return n;
++}
++
++/* The static field block of class k (statics are at offsets in it). */
++uint64_t mango_cheat_il2cpp_statics(uint64_t k, int self)
++{
++    uint64_t statics;
++    return mc_read(k + self + 0x40, &statics, 8) && mc_ptr(statics) ? statics : 0;
++}
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index ee1276d1..3b171c23 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -3254,7 +3254,16 @@ final class MangoMoonMods: ObservableObject {
+ final class MangoMoonMoney: ObservableObject {
+     static let shared = MangoMoonMoney()
+ 
+-    enum Phase: Equatable { case idle, looking, finding, narrowing(Int), ready, notFound(String) }
++    enum Phase: Equatable { case idle, looking, finding, fields, narrowing(Int), ready, notFound(String) }
++
++    /// A field the game itself names like money (PlayerWallet.money), with where it is now.
++    struct Field: Identifiable, Equatable {
++        let id: Int
++        let title: String       // "PlayerWallet.money"
++        let detail: String      // "ObscuredDouble (anti-cheat)", "double"...
++        let target: Target?     // nil: a kind this can't read yet
++        let value: Double?
++    }
+ 
+     struct Target: Equatable { let address: UInt64; let kind: Int32 }
+ 
+@@ -3266,6 +3275,7 @@ final class MangoMoonMoney: ObservableObject {
+     @Published var locked = false
+     @Published var note = ""
+     @Published var progress = 0.0
++    @Published var fields: [Field] = []
+ 
+     /// Saved paths per GameAssembly build: "kind<TAB>class<TAB>copy rva static_off slot field" (hex).
+     private static let store = "mango.moonMoneyPaths"
+@@ -3288,7 +3298,7 @@ final class MangoMoonMoney: ObservableObject {
+ 
+     /// Opening the page: the saved path when it still reads a sensible amount, else the finder.
+     func open() {
+-        if phase == .ready || phase == .looking || phase == .finding { refresh(); return }
++        if phase == .ready || phase == .looking || phase == .finding || phase == .fields { refresh(); return }
+         if case .narrowing = phase { refresh(); return }
+         phase = .looking
+         Task {
+@@ -3355,8 +3365,123 @@ final class MangoMoonMoney: ObservableObject {
+         return plausible.first?.0
+     }
+ 
+-    /// Step 1: every money kind holding the amount typed (the save's amount to start).
++    /// Step 1: the game's own money fields (Unity IL2CPP class data: PlayerWallet.money and the
++    /// like), each read where it is now. The one matching the amount is picked; the rest are listed.
++    /// A plain copy on screen (a HUD's displayed amount) can't fool this, the way it fooled a scan.
+     func find() {
++        guard MangoCheats.parse(amountText) != nil else { note = "Type the money the game shows (the Garage shows your real balance)."; return }
++        guard !moduleBases.isEmpty else { scanMemory(); return }
++        phase = .looking; note = ""
++        let bases = moduleBases, size = moduleSize, want = MangoCheats.parse(amountText)?.0
++        Task {
++            let (found, log) = await Task.detached(priority: .userInitiated) { MangoMoonMoney.readFields(bases: bases, size: size) }.value
++            LogStore.shared.log("[moon-money] fields: " + String(log.prefix(4000)))
++            fields = found.sorted { a, b in
++                func score(_ f: Field) -> Int {
++                    guard let v = f.value, f.target != nil else { return 3 }
++                    if let want, abs(v - want) < 0.02 { return 0 }
++                    return f.title.lowercased().contains("display") || f.title.lowercased().contains("hud") ? 2 : 1
++                }
++                return score(a) < score(b)
++            }
++            if let best = fields.first, let t = best.target, let v = best.value, let want, abs(v - want) < 0.02 {
++                use(best); LogStore.shared.log("[moon-money] picked \(best.title) = \(Self.dollars(v)) (\(String(t.kind)))")
++            } else if fields.isEmpty {
++                scanMemory()
++            } else {
++                phase = .fields
++            }
++        }
++    }
++
++    /// One of the listed fields, as the money to change.
++    func use(_ field: Field) {
++        guard let t = field.target else { return }
++        targets = [t]; phase = .ready; refresh()
++        note = "Using \(field.title)."
++        learn()
++    }
++
++    /// Reads the module's classes for money-named fields and works out each one's address and kind.
++    nonisolated static func readFields(bases: [UInt64], size: UInt64) -> ([Field], String) {
++        var buffer = [CChar](repeating: 0, count: 1 << 18)
++        let classes = mango_cheat_il2cpp_money_fields(bases, Int32(bases.count), size, &buffer, Int(buffer.count))
++        let text = String(cString: buffer)
++        var structs: [String: [(name: String, off: UInt64, type: Int)]] = [:]
++        var lines: [[String]] = []
++        for line in text.split(separator: "\n") {
++            let c = line.split(separator: " ").map(String.init)
++            if c.first == "S", c.count == 5, let off = UInt64(c[3], radix: 16), let ty = Int(c[4], radix: 16) {
++                structs[c[1], default: []].append((c[2], off, ty))
++            } else if c.first == "F", c.count == 9 { lines.append(c) }
++        }
++        var out: [Field] = []
++        var instanceScans = 0
++        for c in lines {
++            guard let k = UInt64(c[1], radix: 16), let selfOff = Int32(c[2], radix: 16), let off = UInt64(c[5], radix: 16),
++                  let type = Int(c[6], radix: 16), let attrs = Int(c[7], radix: 16) else { continue }
++            let cls = c[3], name = c[4], sname = c[8]
++            // the field's address: in the static block, or in the class's object(s)
++            var bases: [UInt64] = []
++            if attrs & 0x10 != 0 {
++                let block = mango_cheat_il2cpp_statics(k, selfOff)
++                if block != 0 { bases = [block + off] }
++            } else {
++                var objs = [UInt64](repeating: 0, count: 4)
++                var n = Int(mango_cheat_il2cpp_singletons(k, selfOff, &objs, 4))
++                if n == 0, instanceScans < 3 {
++                    instanceScans += 1
++                    objs = [UInt64](repeating: 0, count: 8)
++                    n = Int(mango_cheat_il2cpp_instances(k, &objs, 8))
++                }
++                bases = objs.prefix(n).map { $0 + off }
++            }
++            // the kind it is kept as
++            var kind: Int32? = nil, shift: UInt64 = 0, detail = ""
++            switch type {
++            case 0x0d: kind = 3; detail = "double"
++            case 0x0c: kind = 2; detail = "float"
++            case 0x08, 0x09: kind = 1; detail = "int"
++            case 0x0a, 0x0b: kind = 4; detail = "long"
++            case 0x11:
++                let parts = structs[sname] ?? []
++                let lower = sname.lowercased()
++                let key = parts.first { $0.name.lowercased().contains("key") && [0x08, 0x09, 0x0a, 0x0b].contains($0.type) }
++                let hidden = parts.first { $0.name.lowercased().contains("hidden") }
++                if let key, let hidden, [0x08, 0x09, 0x0a, 0x0b].contains(hidden.type) {
++                    let wide = [0x0a, 0x0b].contains(key.type)
++                    if hidden.off == key.off + (wide ? 8 : 4) {
++                        kind = lower.contains("double") ? 5 : lower.contains("float") ? 6 : wide ? 10 : 7
++                        shift = key.off >= 0x10 ? key.off - 0x10 : key.off
++                        detail = "\(sname) (anti-cheat)"
++                    } else { detail = "\(sname): key and value apart, not read yet" }
++                } else if let hidden, hidden.type == 0x11 {
++                    detail = "\(sname): shuffled bytes, not read yet"
++                } else if parts.count == 1, let only = parts.first {
++                    kind = only.type == 0x0d ? 3 : only.type == 0x0c ? 2 : [0x0a, 0x0b].contains(only.type) ? 4 : [0x08, 0x09].contains(only.type) ? 1 : nil
++                    shift = only.off >= 0x10 ? only.off - 0x10 : only.off
++                    detail = sname
++                } else { detail = "\(sname), not read yet" }
++            default: break
++            }
++            for (i, base) in bases.enumerated() {
++                var value: Double? = nil
++                var target: Target? = nil
++                if let kind {
++                    var v = 0.0
++                    if mango_cheat_peek(base + shift, kind, &v) != 0, v.isFinite { value = v; target = Target(address: base + shift, kind: kind) }
++                }
++                out.append(Field(id: out.count, title: "\(cls).\(name)" + (bases.count > 1 ? " #\(i + 1)" : ""), detail: detail, target: target, value: value))
++            }
++            if bases.isEmpty {
++                out.append(Field(id: out.count, title: "\(cls).\(name)", detail: detail + " (no object right now)", target: nil, value: nil))
++            }
++        }
++        return (out, "classes=\(classes) " + text.replacingOccurrences(of: "\n", with: " | "))
++    }
++
++    /// The fallback: every money kind holding the amount typed, by scanning memory.
++    func scanMemory() {
+         guard MangoCheats.parse(amountText) != nil else { note = "Type the money the game shows."; return }
+         phase = .finding; note = ""
+         let text = amountText
+@@ -3494,6 +3619,8 @@ struct MangoMoonMoneySection: View {
+                 }
+             case .ready:
+                 moneyControls
++            case .fields:
++                fieldList
+             case .idle, .notFound, .narrowing:
+                 finder
+             }
+@@ -3515,15 +3642,36 @@ struct MangoMoonMoneySection: View {
+             HStack {
+                 Button("Update") { mod.update() }.buttonStyle(.borderedProminent)
+                 Spacer()
+-                Button("Start over") { mod.find() }.buttonStyle(.borderless)
++                Button("Start over") { mod.scanMemory() }.buttonStyle(.borderless)
+             }
+         } else {
+-            Text("Check the amount matches what the game shows (it starts from your last save), then tap Find.")
++            Text("Type your money as the Garage shows it (it starts from your last save), then tap Find.")
+                 .font(.caption).foregroundStyle(.secondary)
+             Button("Find my money", systemImage: "magnifyingglass") { mod.find() }.buttonStyle(.borderedProminent)
+         }
+     }
+ 
++    @ViewBuilder private var fieldList: some View {
++        Text("None of the game's money fields holds \(mod.amountText) right now. Pick the one that matches your Garage balance:")
++            .font(.caption).foregroundStyle(.secondary)
++        ForEach(mod.fields) { field in
++            HStack {
++                VStack(alignment: .leading, spacing: 2) {
++                    Text(field.title).font(.subheadline.bold())
++                    Text(field.detail).font(.caption2).foregroundStyle(.secondary)
++                }
++                Spacer()
++                Text(field.value.map { "$" + MangoMoonMoney.dollars($0) } ?? "–").font(.subheadline.monospacedDigit())
++                Button("Use") { mod.use(field) }.buttonStyle(.bordered).disabled(field.target == nil)
++            }
++        }
++        HStack {
++            TextField("Your money", text: $mod.amountText).keyboardType(.decimalPad)
++            Button("Look again") { mod.find() }.buttonStyle(.bordered)
++        }
++        Button("Scan memory instead") { mod.scanMemory() }.font(.caption)
++    }
++
+     @ViewBuilder private var moneyControls: some View {
+         LabeledContent("Money") { Text(mod.money).font(.title3.monospacedDigit().bold()).foregroundStyle(MangoTheme.mango) }
+         HStack {
