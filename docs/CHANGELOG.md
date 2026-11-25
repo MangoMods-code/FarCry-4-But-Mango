@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.18.1
+Much faster scans.
+
+- **Find my money** and every Cheats scan are about 10x faster: numbers are checked with a quick range test instead of decoding every type at every spot, and the scan runs on several CPU cores at once
+- Saving where your money lives (the pointer scan) also uses several cores
+- Scans show a percentage
+
 ## v0.18.0
 A real Moon Sweepers money mod, and a smarter cheat engine.
 

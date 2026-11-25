@@ -1,0 +1,413 @@
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 68a7c633..eb502b24 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -6400,7 +6400,9 @@ struct MangoCheatsPage: View {
+                         }
+                     }
+                     if cheats.scanning {
+-                        ProgressView(value: cheats.progress) { Text("Scanning…") }
++                        ProgressView(value: cheats.progress) {
++                            HStack { Text("Scanning…"); Spacer(); Text("\(Int(cheats.progress * 100))%").monospacedDigit() }
++                        }
+                     } else {
+                         HStack {
+                             Button(cheats.scanned ? "New scan" : "Scan") { cheats.scan(first: true) }
+diff --git a/app/Madeira/MangoCheat.inc.c b/app/Madeira/MangoCheat.inc.c
+index 4235aa51..f91fbce3 100644
+--- a/app/Madeira/MangoCheat.inc.c
++++ b/app/Madeira/MangoCheat.inc.c
+@@ -31,6 +31,9 @@
+ #include <math.h>
+ #include <stdatomic.h>
+ #include <sys/mman.h>
++#ifdef __APPLE__
++#include <pthread/qos.h>
++#endif
+ 
+ #define MANGO_CHEAT_TAG 253            /* VM_MEMORY_APPLICATION_SPECIFIC_14 */
+ #define MANGO_CHEAT_MAX (4u << 20)     /* results kept at most */
+@@ -194,11 +197,11 @@ static int mc_scannable(const mc_region *r)
+ /* Reads [base, base+n) page run by page run, only pages in memory or
+  * compressed (file-backed regions: all of it), calling fn on each run that
+  * was read into mc_buf + (its offset in the chunk). */
+-static void mc_read_resident(const mc_region *r, uint64_t base, uint64_t n,
+-                             void (*fn)(uint64_t at, const uint8_t *p, uint64_t len, void *), void *ctx)
++static void mc_read_resident_into(int external, uint64_t base, uint64_t n, uint8_t *buf,
++                                  void (*fn)(uint64_t at, const uint8_t *p, uint64_t len, void *), void *ctx)
+ {
+-    if (r->external) {
+-        if (mc_read(base, mc_buf, n)) fn(base, mc_buf, n, ctx);
++    if (external) {
++        if (mc_read(base, buf, n)) fn(base, buf, n, ctx);
+         return;
+     }
+     unsigned char vec[(MANGO_CHEAT_CHUNK / MANGO_CHEAT_PAGE) + 2];
+@@ -217,11 +220,17 @@ static void mc_read_resident(const mc_region *r, uint64_t base, uint64_t n,
+         uint64_t s = first + i * MANGO_CHEAT_PAGE, e = first + j * MANGO_CHEAT_PAGE;
+         if (s < base) s = base;
+         if (e > base + n) e = base + n;
+-        if (e > s && mc_read(s, mc_buf + (s - base), e - s)) fn(s, mc_buf + (s - base), e - s, ctx);
++        if (e > s && mc_read(s, buf + (s - base), e - s)) fn(s, buf + (s - base), e - s, ctx);
+         i = j;
+     }
+ }
+ 
++static void mc_read_resident(const mc_region *r, uint64_t base, uint64_t n,
++                             void (*fn)(uint64_t at, const uint8_t *p, uint64_t len, void *), void *ctx)
++{
++    mc_read_resident_into(r->external, base, n, mc_buf, fn, ctx);
++}
++
+ /* ---- matching -------------------------------------------------------- */
+ 
+ /* A typed number matches what the game shows: "167.47" is 167.465 up to
+@@ -293,53 +302,186 @@ static int mc_ensure_buffers(void)
+ 
+ /* ---- first scan ------------------------------------------------------ */
+ 
+-typedef struct { unsigned mask; mc_want want; uint64_t done, total; } mc_first_ctx;
++/* The fast test: for a positive target every kind's match is a range of its raw bits (positive
++ * doubles and floats order like their bit patterns; cents and ints are integers), so a position
++ * costs a load, maybe an XOR, and two compares instead of decoding every kind. A target of zero
++ * or below uses the exact (slow) test. 8-byte kinds are read at 8-byte boundaries only, where a
++ * 64-bit game keeps them. */
++typedef struct {
++    unsigned mask; int fast;
++    uint64_t f64lo, f64hi; uint32_t f32lo, f32hi;
++    int64_t c_lo, c_hi;          /* cents, [lo, hi) */
++    int64_t ival; int integral;
++    mc_want want;
++} mc_fast;
++
++static mc_fast mc_make_fast(unsigned mask, mc_want w)
++{
++    mc_fast f; memset(&f, 0, sizeof f);
++    f.mask = mask; f.want = w; f.integral = w.integral; f.ival = w.ival;
++    f.fast = w.lo > 1e-6 && w.hi < 1e15;
++    if (!f.fast) return f;
++    f.f64lo = mc_vbits(w.lo); f.f64hi = mc_vbits(w.hi);
++    float a = (float)w.lo; if ((double)a < w.lo) a = nextafterf(a, INFINITY);
++    float b = (float)w.hi; if ((double)b < w.hi) b = nextafterf(b, INFINITY);
++    memcpy(&f.f32lo, &a, 4); memcpy(&f.f32hi, &b, 4);
++    int64_t c = (int64_t)floor(w.lo * 100) - 1; while (c / 100.0 < w.lo) c++;
++    int64_t d = (int64_t)floor(w.hi * 100) - 1; while (d / 100.0 < w.hi) d++;
++    f.c_lo = c; f.c_hi = d;
++    return f;
++}
++
++typedef struct { mc_hit local[512]; int n; } mc_hitbuf;   /* lives on a worker's stack, which no scan reads */
++
++static pthread_mutex_t mc_hits_lock = PTHREAD_MUTEX_INITIALIZER;
++
++static void mc_flush(mc_hitbuf *h)
++{
++    if (!h->n) return;
++    pthread_mutex_lock(&mc_hits_lock);
++    for (int i = 0; i < h->n; i++) {
++        if (mc_count >= MANGO_CHEAT_MAX) { mc_truncated = 1; break; }
++        mc_hits[mc_count++] = h->local[i];
++    }
++    pthread_mutex_unlock(&mc_hits_lock);
++    h->n = 0;
++}
+ 
+-static void mc_add(uint64_t addr, int kind, double value)
++static void mc_push(mc_hitbuf *h, uint64_t addr, int kind, const uint8_t *q)
+ {
+-    if (mc_count >= MANGO_CHEAT_MAX) { mc_truncated = 1; return; }
+-    mc_hits[mc_count].addr = addr | ((uint64_t)kind << 56);
+-    mc_hits[mc_count].old = mc_vbits(value);
+-    mc_count++;
++    h->local[h->n].addr = addr | ((uint64_t)kind << 56);
++    h->local[h->n].old = mc_vbits(mc_value(kind, q));
++    if (++h->n == 512) mc_flush(h);
+ }
+ 
+-static void mc_first_run(uint64_t at, const uint8_t *p, uint64_t len, void *vctx)
++typedef struct { const mc_fast *f; mc_hitbuf *hits; } mc_scan_ctx;
++
++static void mc_scan_run(uint64_t at, const uint8_t *p, uint64_t len, void *vctx)
+ {
+-    mc_first_ctx *c = vctx;
+-    for (uint64_t i = 0; i + 4 <= len; i += 4) {
++    mc_scan_ctx *c = vctx;
++    const mc_fast *f = c->f;
++    const unsigned m = f->mask;
++    if (!f->fast) {
++        for (uint64_t i = 0; i + 4 <= len; i += 4)
++            for (int k = 1; k < MC_KINDS; k++) {
++                if (!(m & MC_BIT(k)) || i + (uint64_t)mc_size(k) > len) continue;
++                if (mc_size(k) >= 8 && ((at + i) & 7)) continue;
++                if (mc_match(k, p + i, &f->want)) mc_push(c->hits, at + i, k, p + i);
++            }
++        return;
++    }
++    const int i32 = (m & MC_BIT(MC_I32)) && f->integral, xi32 = (m & MC_BIT(MC_XI32)) && f->integral;
++    const int i64 = (m & MC_BIT(MC_I64)) && f->integral, xi64 = (m & MC_BIT(MC_XI64)) && f->integral;
++    const int f32 = m & MC_BIT(MC_F32), xf32 = m & MC_BIT(MC_XF32), c32 = m & MC_BIT(MC_I32C);
++    const int f64 = m & MC_BIT(MC_F64), xf64 = m & MC_BIT(MC_XF64), c64 = m & MC_BIT(MC_I64C);
++    const int any8 = f64 | xf64 | c64 | i64 | xi64;
++    const uint32_t flo = f->f32lo, fhi = f->f32hi;
++    const uint64_t dlo = f->f64lo, dhi = f->f64hi;
++    const int64_t clo = f->c_lo, chi = f->c_hi, iv = f->ival;
++    uint64_t i = (4 - (at & 3)) & 3;
++    for (; i + 4 <= len; i += 4) {
+         const uint8_t *q = p + i;
+-        for (int k = 1; k < MC_KINDS; k++) {
+-            if (!(c->mask & MC_BIT(k)) || i + (uint64_t)mc_size(k) > len) continue;
+-            if (mc_match(k, q, &c->want)) mc_add(at + i, k, mc_value(k, q));
++        uint32_t u = mc_u32(q);
++        if (f32 && u - flo < fhi - flo) mc_push(c->hits, at + i, MC_F32, q);
++        if (c32 && (int64_t)(int32_t)u >= clo && (int64_t)(int32_t)u < chi) mc_push(c->hits, at + i, MC_I32C, q);
++        if (i32 && (int64_t)(int32_t)u == iv) mc_push(c->hits, at + i, MC_I32, q);
++        if ((xf32 || xi32) && i + 8 <= len && u) {
++            uint32_t w = mc_u32(q + 4);
++            if (w) {
++                uint32_t x = u ^ w;
++                if (xf32 && x - flo < fhi - flo) mc_push(c->hits, at + i, MC_XF32, q);
++                if (xi32 && (int64_t)(int32_t)x == iv) mc_push(c->hits, at + i, MC_XI32, q);
++            }
++        }
++        if (any8 && !((at + i) & 7) && i + 8 <= len) {
++            uint64_t v = mc_u64(q);
++            if (f64 && v - dlo < dhi - dlo) mc_push(c->hits, at + i, MC_F64, q);
++            if (c64 && (int64_t)v >= clo && (int64_t)v < chi) mc_push(c->hits, at + i, MC_I64C, q);
++            if (i64 && (int64_t)v == iv) mc_push(c->hits, at + i, MC_I64, q);
++            if ((xf64 || xi64) && v && i + 16 <= len) {
++                uint64_t w = mc_u64(q + 8);
++                if (w) {
++                    uint64_t x = v ^ w;
++                    if (xf64 && x - dlo < dhi - dlo) mc_push(c->hits, at + i, MC_XF64, q);
++                    if (xi64 && (int64_t)x == iv) mc_push(c->hits, at + i, MC_XI64, q);
++                }
++            }
+         }
+     }
+ }
+ 
+-static void mc_total_fn(const mc_region *r, void *ctx) { if (mc_scannable(r)) *(uint64_t *)ctx += r->size; }
++/* The scan's work: every scannable region cut into chunks, taken in turn by the workers. */
++typedef struct { uint64_t base, len; int external; } mc_chunk;
++#define MC_CHUNKS_MAX (1u << 18)
++static mc_chunk *mc_chunks;
++static uint32_t mc_nchunks;
++static _Atomic uint32_t mc_next_chunk;
++static _Atomic uint64_t mc_done_bytes;
++static uint64_t mc_total_bytes;
++#define MC_WORKERS 4
++static uint8_t *mc_wbuf[MC_WORKERS];
+ 
+-static void mc_first_region(const mc_region *r, void *vctx)
++static void mc_chunk_region(const mc_region *r, void *unused)
+ {
+-    mc_first_ctx *c = vctx;
++    (void)unused;
+     if (!mc_scannable(r)) return;
+-    for (uint64_t off = 0; off < r->size && !atomic_load(&mc_cancel); off += MANGO_CHEAT_CHUNK) {
++    for (uint64_t off = 0; off < r->size && mc_nchunks < MC_CHUNKS_MAX; off += MANGO_CHEAT_CHUNK) {
+         uint64_t n = r->size - off < MANGO_CHEAT_CHUNK ? r->size - off : MANGO_CHEAT_CHUNK;
+-        mc_read_resident(r, r->base + off, n, mc_first_run, c);
+-        c->done += n;
+-        if (c->total) atomic_store(&mc_progress, (int)(c->done * 1000 / c->total));
++        mc_chunks[mc_nchunks].base = r->base + off; mc_chunks[mc_nchunks].len = n;
++        mc_chunks[mc_nchunks].external = r->external;
++        mc_nchunks++; mc_total_bytes += n;
+     }
+ }
+ 
++typedef struct { const mc_fast *f; uint8_t *buf; } mc_worker_arg;
++
++static void *mc_worker(void *varg)
++{
++    mc_worker_arg *a = varg;
++    mc_hitbuf hits; hits.n = 0;
++    mc_scan_ctx c = { a->f, &hits };
++    for (;;) {
++        uint32_t i = atomic_fetch_add(&mc_next_chunk, 1);
++        if (i >= mc_nchunks || atomic_load(&mc_cancel)) break;
++        mc_read_resident_into(mc_chunks[i].external, mc_chunks[i].base, mc_chunks[i].len, a->buf, mc_scan_run, &c);
++        uint64_t done = atomic_fetch_add(&mc_done_bytes, mc_chunks[i].len) + mc_chunks[i].len;
++        if (mc_total_bytes) atomic_store(&mc_progress, (int)(done * 1000 / mc_total_bytes));
++    }
++    mc_flush(&hits);
++    return NULL;
++}
++
+ /* mask: MC_BIT(kind)s. Returns the number of results, or -1 when the buffers cannot be made. */
+ long mango_cheat_first_scan_mask(unsigned mask, double value, int decimals)
+ {
+     pthread_mutex_lock(&mc_lock);
+     if (!mc_ensure_buffers()) { pthread_mutex_unlock(&mc_lock); return -1; }
++    if (!mc_chunks) mc_chunks = mc_alloc(MC_CHUNKS_MAX * sizeof(mc_chunk));
++    for (int t = 0; t < MC_WORKERS; t++) if (!mc_wbuf[t]) mc_wbuf[t] = mc_alloc(MANGO_CHEAT_CHUNK + 64);
++    if (!mc_chunks || !mc_wbuf[0]) { pthread_mutex_unlock(&mc_lock); return -1; }
+     mc_count = 0; mc_truncated = 0;
+     atomic_store(&mc_cancel, 0);
+     atomic_store(&mc_progress, 0);
+-    mc_first_ctx c = { mask, mc_target(value, decimals), 0, 0 };
+-    mc_each_region(mc_total_fn, &c.total);
+-    mc_each_region(mc_first_region, &c);
++    mc_nchunks = 0; mc_total_bytes = 0;
++    atomic_store(&mc_next_chunk, 0); atomic_store(&mc_done_bytes, 0);
++    mc_each_region(mc_chunk_region, NULL);
++    mc_fast f = mc_make_fast(mask, mc_target(value, decimals));
++    mc_worker_arg args[MC_WORKERS];
++    pthread_t threads[MC_WORKERS];
++    int started = 0;
++    for (int t = 0; t < MC_WORKERS; t++) {
++        if (!mc_wbuf[t]) continue;
++        args[t].f = &f; args[t].buf = mc_wbuf[t];
++        if (t == 0) continue;   /* this thread is worker 0 */
++        pthread_attr_t attr; pthread_attr_init(&attr);
++#ifdef __APPLE__
++        pthread_attr_set_qos_class_np(&attr, QOS_CLASS_USER_INITIATED, 0);
++#endif
++        if (pthread_create(&threads[started], &attr, mc_worker, &args[t]) == 0) started++;
++        pthread_attr_destroy(&attr);
++    }
++    mc_worker(&args[0]);
++    for (int t = 0; t < started; t++) pthread_join(threads[t], NULL);
+     atomic_store(&mc_progress, 1000);
+     long n = (long)mc_count;
+     pthread_mutex_unlock(&mc_lock);
+@@ -615,7 +757,7 @@ typedef struct { uint64_t addr; uint32_t parent; uint32_t off; } mc_node;
+ 
+ typedef struct {
+     mc_node *prev; uint32_t nprev;          /* sorted by addr */
+-    mc_node *next; uint32_t nnext;
++    mc_node *next; _Atomic uint32_t nnext;
+     uint64_t lo, hi;                        /* pointer values worth a look */
+     uint32_t max_off;
+     const uint64_t *mods; int nmods; uint64_t mod_size;
+@@ -648,29 +790,62 @@ static void mc_ps_run(uint64_t at, const uint8_t *p, uint64_t len, void *vctx)
+         uint32_t l = 0, h = c->nprev;
+         while (l < h) { uint32_t m = (l + h) / 2; if (c->prev[m].addr < v) l = m + 1; else h = m; }
+         if (l >= c->nprev || c->prev[l].addr - v > c->max_off) continue;
+-        if (c->nnext >= MC_PS_NODES) return;
+-        c->next[c->nnext].addr = at + i;
+-        c->next[c->nnext].parent = l;
+-        c->next[c->nnext].off = (uint32_t)(c->prev[l].addr - v);
+-        c->nnext++;
++        uint32_t slot = atomic_fetch_add(&c->nnext, 1);
++        if (slot >= MC_PS_NODES) return;
++        c->next[slot].addr = at + i;
++        c->next[slot].parent = l;
++        c->next[slot].off = (uint32_t)(c->prev[l].addr - v);
+     }
+ }
+ 
+-static void mc_ps_total(const mc_region *r, void *vctx)
++static void mc_ps_chunks(const mc_region *r, void *vctx)
+ {
+     mc_ps_ctx *c = vctx;
+-    if (mc_ps_region_ok(c, r)) c->total += r->size;
++    if (!mc_ps_region_ok(c, r)) return;
++    for (uint64_t off = 0; off < r->size && mc_nchunks < MC_CHUNKS_MAX; off += MANGO_CHEAT_CHUNK) {
++        uint64_t n = r->size - off < MANGO_CHEAT_CHUNK ? r->size - off : MANGO_CHEAT_CHUNK;
++        mc_chunks[mc_nchunks].base = r->base + off; mc_chunks[mc_nchunks].len = n;
++        mc_chunks[mc_nchunks].external = r->external;
++        mc_nchunks++;
++    }
+ }
+ 
+-static void mc_ps_region(const mc_region *r, void *vctx)
++typedef struct { mc_ps_ctx *c; uint8_t *buf; } mc_ps_arg;
++
++static void *mc_ps_worker(void *varg)
+ {
+-    mc_ps_ctx *c = vctx;
+-    if (!mc_ps_region_ok(c, r) || c->nnext >= MC_PS_NODES) return;
+-    for (uint64_t off = 0; off < r->size && !atomic_load(&mc_cancel) && c->nnext < MC_PS_NODES; off += MANGO_CHEAT_CHUNK) {
+-        uint64_t n = r->size - off < MANGO_CHEAT_CHUNK ? r->size - off : MANGO_CHEAT_CHUNK;
+-        mc_read_resident(r, r->base + off, n, mc_ps_run, c);
+-        c->done += n;
++    mc_ps_arg *a = varg;
++    for (;;) {
++        uint32_t i = atomic_fetch_add(&mc_next_chunk, 1);
++        if (i >= mc_nchunks || atomic_load(&mc_cancel) || atomic_load(&a->c->nnext) >= MC_PS_NODES) break;
++        mc_read_resident_into(mc_chunks[i].external, mc_chunks[i].base, mc_chunks[i].len, a->buf, mc_ps_run, a->c);
++    }
++    return NULL;
++}
++
++/* One pass of the pointer scan over every chunk, on MC_WORKERS threads. */
++static void mc_ps_pass(mc_ps_ctx *c)
++{
++    mc_nchunks = 0;
++    atomic_store(&mc_next_chunk, 0);
++    mc_each_region(mc_ps_chunks, c);
++    mc_ps_arg args[MC_WORKERS];
++    pthread_t threads[MC_WORKERS];
++    int started = 0;
++    for (int t = 1; t < MC_WORKERS; t++) {
++        if (!mc_wbuf[t]) continue;
++        args[t].c = c; args[t].buf = mc_wbuf[t];
++        pthread_attr_t attr; pthread_attr_init(&attr);
++#ifdef __APPLE__
++        pthread_attr_set_qos_class_np(&attr, QOS_CLASS_UTILITY, 0);
++#endif
++        if (pthread_create(&threads[started], &attr, mc_ps_worker, &args[t]) == 0) started++;
++        pthread_attr_destroy(&attr);
+     }
++    args[0].c = c; args[0].buf = mc_wbuf[0];
++    mc_ps_worker(&args[0]);
++    for (int t = 0; t < started; t++) pthread_join(threads[t], NULL);
++    if (atomic_load(&c->nnext) > MC_PS_NODES) atomic_store(&c->nnext, MC_PS_NODES);
+ }
+ 
+ static int mc_node_cmp(const void *a, const void *b)
+@@ -692,6 +867,9 @@ long mango_cheat_pointer_scan(uint64_t target, const uint64_t *mods, int nmods,
+     static uint32_t counts[MC_PS_DEPTH + 1];
+     for (int d = 0; d <= MC_PS_DEPTH; d++)
+         if (!levels[d] && !(levels[d] = mc_alloc(MC_PS_NODES * sizeof(mc_node)))) return -1;
++    if (!mc_chunks) mc_chunks = mc_alloc(MC_CHUNKS_MAX * sizeof(mc_chunk));
++    for (int t = 0; t < MC_WORKERS; t++) if (!mc_wbuf[t]) mc_wbuf[t] = mc_alloc(MANGO_CHEAT_CHUNK + 64);
++    if (!mc_chunks || !mc_wbuf[0]) return -1;
+     pthread_mutex_lock(&mc_lock);
+     atomic_store(&mc_cancel, 0);
+     atomic_store(&mc_progress, 0);
+@@ -709,11 +887,11 @@ long mango_cheat_pointer_scan(uint64_t target, const uint64_t *mods, int nmods,
+         c.lo = c.prev[0].addr > (uint64_t)max_off ? c.prev[0].addr - max_off : 0;
+         c.hi = c.prev[c.nprev - 1].addr;
+         if (c.lo < 0x10000) c.lo = 0x10000;
+-        mc_each_region(mc_ps_total, &c);
+-        mc_each_region(mc_ps_region, &c);
+-        counts[d] = c.nnext;
++        mc_ps_pass(&c);
++        uint32_t found = atomic_load(&c.nnext);
++        counts[d] = found;
+         /* roots: write their chains */
+-        for (uint32_t i = 0; i < c.nnext; i++) {
++        for (uint32_t i = 0; i < found; i++) {
+             int m = mc_in_mods(&c, c.next[i].addr);
+             if (!m || !out) continue;
+             char line[160]; int len = snprintf(line, sizeof line, "%x %llx", m - 1,
+@@ -731,7 +909,7 @@ long mango_cheat_pointer_scan(uint64_t target, const uint64_t *mods, int nmods,
+          * unsorted list of the level before, so sort a copy's order in place by
+          * keeping parent indices (they index levels[d-1], which is not moved). */
+         uint32_t keep = 0;
+-        for (uint32_t i = 0; i < c.nnext; i++) if (!mc_in_mods(&c, c.next[i].addr)) c.next[keep++] = c.next[i];
++        for (uint32_t i = 0; i < found; i++) if (!mc_in_mods(&c, c.next[i].addr)) c.next[keep++] = c.next[i];
+         qsort(c.next, keep, sizeof(mc_node), mc_node_cmp);
+         counts[d] = keep;
+         atomic_store(&mc_progress, d * 1000 / max_depth);
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index b9e37d88..f5940e95 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -3450,7 +3450,13 @@ struct MangoMoonMoneySection: View {
+             case .looking:
+                 HStack { ProgressView(); Text("Looking for your money…") }
+             case .finding, .learning:
+-                ProgressView(value: mod.progress) { Text(mod.phase == .learning ? "Saving where your money lives, for next time…" : "Scanning…") }
++                ProgressView(value: mod.progress) {
++                    HStack {
++                        Text(mod.phase == .learning ? "Saving where your money lives, for next time…" : "Scanning…")
++                        Spacer()
++                        Text("\(Int(mod.progress * 100))%").monospacedDigit()
++                    }
++                }
+                 if mod.phase == .learning { moneyControls }
+             case .ready:
+                 moneyControls

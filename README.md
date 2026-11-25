@@ -33,6 +33,7 @@ Mango Port runs **your own copies of Windows PC games** on a non-jailbroken iPho
 | `mango/patches/0021-cheats-memory-scanner.patch` | Cheats in the in-game menu: a memory scanner (MangoCheat.inc.c, in JITAllocator.c) over the game's memory in Mango Port's own task, with scan, next scan, set, set all and freeze; its buffers are tagged so the scan skips them |
 | `mango/patches/0022-nightly-ports-heat-guard-polish.patch` | Ports from Madeira Nightly 0.2.100 (Steam direct launch arguments, Dock installers: DirectX skip, every library's shared redistributables, drive links; early player-1 pad; 13 game lists whose keys this runtime reads); Heat guard (ThermalPacing as an in-game switch, Eco at critical); Cheats undo and session reset; Moon Sweepers money test removed |
 | `mango/patches/0023-moon-money-mod-pointer-scan.patch` | Cheats engine: XOR-hidden and cents kinds, resident-page reads (mincore), PE module finder and reverse pointer scan with chain resolve; Moon Sweepers money card (find from the last save's amount, set/add/lock, pointer paths saved per GameAssembly build) |
+| `mango/patches/0024-faster-cheat-scans.patch` | Cheats engine: raw-bit range tests for every kind (positive targets), 8-byte kinds at 8-byte boundaries, first scan and pointer-scan passes on 4 worker threads over 4 MB chunks; scan percentages |
 | `scripts/apply-mango.sh` | Fetches Madeira and applies the patches (idempotent) |
 | `scripts/test.sh` | Runs the Madeira host checks the patches touch |
 | `docs/` | Roadmap, Far Cry 4 test log, legal notes |
