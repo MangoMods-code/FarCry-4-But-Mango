@@ -238,10 +238,10 @@ index 69481f42..845caebd 100644
          if let restore = restoreMode {
              guard current == ourMode else { userChose(); return }
 diff --git a/app/Madeira/GameRecommendations.swift b/app/Madeira/GameRecommendations.swift
-index 2b69a691..f7374fe8 100644
+index 2b69a691..6573f240 100644
 --- a/app/Madeira/GameRecommendations.swift
 +++ b/app/Madeira/GameRecommendations.swift
-@@ -1590,11 +1590,283 @@ extension GameRecommendations {
+@@ -1590,11 +1590,294 @@ extension GameRecommendations {
                     programs: ["neosphere.exe"], steamPrograms: [], list: glyphicaTypingSurvival),
          SteamTitle(appIDs: [3483510], folders: ["the adventures of elliot the millennium tales"],
                     programs: ["elliot-win64-shipping.exe"], steamPrograms: [], list: theAdventuresOfElliot),
@@ -504,6 +504,17 @@ index 2b69a691..f7374fe8 100644
 +        rp-discard = 1
 +        """,
 +        smallRAMConfig: satisfactorySmallRAMLines)
++
++    /// Satisfactory on a device with less than 10 GB of RAM (from Madeira nightly 0.2.100): the swap file (broad
++    /// coverage, down to Unreal's 64 KB reservations) takes the game's data and its pure-x64 images out of the memory
++    /// iOS counts, and the game is told it has 768 MB of video memory, so Unreal's texture pool starts smaller.
++    static let satisfactorySmallRAMLines = """
++        swap-mb = 8192
++        swap-mode = 2
++        swap-images = 1
++        vram-mb = 768
++        env.MADEIRA_SWAP_MIN_KB = 64
++        """
 +
 +    /// Football Manager 27 (Steam App ID 4530370, Unity, 64-bit). fm27-mitigation-policy, 2026-11-22: Sentry
 +    /// GET-HELP-LOGS-1PT (0.2.72, iPad16,8) died with c0000005 in ntdll 65 s in, right after the game asked
