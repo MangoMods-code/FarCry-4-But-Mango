@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.18.2
+Moon Sweepers money without the stuck step, and fixes from Madeira Nightly 0.2.101.
+
+- **Moon Sweepers money:** after **Find my money**, the path to your money is saved in about a second, with no lag. Mango Port reads it from how Unity games are built (your money's object knows its class, and the class knows where it's kept) instead of searching all of the game's memory six times. Next launch it finds your money at once
+- Scans skip memory iOS has compressed: faster, and they can't push Mango Port over iOS's memory limit (the reset you saw)
+- Scans run gentler (3 cores, lower priority), so the game keeps running while they do
+- **From Madeira Nightly 0.2.101** (camhawk):
+  - Left 4 Dead 2: downloaded Workshop add-ons are copied to where the game looks for them, before it starts
+  - Madeira Dock: a game with no .exe launch option uses the best Windows option outside beta branches (tModLoader)
+  - Fix for the Visual C++ installer failing in some Unreal games
+
 ## v0.18.1
 Much faster scans.
 

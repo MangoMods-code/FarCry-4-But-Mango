@@ -1,0 +1,927 @@
+diff --git a/app/Madeira/ConfigCatalog.generated.swift b/app/Madeira/ConfigCatalog.generated.swift
+index ac61aa3d..2c0b3638 100644
+--- a/app/Madeira/ConfigCatalog.generated.swift
++++ b/app/Madeira/ConfigCatalog.generated.swift
+@@ -25,6 +25,7 @@ extension ConfigCatalog {
+         ConfigOption(key: "env.MADEIRA_DEVICE_STATS", title: "", kind: .bool, defaultValue: "0", category: "App & front end", note: "Opt-in (env.MADEIRA_DEVICE_STATS = 1): a line every 10 s during every session is a diagnostic, so it is off by default.", choices: [], sources: ["app/Madeira/Library.swift"]),
+         ConfigOption(key: "env.MADEIRA_DOCK_CLEAR_STEAM_ID", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "A Dock session publishes no fixed Steam game identity to its guests (WineProcessBridge.m): Valve's client runs in the host and gives each game its own. Every other launch clears the flag and is unchanged. env.MADEIRA_DOCK_CLEAR_STEAM_ID ...", choices: [], sources: ["app/Madeira/ContentView.swift"]),
+         ConfigOption(key: "env.MADEIRA_DOCK_GAME_SCM_FASTSYNC", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "0: such a session runs Wine's standard sync, as before 2026-10-28", choices: [], sources: ["app/Madeira/ContentView.swift"]),
++        ConfigOption(key: "env.MADEIRA_DOCK_LAUNCH_FALLBACK", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "(dock-launch-entry-fallback) With no entry that is an .exe on disk (tModLoader: its only non-beta Windows entry is start-tModLoader.bat), the default was entry 0, which can be a beta-branch entry whose program is not installed (Steam: \"m...", choices: [], sources: ["app/Madeira/ContentView.swift"]),
+         ConfigOption(key: "env.MADEIRA_DOCK_X64_TITLE", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "0: a 32-bit helper in the game's folder keeps the 64-bit title's memory on the swap file first", choices: [], sources: ["app/Madeira/ContentView.swift"]),
+         ConfigOption(key: "env.MADEIRA_DXMT_EXTRA", title: "", kind: .text, defaultValue: "", category: "App & front end", note: "madeira-bcd: the game's options from BCDLaunch.applyExtras (LibraryPrefs' NVIDIA device id), last, as before the merge. An option whose key is already set above is replaced, not repeated: DXMT reads at most 259 characters.", choices: [], sources: ["app/Madeira/ContentView.swift"]),
+         ConfigOption(key: "env.MADEIRA_EA", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "Off with `env.MADEIRA_EA = 0`.", choices: [], sources: ["app/Madeira/EALibrary.swift"]),
+@@ -49,6 +50,7 @@ extension ConfigCatalog {
+         ConfigOption(key: "env.MADEIRA_ITCH", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "Off with `env.MADEIRA_ITCH = 0`.", choices: [], sources: ["app/Madeira/ItchLibrary.swift"]),
+         ConfigOption(key: "env.MADEIRA_JIT_SHORTCUT", title: "", kind: .bool, defaultValue: "0", category: "App & front end", note: "Settings › JIT › Madeira JIT shortcut: when LocalDevVPN's loopback does not answer, Enable JIT runs the shortcut. Off unless it is 1.", choices: [], sources: ["app/Madeira/JITNetwork.swift"]),
+         ConfigOption(key: "env.MADEIRA_JIT_SIGNING_CHECK", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "Explains why JIT cannot be enabled on a copy signed without get-task-allow; 0 opens StikDebug regardless. A debugger can attach only to a process whose signature carries get-task-allow (a development signature). A copy signed with a dist...", choices: [], sources: ["app/Madeira/ContentView.swift"]),
++        ConfigOption(key: "env.MADEIRA_L4D2_WORKSHOP_SYNC", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "[l4d2-workshop-sync] Left 4 Dead 2 (550): Steam downloads new Workshop add-ons to <library>/workshop/content/550/<id> .vpk, but the game only lists vpks in left4dead2/addons/workshop/<id>.vpk, and the game's own copy step writes 0 bytes ...", choices: [], sources: ["app/Madeira/ContentView.swift"]),
+         ConfigOption(key: "env.MADEIRA_LAUNCH_EARLY", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "0: Play keeps the Game details page up until the session begins", choices: [], sources: ["app/Madeira/Library.swift"]),
+         ConfigOption(key: "env.MADEIRA_LAUNCH_FLOOD", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "0: the starting screen fades in without growing out of the Play button", choices: [], sources: ["app/Madeira/Library.swift"]),
+         ConfigOption(key: "env.MADEIRA_LAUNCH_WIDE", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "0: the starting screen is one centred column in landscape too", choices: [], sources: ["app/Madeira/Library.swift"]),
+@@ -783,6 +785,7 @@ extension ConfigCatalog {
+         ConfigOption(key: "env.MADEIRA_TLS_X64", title: "", kind: .bool, defaultValue: "0", category: "Wine core (ntdll)", note: "x64 fast path for TlsGetValue (kernelbase). Default off (experimental). 1: a TLS index below 64 is read in the x64 JIT code, without a round trip into native code. Read when a 64-bit program starts.", choices: [], sources: ["wine/dlls/ntdll/cs_x64_fastpath.c"]),
+         ConfigOption(key: "env.MADEIRA_UNIX_EXIT_ROUTE", title: "", kind: .text, defaultValue: "", category: "Wine core (ntdll)", note: "MADEIRA_UNIX_EXIT_ROUTE=0: a fatal unix-side error calls plain (shimmed) exit() again (ml1310)", choices: [], sources: ["build/ntdll-unix/server_ios.c"]),
+         ConfigOption(key: "env.MADEIRA_VCRT_ARM64_KEY", title: "ARM64 Visual C++ runtime marker", kind: .text, defaultValue: "", category: "Wine core (ntdll)", note: "Default empty: nothing written. 1 (or a version such as 14.50.35717): the session has the ARM64 Visual C++ 2015-2022 redistributable's Installed marker (volatile keys; one the prefix has is left alone), for an Unreal bootstrap program that sees an ARM64 machine and stops asking for that redistributable (exit 0x2329). Read at session start.", choices: [], sources: ["build/ntdll-unix/server_ios.c"]),
++        ConfigOption(key: "env.MADEIRA_VCRT_PARENTS", title: "", kind: .text, defaultValue: "", category: "Wine core (ntdll)", note: "", choices: [], sources: ["build/ntdll-unix/server_ios.c"]),
+         ConfigOption(key: "env.MADEIRA_VK_DIAGNOSTICS", title: "", kind: .text, defaultValue: "", category: "Wine core (ntdll)", note: "", choices: [], sources: ["build/vulkan-ios/backend.c"]),
+         ConfigOption(key: "env.MADEIRA_WOW64_PEB_SELF", title: "", kind: .text, defaultValue: "", category: "Wine core (ntdll)", note: "Madeira wow64-peb-self: wow_peb is a session global that init_peb() sets for a 32-bit child and loader_ios.c temporarily clears while a 64-bit child runs unix_init_startup_info(). A 32-bit thread querying ProcessWow64Information during t...", choices: [], sources: ["build/ntdll-unix/process_ios.c"]),
+         ConfigOption(key: "env.MADEIRA_WOW_MAIN_FAIL_EXIT", title: "", kind: .text, defaultValue: "", category: "Wine core (ntdll)", note: "This is the SESSION'S OWN program, not a child (a 32-bit program started on a device whose address space has no 4 GB window left). The pthread_exit() inside fatal_error() ends the boot thread (wine_process_thread) in the middle of __wine...", choices: [], sources: ["build/ntdll-unix/loader_ios.c"]),
+diff --git a/app/Madeira/ContentView.swift b/app/Madeira/ContentView.swift
+index 15c0f9f2..016ec3f8 100644
+--- a/app/Madeira/ContentView.swift
++++ b/app/Madeira/ContentView.swift
+@@ -3543,7 +3543,17 @@ struct ContentView: View {
+             let options = await SteamOwnedLibrary.shared.launchOptions(appID: game.id)
+             let installFolder = MadeiraDock.drive.appendingPathComponent(game.library + "/common/" + game.installDir)
+             let steamEntry = options.flatMap { SteamDirectStart.choose($0, installFolder: installFolder) }
+-            let chosen = steamEntry?.launchIndex
++            var chosen = steamEntry?.launchIndex
++            // (dock-launch-entry-fallback) With no entry that is an .exe on disk (tModLoader: its only
++            // non-beta Windows entry is start-tModLoader.bat), the default was entry 0, which can be a
++            // beta-branch entry whose program is not installed (Steam: "missing executable ...
++            // tModLoader.exe", launch-client-error=28). Take the best Windows entry outside beta
++            // branches instead. Off: env.MADEIRA_DOCK_LAUNCH_FALLBACK = 0.
++            if chosen == nil, MadeiraConfig.flag("MADEIRA_DOCK_LAUNCH_FALLBACK"),
++               let list = options, let alternative = SteamDirectStart.dockFallbackIndex(list) {
++                chosen = alternative
++                LogStore.shared.log("[dock-launch-fallback] app=\(game.id) no entry was an .exe on disk: launch option \(alternative) (Windows, not a beta branch)")
++            }
+             // madeira-bcd exe-window-mb: measure the game's own fixed-base exe now, so the
+             // JIT pool is placed above it (StikJITHelper.allocatePool reads this once).
+             if let need = StikJITHelper.fixedBaseWindowMB(in: installFolder) {
+@@ -3553,6 +3563,54 @@ struct ContentView: View {
+             } else {
+                 StikJITHelper.exeWindowAutoMB = 0
+             }
++            // [l4d2-workshop-sync] Left 4 Dead 2 (550): Steam downloads new Workshop add-ons to
++            // <library>/workshop/content/550/<id>/*.vpk, but the game only lists vpks in
++            // left4dead2/addons/workshop/<id>.vpk, and the game's own copy step writes 0 bytes here
++            // (0.2.100 iPad: 0-byte ugc\download\*.vpk.download.z; a hand-copied vpk showed up ticked in
++            // Add-ons). Copy each missing vpk across before the game starts. Skips a file that already
++            // has the source's size. Off switch: env.MADEIRA_L4D2_WORKSHOP_SYNC = 0 in madeira.cfg.
++            if game.id == 550, MadeiraConfig.flag("MADEIRA_L4D2_WORKSHOP_SYNC") {
++                let content = MadeiraDock.drive.appendingPathComponent(game.library + "/workshop/content/550")
++                let target = installFolder.appendingPathComponent("left4dead2/addons/workshop")
++                // Off the main actor: a vpk can be 200 MB. Each file is copied to a .madeira-tmp name and
++                // then moved, so a killed copy never leaves a truncated .vpk that counts as present.
++                let result = await Task.detached(priority: .userInitiated) { () -> (copied: Int, present: Int, failed: Int, errors: [String]) in
++                    let fm = FileManager.default
++                    var copied = 0, present = 0, failed = 0
++                    var errors: [String] = []
++                    func size(_ url: URL) -> Int64? {
++                        ((try? fm.attributesOfItem(atPath: url.path))?[.size] as? NSNumber)?.int64Value
++                    }
++                    guard let ids = try? fm.contentsOfDirectory(atPath: content.path) else { return (0, 0, 0, []) }
++                    try? fm.createDirectory(at: target, withIntermediateDirectories: true)
++                    for id in ids where !id.isEmpty && id.allSatisfy({ $0.isASCII && $0.isNumber }) {
++                        let folder = content.appendingPathComponent(id)
++                        guard let files = try? fm.contentsOfDirectory(atPath: folder.path) else { continue }
++                        // One vpk per item is the normal case; with several, number the extras.
++                        for (i, name) in files.filter({ $0.lowercased().hasSuffix(".vpk") }).sorted().enumerated() {
++                            let source = folder.appendingPathComponent(name)
++                            let dest = target.appendingPathComponent(i == 0 ? "\(id).vpk" : "\(id)_\(i).vpk")
++                            let tmp = target.appendingPathComponent(dest.lastPathComponent + ".madeira-tmp")
++                            // Present = same size as the source; a 0-byte or older/smaller copy is replaced.
++                            if let have = size(dest), have > 0, have == size(source) { present += 1; continue }
++                            do {
++                                try? fm.removeItem(at: tmp)
++                                try fm.copyItem(at: source, to: tmp)
++                                if fm.fileExists(atPath: dest.path) { try fm.removeItem(at: dest) }
++                                try fm.moveItem(at: tmp, to: dest)
++                                copied += 1
++                            } catch {
++                                failed += 1
++                                try? fm.removeItem(at: tmp)
++                                errors.append("could not copy \(id)/\(name): \(error.localizedDescription)")
++                            }
++                        }
++                    }
++                    return (copied, present, failed, errors)
++                }.value
++                for message in result.errors { LogStore.shared.log("[l4d2-workshop-sync] \(message)", level: .error) }
++                LogStore.shared.log("[l4d2-workshop-sync] workshop content folder \(content.path): copied \(result.copied), already present \(result.present), failed \(result.failed)")
++            }
+             let launchOption = chosen ?? 0
+             LogStore.shared.log("[madeira-dock] launch option \(launchOption)\(chosen == nil ? " (none chosen: the default)" : "")")
+             await SteamOwnedLibrary.shared.prepareDock()
+diff --git a/app/Madeira/JITAllocator.h b/app/Madeira/JITAllocator.h
+index 298f56d3..d4aa7af3 100644
+--- a/app/Madeira/JITAllocator.h
++++ b/app/Madeira/JITAllocator.h
+@@ -151,9 +151,15 @@ long mango_cheat_first_scan_money(double value, int decimals);
+ long mango_cheat_mincore_failures(void);
+ /* PE images in memory named `name` by their export directory: up to cap bases; returns how many. */
+ int mango_cheat_find_module(const char *name, uint64_t *bases, int cap, uint64_t *size, uint32_t *stamp);
+-/* Pointer paths from a module's copies to target, as text lines "copy rva off off ...\n" (hex). */
+-long mango_cheat_pointer_scan(uint64_t target, const uint64_t *mods, int nmods, uint64_t mod_size,
+-                              int max_depth, int max_off, char *out, long out_cap);
+-int mango_cheat_resolve(uint64_t base, uint64_t rva, const uint32_t *offs, int n, uint64_t *out);
++/* Unity IL2CPP: the managed object and class holding addr; a path to it from the module
++ * ("copy rva static_off slot field", or "copy rva - - field" for the class alone); the
++ * class at a saved rva (checked by name), its singleton object, or every object of it. */
++int mango_cheat_il2cpp_object(uint64_t addr, uint64_t *obj, uint64_t *klass, int *self, char *name, int cap);
++int mango_cheat_il2cpp_path(uint64_t addr, const uint64_t *mods, int nmods, uint64_t mod_size, char *out, int cap,
++                            char *name, int name_cap);
++int mango_cheat_il2cpp_class_at(uint64_t base, uint64_t rva, const char *name, uint64_t *klass);
++int mango_cheat_il2cpp_static_object(uint64_t klass, uint32_t static_off, uint32_t slot, uint64_t *obj);
++int mango_cheat_il2cpp_instances(uint64_t klass, uint64_t *out, int cap);
++int mango_cheat_find_word(uint64_t base, uint64_t size, uint64_t value, uint64_t *out, int cap);
+ 
+ #endif // JIT_ALLOCATOR_H
+diff --git a/app/Madeira/MangoCheat.inc.c b/app/Madeira/MangoCheat.inc.c
+index f91fbce3..e5c3c9a9 100644
+--- a/app/Madeira/MangoCheat.inc.c
++++ b/app/Madeira/MangoCheat.inc.c
+@@ -4,8 +4,9 @@
+  * (docs/WOW64.md), so the game's numbers live in our own address space. This
+  * finds a number the way a desktop memory scanner does (scan, then narrow it
+  * with next scans while the number changes in the game), sets or freezes it,
+- * and finds a pointer path to it from a module's static data (a pointer scan),
+- * so the next launch finds the number at once without scanning.
++ * and finds a path to it from a module's static data,
++ * so the next launch finds the number at once without scanning (for Unity IL2CPP
++ * games, from the object's class: see "IL2CPP anchors").
+  *
+  * Numbers games hide: besides plain int32/int64/float/double it reads
+  *  - XOR-obscured values (Anti-Cheat Toolkit's ObscuredDouble/Float/Int/Long
+@@ -21,7 +22,7 @@
+  * What it scans: readable and writable regions with pages in memory, minus
+  * thread stacks, IOKit/graphics memory, the JIT pool (translated code and PE
+  * images) and its own buffers. Everything it keeps (results, old values,
+- * frozen values, pointer-scan levels) lives in memory tagged MANGO_CHEAT_TAG,
++ * frozen values) lives in memory tagged MANGO_CHEAT_TAG,
+  * which the scan skips, so it never finds its own copies.
+  *
+  * Included at the end of JITAllocator.c (one file, no project change). The
+@@ -213,10 +214,12 @@ static void mc_read_resident_into(int external, uint64_t base, uint64_t n, uint8
+     }
+     uint64_t i = 0;
+     while (i < pages) {
+-        /* 0x1 in core, 0x20 paged out (compressed or swapped): data that exists */
+-        if (!(vec[i] & 0x21)) { i++; continue; }
++        /* 0x1: in core. Compressed pages are left alone: reading one decompresses it,
++         * which grows the footprint (iOS ends Mango Port) and is slow; a number the
++         * game uses now is in core. */
++        if (!(vec[i] & 0x1)) { i++; continue; }
+         uint64_t j = i;
+-        while (j < pages && (vec[j] & 0x21)) j++;
++        while (j < pages && (vec[j] & 0x1)) j++;
+         uint64_t s = first + i * MANGO_CHEAT_PAGE, e = first + j * MANGO_CHEAT_PAGE;
+         if (s < base) s = base;
+         if (e > base + n) e = base + n;
+@@ -418,7 +421,7 @@ static uint32_t mc_nchunks;
+ static _Atomic uint32_t mc_next_chunk;
+ static _Atomic uint64_t mc_done_bytes;
+ static uint64_t mc_total_bytes;
+-#define MC_WORKERS 4
++#define MC_WORKERS 3   /* leaves the game cores to run on */
+ static uint8_t *mc_wbuf[MC_WORKERS];
+ 
+ static void mc_chunk_region(const mc_region *r, void *unused)
+@@ -475,7 +478,7 @@ long mango_cheat_first_scan_mask(unsigned mask, double value, int decimals)
+         if (t == 0) continue;   /* this thread is worker 0 */
+         pthread_attr_t attr; pthread_attr_init(&attr);
+ #ifdef __APPLE__
+-        pthread_attr_set_qos_class_np(&attr, QOS_CLASS_USER_INITIATED, 0);
++        pthread_attr_set_qos_class_np(&attr, QOS_CLASS_UTILITY, 0);
+ #endif
+         if (pthread_create(&threads[started], &attr, mc_worker, &args[t]) == 0) started++;
+         pthread_attr_destroy(&attr);
+@@ -723,7 +726,7 @@ static void mc_mod_region(const mc_region *r, void *vctx)
+     for (uint64_t a = first; a + 0x200 <= r->base + r->size && c->found < c->cap; a += 0x10000) {
+         /* only a page that is in memory: never fault in a reservation */
+         unsigned char v = 0;
+-        if (!r->external && (mincore((void *)(uintptr_t)a, MANGO_CHEAT_PAGE, (void *)&v) != 0 || !(v & 0x21))) continue;
++        if (!r->external && (mincore((void *)(uintptr_t)a, MANGO_CHEAT_PAGE, (void *)&v) != 0 || !(v & 0x1))) continue;
+         uint64_t size; uint32_t stamp;
+         if (mc_pe_named(a, c->name, &size, &stamp)) {
+             int dup = 0;
+@@ -743,193 +746,197 @@ int mango_cheat_find_module(const char *name, uint64_t *bases, int cap, uint64_t
+     return c.found;
+ }
+ 
+-/* ---- pointer scan ---------------------------------------------------- */
++/* ---- IL2CPP anchors -------------------------------------------------- */
+ 
+-/* From a value's address back to a module's image: level 0 is the address;
+- * a word anywhere that points at most max_off below a level-(d-1) node is a
+- * level-d node (its offset is the distance). A node inside one of the module's
+- * copies is a root: its chain (rva, then the offsets from the root down) reads
+- * the same address after the next launch, when the heap is somewhere else.
+- * Each level is one pass over memory; at most MC_PS_NODES nodes per level. */
+-#define MC_PS_DEPTH 6
+-#define MC_PS_NODES 30000
+-typedef struct { uint64_t addr; uint32_t parent; uint32_t off; } mc_node;
++/* Unity IL2CPP games (GameAssembly.dll): every managed object starts with its
++ * Il2CppClass*, and an Il2CppClass points to itself (its `klass` field, 0x78 in
++ * the layouts since 2019) with its static fields 0x40 after that (0xB8); its
++ * name is a C string at 0x10. A number's object, class and the path to it from
++ * the module's static data follow from a few small reads, so no pass over the
++ * game's memory is needed. */
+ 
+-typedef struct {
+-    mc_node *prev; uint32_t nprev;          /* sorted by addr */
+-    mc_node *next; _Atomic uint32_t nnext;
+-    uint64_t lo, hi;                        /* pointer values worth a look */
+-    uint32_t max_off;
+-    const uint64_t *mods; int nmods; uint64_t mod_size;
+-    uint64_t done, total;
+-} mc_ps_ctx;
++static int mc_ptr(uint64_t v) { return v >= 0x10000 && v < 0x0001000000000000ULL && !(v & 7); }
+ 
+-static int mc_in_mods(const mc_ps_ctx *c, uint64_t a)
++static int mc_ident(const char *s)
+ {
+-    for (int i = 0; i < c->nmods; i++) if (a >= c->mods[i] && a < c->mods[i] + c->mod_size) return i + 1;
+-    return 0;
++    if (!s[0]) return 0;
++    for (int i = 0; s[i]; i++) {
++        char c = s[i];
++        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '`'
++              || c == '<' || c == '>' || c == '[' || c == ']' || c == ',' || c == '+' || c == '-' || c == '=')) return 0;
++    }
++    return 1;
+ }
+ 
+-static int mc_ps_region_ok(const mc_ps_ctx *c, const mc_region *r)
+-{
+-    if (mc_scannable(r)) return 1;
+-    /* A module's own data (statics) wherever Wine mapped it, even in the pool. */
+-    for (int i = 0; i < c->nmods; i++)
+-        if (r->readable && !r->ours && r->base < c->mods[i] + c->mod_size && r->base + r->size > c->mods[i]) return 1;
++/* K as an Il2CppClass: the offset of its self pointer (0x40...0x100), or 0. Its name in name. */
++static int mc_class(uint64_t k, char *name, int cap)
++{
++    uint64_t w[0x100 / 8];
++    if (!mc_ptr(k) || !mc_read(k, w, sizeof w)) return 0;
++    int self = 0;
++    for (int i = 0x40 / 8; i < 0x100 / 8; i++) if (w[i] == k) { self = i * 8; break; }
++    if (!self || !mc_ptr(w[2])) return 0;
++    char buf[96] = {0};
++    if (!mc_read(w[2], buf, sizeof buf - 1)) return 0;
++    buf[sizeof buf - 1] = 0;
++    if (!mc_ident(buf)) return 0;
++    if (name && cap > 0) { strncpy(name, buf, (size_t)cap - 1); name[cap - 1] = 0; }
++    return self;
++}
++
++/* The managed object holding addr: the nearest word at or below it (up to 4 KB)
++ * that is an Il2CppClass with a plain monitor word after it. */
++int mango_cheat_il2cpp_object(uint64_t addr, uint64_t *obj, uint64_t *klass, int *self, char *name, int cap)
++{
++    uint64_t start = addr & ~7ULL;
++    for (uint64_t o = start; o + 0x1000 > start && o >= 0x10000; o -= 8) {
++        uint64_t hdr[2];
++        if (!mc_read(o, hdr, sizeof hdr)) return 0;
++        if (!mc_ptr(hdr[0])) continue;
++        if (hdr[1] != 0 && !mc_ptr(hdr[1])) continue;   /* monitor: none, or a lock record */
++        int s = mc_class(hdr[0], name, cap);
++        if (!s) continue;
++        *obj = o; *klass = hdr[0]; *self = s;
++        return 1;
++    }
+     return 0;
+ }
+ 
+-static void mc_ps_run(uint64_t at, const uint8_t *p, uint64_t len, void *vctx)
+-{
+-    mc_ps_ctx *c = vctx;
+-    uint64_t start = (8 - (at & 7)) & 7;
+-    for (uint64_t i = start; i + 8 <= len; i += 8) {
+-        uint64_t v = mc_u64(p + i);
+-        if (v < c->lo || v > c->hi) continue;
+-        /* the nearest node at or above v */
+-        uint32_t l = 0, h = c->nprev;
+-        while (l < h) { uint32_t m = (l + h) / 2; if (c->prev[m].addr < v) l = m + 1; else h = m; }
+-        if (l >= c->nprev || c->prev[l].addr - v > c->max_off) continue;
+-        uint32_t slot = atomic_fetch_add(&c->nnext, 1);
+-        if (slot >= MC_PS_NODES) return;
+-        c->next[slot].addr = at + i;
+-        c->next[slot].parent = l;
+-        c->next[slot].off = (uint32_t)(c->prev[l].addr - v);
++/* Every 8-byte word equal to value in [base, base+size), in memory only; up to cap addresses. */
++typedef struct { uint64_t value; uint64_t *out; int cap, n; } mc_word_ctx;
++static void mc_word_run(uint64_t at, const uint8_t *p, uint64_t len, void *vctx)
++{
++    mc_word_ctx *c = vctx;
++    for (uint64_t i = (8 - (at & 7)) & 7; i + 8 <= len && c->n < c->cap; i += 8)
++        if (mc_u64(p + i) == c->value) c->out[c->n++] = at + i;
++}
++typedef struct { uint64_t base, size; mc_word_ctx *w; } mc_range_ctx;
++static void mc_range_region(const mc_region *r, void *vctx)
++{
++    mc_range_ctx *c = vctx;
++    if (!r->readable || r->ours || r->base >= c->base + c->size || r->base + r->size <= c->base) return;
++    uint64_t s = r->base > c->base ? r->base : c->base, e = r->base + r->size < c->base + c->size ? r->base + r->size : c->base + c->size;
++    for (uint64_t a = s; a < e && c->w->n < c->w->cap; a += MANGO_CHEAT_CHUNK) {
++        uint64_t n = e - a < MANGO_CHEAT_CHUNK ? e - a : MANGO_CHEAT_CHUNK;
++        mc_read_resident_into(r->external, a, n, mc_buf, mc_word_run, c->w);
+     }
+ }
+-
+-static void mc_ps_chunks(const mc_region *r, void *vctx)
++int mango_cheat_find_word(uint64_t base, uint64_t size, uint64_t value, uint64_t *out, int cap)
+ {
+-    mc_ps_ctx *c = vctx;
+-    if (!mc_ps_region_ok(c, r)) return;
+-    for (uint64_t off = 0; off < r->size && mc_nchunks < MC_CHUNKS_MAX; off += MANGO_CHEAT_CHUNK) {
+-        uint64_t n = r->size - off < MANGO_CHEAT_CHUNK ? r->size - off : MANGO_CHEAT_CHUNK;
+-        mc_chunks[mc_nchunks].base = r->base + off; mc_chunks[mc_nchunks].len = n;
+-        mc_chunks[mc_nchunks].external = r->external;
+-        mc_nchunks++;
++    if (!mc_ensure_buffers()) return 0;
++    pthread_mutex_lock(&mc_lock);
++    mc_word_ctx w = { value, out, cap, 0 };
++    mc_range_ctx c = { base, size, &w };
++    mc_each_region(mc_range_region, &c);
++    pthread_mutex_unlock(&mc_lock);
++    return w.n;
++}
++
++/* A path for addr from a module: "copy rva static_off slot_off field_off" when the
++ * object is held by one of its own class's static fields (a singleton), else
++ * "copy rva - - field_off" (the class only; its object is then found by its
++ * class). Returns 0 when addr is not in a managed object or the class is not
++ * in the module. */
++int mango_cheat_il2cpp_path(uint64_t addr, const uint64_t *mods, int nmods, uint64_t mod_size, char *out, int cap,
++                            char *name, int name_cap)
++{
++    uint64_t obj, k; int self;
++    if (!mc_ensure_buffers() || !mango_cheat_il2cpp_object(addr, &obj, &k, &self, name, name_cap)) return 0;
++    uint64_t slots[8];
++    for (int m = 0; m < nmods; m++) {
++        int n = mango_cheat_find_word(mods[m], mod_size, k, slots, 8);
++        if (!n) continue;
++        /* the object in its class's static fields? */
++        uint64_t statics = 0, block[0x800 / 8];
++        int slot = -1;
++        if (mc_read(k + self + 0x40, &statics, 8) && mc_ptr(statics) && mc_read(statics, block, sizeof block))
++            for (int i = 0; i < (int)(sizeof block / 8); i++) if (block[i] == obj) { slot = i * 8; break; }
++        if (slot >= 0)
++            snprintf(out, (size_t)cap, "%x %llx %x %x %llx", m, (unsigned long long)(slots[0] - mods[m]), self + 0x40, slot,
++                     (unsigned long long)(addr - obj));
++        else
++            snprintf(out, (size_t)cap, "%x %llx - - %llx", m, (unsigned long long)(slots[0] - mods[m]), (unsigned long long)(addr - obj));
++        return 1;
+     }
++    return 0;
+ }
+ 
+-typedef struct { mc_ps_ctx *c; uint8_t *buf; } mc_ps_arg;
+-
+-static void *mc_ps_worker(void *varg)
++/* Objects of class k: words equal to k with a plain monitor after them, in memory
++ * the value scan reads. Up to cap object addresses; one fast pass on the workers. */
++typedef struct { uint64_t k; uint64_t *out; int cap; _Atomic int n; } mc_inst_ctx;
++static mc_inst_ctx *mc_inst;
++static void mc_inst_run(uint64_t at, const uint8_t *p, uint64_t len, void *vctx)
++{
++    (void)vctx;
++    mc_inst_ctx *c = mc_inst;
++    for (uint64_t i = (8 - (at & 7)) & 7; i + 16 <= len; i += 8) {
++        if (mc_u64(p + i) != c->k) continue;
++        uint64_t mon = mc_u64(p + i + 8);
++        if (mon && !mc_ptr(mon)) continue;
++        int slot = atomic_fetch_add(&c->n, 1);
++        if (slot < c->cap) c->out[slot] = at + i;
++    }
++}
++static void *mc_inst_worker(void *varg)
+ {
+-    mc_ps_arg *a = varg;
++    uint8_t *buf = varg;
+     for (;;) {
+         uint32_t i = atomic_fetch_add(&mc_next_chunk, 1);
+-        if (i >= mc_nchunks || atomic_load(&mc_cancel) || atomic_load(&a->c->nnext) >= MC_PS_NODES) break;
+-        mc_read_resident_into(mc_chunks[i].external, mc_chunks[i].base, mc_chunks[i].len, a->buf, mc_ps_run, a->c);
++        if (i >= mc_nchunks || atomic_load(&mc_cancel)) break;
++        mc_read_resident_into(mc_chunks[i].external, mc_chunks[i].base, mc_chunks[i].len, buf, mc_inst_run, NULL);
++        uint64_t done = atomic_fetch_add(&mc_done_bytes, mc_chunks[i].len) + mc_chunks[i].len;
++        if (mc_total_bytes) atomic_store(&mc_progress, (int)(done * 1000 / mc_total_bytes));
+     }
+     return NULL;
+ }
+-
+-/* One pass of the pointer scan over every chunk, on MC_WORKERS threads. */
+-static void mc_ps_pass(mc_ps_ctx *c)
++int mango_cheat_il2cpp_instances(uint64_t k, uint64_t *out, int cap)
+ {
+-    mc_nchunks = 0;
+-    atomic_store(&mc_next_chunk, 0);
+-    mc_each_region(mc_ps_chunks, c);
+-    mc_ps_arg args[MC_WORKERS];
+-    pthread_t threads[MC_WORKERS];
+-    int started = 0;
++    if (!mc_ensure_buffers()) return 0;
++    pthread_mutex_lock(&mc_lock);
++    if (!mc_chunks) mc_chunks = mc_alloc(MC_CHUNKS_MAX * sizeof(mc_chunk));
++    for (int t = 0; t < MC_WORKERS; t++) if (!mc_wbuf[t]) mc_wbuf[t] = mc_alloc(MANGO_CHEAT_CHUNK + 64);
++    if (!mc_chunks || !mc_wbuf[0]) { pthread_mutex_unlock(&mc_lock); return 0; }
++    static mc_inst_ctx ctx;
++    ctx.k = k; ctx.out = out; ctx.cap = cap; atomic_store(&ctx.n, 0);
++    mc_inst = &ctx;
++    atomic_store(&mc_cancel, 0); atomic_store(&mc_progress, 0);
++    mc_nchunks = 0; mc_total_bytes = 0;
++    atomic_store(&mc_next_chunk, 0); atomic_store(&mc_done_bytes, 0);
++    mc_each_region(mc_chunk_region, NULL);
++    pthread_t threads[MC_WORKERS]; int started = 0;
+     for (int t = 1; t < MC_WORKERS; t++) {
+         if (!mc_wbuf[t]) continue;
+-        args[t].c = c; args[t].buf = mc_wbuf[t];
+         pthread_attr_t attr; pthread_attr_init(&attr);
+ #ifdef __APPLE__
+         pthread_attr_set_qos_class_np(&attr, QOS_CLASS_UTILITY, 0);
+ #endif
+-        if (pthread_create(&threads[started], &attr, mc_ps_worker, &args[t]) == 0) started++;
++        if (pthread_create(&threads[started], &attr, mc_inst_worker, mc_wbuf[t]) == 0) started++;
+         pthread_attr_destroy(&attr);
+     }
+-    args[0].c = c; args[0].buf = mc_wbuf[0];
+-    mc_ps_worker(&args[0]);
++    mc_inst_worker(mc_wbuf[0]);
+     for (int t = 0; t < started; t++) pthread_join(threads[t], NULL);
+-    if (atomic_load(&c->nnext) > MC_PS_NODES) atomic_store(&c->nnext, MC_PS_NODES);
+-}
+-
+-static int mc_node_cmp(const void *a, const void *b)
+-{
+-    uint64_t x = ((const mc_node *)a)->addr, y = ((const mc_node *)b)->addr;
+-    return x < y ? -1 : x > y;
++    atomic_store(&mc_progress, 1000);
++    int n = atomic_load(&ctx.n);
++    pthread_mutex_unlock(&mc_lock);
++    return n < cap ? n : cap;
+ }
+ 
+-/* Writes up to out_cap bytes of chains as text lines, shortest first:
+- * "<module copy> <rva> <off> <off> ...\n" in hex (offsets from the root down).
+- * Returns the number of chains, or -1 when its memory cannot be made. */
+-long mango_cheat_pointer_scan(uint64_t target, const uint64_t *mods, int nmods, uint64_t mod_size,
+-                              int max_depth, int max_off, char *out, long out_cap)
++/* Reads a saved path's parts. rva's word is the class (checked by name); with a
++ * static slot, the object comes from the class's static fields. */
++int mango_cheat_il2cpp_class_at(uint64_t base, uint64_t rva, const char *name, uint64_t *klass)
+ {
+-    if (max_depth < 1) max_depth = 1;
+-    if (max_depth > MC_PS_DEPTH) max_depth = MC_PS_DEPTH;
+-    if (!mc_ensure_buffers()) return -1;
+-    static mc_node *levels[MC_PS_DEPTH + 1];
+-    static uint32_t counts[MC_PS_DEPTH + 1];
+-    for (int d = 0; d <= MC_PS_DEPTH; d++)
+-        if (!levels[d] && !(levels[d] = mc_alloc(MC_PS_NODES * sizeof(mc_node)))) return -1;
+-    if (!mc_chunks) mc_chunks = mc_alloc(MC_CHUNKS_MAX * sizeof(mc_chunk));
+-    for (int t = 0; t < MC_WORKERS; t++) if (!mc_wbuf[t]) mc_wbuf[t] = mc_alloc(MANGO_CHEAT_CHUNK + 64);
+-    if (!mc_chunks || !mc_wbuf[0]) return -1;
+-    pthread_mutex_lock(&mc_lock);
+-    atomic_store(&mc_cancel, 0);
+-    atomic_store(&mc_progress, 0);
+-    levels[0][0].addr = target; levels[0][0].parent = 0; levels[0][0].off = 0; counts[0] = 1;
+-    long chains = 0, used = 0;
+-    if (out && out_cap) out[0] = 0;
+-    for (int d = 1; d <= max_depth && !atomic_load(&mc_cancel); d++) {
+-        /* level d-1 sorted by address, parents fixed up through a sort that keeps them */
+-        mc_ps_ctx c;
+-        memset(&c, 0, sizeof c);
+-        c.prev = levels[d - 1]; c.nprev = counts[d - 1];
+-        if (!c.nprev) break;
+-        c.next = levels[d]; c.max_off = (uint32_t)max_off;
+-        c.mods = mods; c.nmods = nmods; c.mod_size = mod_size;
+-        c.lo = c.prev[0].addr > (uint64_t)max_off ? c.prev[0].addr - max_off : 0;
+-        c.hi = c.prev[c.nprev - 1].addr;
+-        if (c.lo < 0x10000) c.lo = 0x10000;
+-        mc_ps_pass(&c);
+-        uint32_t found = atomic_load(&c.nnext);
+-        counts[d] = found;
+-        /* roots: write their chains */
+-        for (uint32_t i = 0; i < found; i++) {
+-            int m = mc_in_mods(&c, c.next[i].addr);
+-            if (!m || !out) continue;
+-            char line[160]; int len = snprintf(line, sizeof line, "%x %llx", m - 1,
+-                                               (unsigned long long)(c.next[i].addr - mods[m - 1]));
+-            uint32_t idx = i;
+-            for (int k = d; k >= 1 && len < (int)sizeof line - 12; k--) {
+-                mc_node *node = &levels[k][idx];
+-                len += snprintf(line + len, sizeof line - len, " %x", node->off);
+-                idx = node->parent;
+-            }
+-            line[len++] = '\n'; line[len] = 0;
+-            if (used + len < out_cap) { memcpy(out + used, line, (size_t)len + 1); used += len; chains++; }
+-        }
+-        /* non-roots go on to the next level, sorted; parents point into the
+-         * unsorted list of the level before, so sort a copy's order in place by
+-         * keeping parent indices (they index levels[d-1], which is not moved). */
+-        uint32_t keep = 0;
+-        for (uint32_t i = 0; i < found; i++) if (!mc_in_mods(&c, c.next[i].addr)) c.next[keep++] = c.next[i];
+-        qsort(c.next, keep, sizeof(mc_node), mc_node_cmp);
+-        counts[d] = keep;
+-        atomic_store(&mc_progress, d * 1000 / max_depth);
+-    }
+-    atomic_store(&mc_progress, 1000);
+-    pthread_mutex_unlock(&mc_lock);
+-    return chains;
++    uint64_t k; char got[96];
++    if (!mc_read(base + rva, &k, 8) || !mc_class(k, got, sizeof got) || strcmp(got, name) != 0) return 0;
++    *klass = k;
++    return 1;
+ }
+ 
+-/* Follows a chain from a module copy's base: the word at base + rva, plus the
+- * first offset; the word there, plus the next; ... The last address is the
+- * value's. Returns 0 when a step cannot be read or leaves the user range. */
+-int mango_cheat_resolve(uint64_t base, uint64_t rva, const uint32_t *offs, int n, uint64_t *out)
++int mango_cheat_il2cpp_static_object(uint64_t klass, uint32_t static_off, uint32_t slot, uint64_t *obj)
+ {
+-    uint64_t p = base + rva;
+-    for (int i = 0; i < n; i++) {
+-        uint64_t v;
+-        if (!mc_read(p, &v, 8) || v < 0x10000 || v >= 0x0001000000000000ULL) return 0;
+-        p = v + offs[i];
+-    }
+-    *out = p;
++    uint64_t statics, o, hdr;
++    if (!mc_read(klass + static_off, &statics, 8) || !mc_ptr(statics)) return 0;
++    if (!mc_read(statics + slot, &o, 8) || !mc_ptr(o)) return 0;
++    if (!mc_read(o, &hdr, 8) || hdr != klass) return 0;
++    *obj = o;
+     return 1;
+ }
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index f5940e95..ee1276d1 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -316,6 +316,27 @@ enum SteamDirectStart {
+         return nil
+     }
+ 
++    /// (dock-launch-entry-fallback) The launch entry Madeira Dock asks Steam for when `choose`
++    /// found no .exe on disk: the same candidates (Windows, outside beta branches, the game
++    /// itself, ranked as in `choose`), the best one's index, whatever its program is (a .bat
++    /// is Steam's to start). nil when there is none.
++    static func dockFallbackIndex(_ options: [SteamLaunchOption]) -> UInt32? {
++        var best: (rank: Int, order: Int, index: UInt32)? = nil
++        for (order, option) in options.enumerated() {
++            let type = option.type.lowercased()
++            guard let index = option.index, option.betaKey.isEmpty, !otherKinds.contains(type),
++                  option.requiredDLC == nil || option.requiredDLC == "" || option.requiredDLC == "0",
++                  option.oslist.isEmpty || option.oslist.lowercased().contains("windows") else { continue }
++            let kind = type == "default" ? 0 : (type.isEmpty || type == "none" ? 1 : 2)
++            let arch = option.osarch == "64" ? 0 : (option.osarch.isEmpty ? 1 : 2)
++            let rank = kind * 3 + arch
++            if best == nil || rank < best!.rank || (rank == best!.rank && order < best!.order) {
++                best = (rank, order, index)
++            }
++        }
++        return best?.index
++    }
++
+     /// The install folder's Windows programs for the Program picker: every .exe up to
+     /// six folders deep (linked folders are not followed), at most 400, sorted.
+     static func programs(in root: URL) -> [String] {
+@@ -3233,7 +3254,7 @@ final class MangoMoonMods: ObservableObject {
+ final class MangoMoonMoney: ObservableObject {
+     static let shared = MangoMoonMoney()
+ 
+-    enum Phase: Equatable { case idle, looking, finding, narrowing(Int), learning, ready, notFound(String) }
++    enum Phase: Equatable { case idle, looking, finding, narrowing(Int), ready, notFound(String) }
+ 
+     struct Target: Equatable { let address: UInt64; let kind: Int32 }
+ 
+@@ -3246,7 +3267,8 @@ final class MangoMoonMoney: ObservableObject {
+     @Published var note = ""
+     @Published var progress = 0.0
+ 
+-    private static let store = "mango.moonMoneyChains"
++    /// Saved paths per GameAssembly build: "kind<TAB>class<TAB>copy rva static_off slot field" (hex).
++    private static let store = "mango.moonMoneyPaths"
+     private var moduleKey: String?
+     private var moduleBases: [UInt64] = []
+     private var moduleSize: UInt64 = 0
+@@ -3266,7 +3288,7 @@ final class MangoMoonMoney: ObservableObject {
+ 
+     /// Opening the page: the saved path when it still reads a sensible amount, else the finder.
+     func open() {
+-        if phase == .ready || phase == .looking || phase == .finding || phase == .learning { refresh(); return }
++        if phase == .ready || phase == .looking || phase == .finding { refresh(); return }
+         if case .narrowing = phase { refresh(); return }
+         phase = .looking
+         Task {
+@@ -3280,7 +3302,13 @@ final class MangoMoonMoney: ObservableObject {
+             }.value
+             moduleKey = found.0; moduleBases = found.1; moduleSize = found.2
+             LogStore.shared.log("[moon-money] GameAssembly.dll copies=\(found.1.count) build=\(found.0 ?? "none")")
+-            if let hit = resolveSaved(near: saved) {
++            let lines = moduleKey.flatMap { (UserDefaults.standard.dictionary(forKey: Self.store) as? [String: [String]])?[$0] } ?? []
++            let bases = moduleBases
++            if !lines.isEmpty { poll() }
++            let hit = lines.isEmpty ? nil : await Task.detached(priority: .userInitiated) {
++                MangoMoonMoney.resolve(lines, bases: bases, near: saved)
++            }.value
++            if let hit {
+                 targets = [hit]; phase = .ready; refresh()
+                 LogStore.shared.log("[moon-money] saved path found the money at once")
+             } else {
+@@ -3289,22 +3317,37 @@ final class MangoMoonMoney: ObservableObject {
+         }
+     }
+ 
+-    /// The saved chains for this build; the one whose amount matches the last save wins, else the
+-    /// first that reads a sensible amount.
+-    private func resolveSaved(near saved: Double?) -> Target? {
+-        guard let key = moduleKey, let lines = (UserDefaults.standard.dictionary(forKey: Self.store) as? [String: [String]])?[key] else { return nil }
++    /// The saved paths for this build: the class at its module slot (checked by name), then the
++    /// object in the class's static field, or every object of the class (one quick pass). The
++    /// amount matching the last save wins, else the first sensible one.
++    nonisolated static func resolve(_ lines: [String], bases: [UInt64], near saved: Double?) -> Target? {
+         var plausible: [(Target, Double)] = []
+         for line in lines {
+-            let parts = line.split(separator: " ").compactMap { UInt64($0, radix: 16) }
+-            guard parts.count >= 4 else { continue }
+-            let kind = Int32(parts[0]), copy = Int(parts[1]), rva = parts[2]
+-            let offs = parts.dropFirst(3).map { UInt32(truncatingIfNeeded: $0) }
+-            let order = (moduleBases.indices.contains(copy) ? [copy] : []) + moduleBases.indices.filter { $0 != copy }
++            let cols = line.split(separator: "\t", omittingEmptySubsequences: false)
++            guard cols.count == 3, let kind = Int32(cols[0], radix: 16) else { continue }
++            let name = String(cols[1])
++            let parts = cols[2].split(separator: " ").map(String.init)
++            guard parts.count == 5, let copy = Int(parts[0], radix: 16), let rva = UInt64(parts[1], radix: 16),
++                  let field = UInt64(parts[4], radix: 16) else { continue }
++            let order = (bases.indices.contains(copy) ? [copy] : []) + bases.indices.filter { $0 != copy }
+             for i in order {
+-                var address: UInt64 = 0, value = 0.0
+-                guard mango_cheat_resolve(moduleBases[i], rva, offs, Int32(offs.count), &address) != 0,
+-                      mango_cheat_peek(address, kind, &value) != 0, value.isFinite, value >= 0, value < 1e12 else { continue }
+-                plausible.append((Target(address: address, kind: kind), value))
++                var klass: UInt64 = 0
++                guard mango_cheat_il2cpp_class_at(bases[i], rva, name, &klass) != 0 else { continue }
++                var objects: [UInt64] = []
++                if let so = UInt32(parts[2], radix: 16), let slot = UInt32(parts[3], radix: 16) {
++                    var obj: UInt64 = 0
++                    if mango_cheat_il2cpp_static_object(klass, so, slot, &obj) != 0 { objects = [obj] }
++                }
++                if objects.isEmpty {
++                    var found = [UInt64](repeating: 0, count: 64)
++                    let n = Int(mango_cheat_il2cpp_instances(klass, &found, 64))
++                    objects = Array(found.prefix(n))
++                }
++                for obj in objects {
++                    var value = 0.0
++                    guard mango_cheat_peek(obj + field, kind, &value) != 0, value.isFinite, value >= 0, value < 1e12 else { continue }
++                    plausible.append((Target(address: obj + field, kind: kind), value))
++                }
+                 break
+             }
+         }
+@@ -3346,7 +3389,7 @@ final class MangoMoonMoney: ObservableObject {
+     private func poll() {
+         progress = 0
+         Task { @MainActor in
+-            while phase == .finding || phase == .learning { progress = Double(mango_cheat_progress()) / 1000; try? await Task.sleep(for: .milliseconds(150)) }
++            while phase == .finding || phase == .looking { progress = Double(mango_cheat_progress()) / 1000; try? await Task.sleep(for: .milliseconds(150)) }
+         }
+     }
+ 
+@@ -3367,32 +3410,28 @@ final class MangoMoonMoney: ObservableObject {
+         learn()
+     }
+ 
+-    /// Step 3, in the background: a path from GameAssembly.dll to the money, saved for next time.
++    /// Step 3: a path from GameAssembly.dll to the money, saved for next time. A Unity IL2CPP
++    /// object knows its class, and the class knows its static fields, so the path comes from a
++    /// few small reads (MangoCheat.inc.c, IL2CPP anchors), not a pass over the game's memory.
+     private func learn() {
+-        guard let key = moduleKey, !moduleBases.isEmpty, let first = targets.first else {
++        guard let key = moduleKey, !moduleBases.isEmpty, !targets.isEmpty else {
+             note = "Found. (GameAssembly.dll wasn't seen, so next launch finds it again by scanning.)"; return
+         }
+         let bases = moduleBases, size = moduleSize, all = targets
+-        phase = .learning
+-        poll()
+         Task {
+             let lines = await Task.detached(priority: .utility) { () -> [String] in
+                 var out: [String] = []
+-                for t in all.prefix(3) {
+-                    var buffer = [CChar](repeating: 0, count: 1 << 16)
+-                    let n = mango_cheat_pointer_scan(t.address, bases, Int32(bases.count), size, 6, 0x1000, &buffer, Int(buffer.count))
+-                    guard n > 0 else { continue }
+-                    let text = String(cString: buffer)
+-                    out += text.split(separator: "\n").prefix(40).map { "\(String(t.kind, radix: 16)) \($0)" }
++                for t in all.prefix(6) {
++                    var path = [CChar](repeating: 0, count: 128), name = [CChar](repeating: 0, count: 96)
++                    guard mango_cheat_il2cpp_path(t.address, bases, Int32(bases.count), size, &path, 128, &name, 96) != 0 else { continue }
++                    out.append(String(t.kind, radix: 16) + "\t" + String(cString: name) + "\t" + String(cString: path))
+                 }
+                 return out
+             }.value
+-            var all = UserDefaults.standard.dictionary(forKey: Self.store) as? [String: [String]] ?? [:]
+-            if !lines.isEmpty { all[key] = lines; UserDefaults.standard.set(all, forKey: Self.store) }
+-            LogStore.shared.log("[moon-money] pointer scan from \(String(first.address, radix: 16)): \(lines.count) paths saved")
+-            phase = .ready
+-            note = lines.isEmpty ? "Found. No saved path this time, so next launch scans again." : "Found, and saved: next launch finds your money at once."
+-            refresh()
++            var store = UserDefaults.standard.dictionary(forKey: Self.store) as? [String: [String]] ?? [:]
++            if !lines.isEmpty { store[key] = lines; UserDefaults.standard.set(store, forKey: Self.store) }
++            LogStore.shared.log("[moon-money] paths saved: \(lines.joined(separator: " | "))")
++            note = lines.isEmpty ? "Found. Its path couldn't be saved, so next launch scans again." : "Found, and saved: next launch finds your money at once."
+         }
+     }
+ 
+@@ -3449,15 +3488,10 @@ struct MangoMoonMoneySection: View {
+             switch mod.phase {
+             case .looking:
+                 HStack { ProgressView(); Text("Looking for your money…") }
+-            case .finding, .learning:
++            case .finding:
+                 ProgressView(value: mod.progress) {
+-                    HStack {
+-                        Text(mod.phase == .learning ? "Saving where your money lives, for next time…" : "Scanning…")
+-                        Spacer()
+-                        Text("\(Int(mod.progress * 100))%").monospacedDigit()
+-                    }
++                    HStack { Text("Scanning…"); Spacer(); Text("\(Int(mod.progress * 100))%").monospacedDigit() }
+                 }
+-                if mod.phase == .learning { moneyControls }
+             case .ready:
+                 moneyControls
+             case .idle, .notFound, .narrowing:
+@@ -3467,7 +3501,7 @@ struct MangoMoonMoneySection: View {
+         } header: {
+             Label("Moon Sweepers money", systemImage: "dollarsign.circle.fill")
+         } footer: {
+-            Text("Changes your money in the running game, like a PC trainer. The first time, it finds your money by scanning; after that it remembers where it lives, so it's there at once. Solo play only: keep it out of co-op.")
++            Text("Changes your money in the running game, like a PC trainer. The first time, it finds your money by scanning; then it reads where the game keeps it (its class), so next launch it's there at once. Solo play only: keep it out of co-op.")
+         }
+         .onAppear { mod.open() }
+     }
+@@ -3492,17 +3526,16 @@ struct MangoMoonMoneySection: View {
+ 
+     @ViewBuilder private var moneyControls: some View {
+         LabeledContent("Money") { Text(mod.money).font(.title3.monospacedDigit().bold()).foregroundStyle(MangoTheme.mango) }
+-        // A pointer scan holds the scanner: writes wait until it ends (MangoCheat.inc.c's lock).
+         HStack {
+             ForEach([1_000.0, 10_000, 100_000], id: \.self) { amount in
+                 Button("+\(Int(amount).formatted())") { mod.add(amount) }.buttonStyle(.bordered)
+             }
+-        }.disabled(mod.phase == .learning)
++        }
+         HStack {
+             TextField("Set to…", text: $mod.setText).keyboardType(.decimalPad)
+             Button("Set") { if let v = MangoCheats.parse(mod.setText)?.0 { mod.set(v) } }
+                 .buttonStyle(.borderedProminent).disabled(MangoCheats.parse(mod.setText) == nil)
+-        }.disabled(mod.phase == .learning)
++        }
+         Toggle("Lock money", isOn: Binding(get: { mod.locked }, set: { mod.lock($0) }))
+         Button("Not my money? Find it again", role: .destructive) { mod.forget() }.font(.caption)
+     }
+diff --git a/build/ntdll-unix/server_ios.c b/build/ntdll-unix/server_ios.c
+index dd92c34b..54d24f63 100644
+--- a/build/ntdll-unix/server_ios.c
++++ b/build/ntdll-unix/server_ios.c
+@@ -5865,7 +5865,20 @@ static uint64_t ios_hw_cntfrq(void)
+  * named objects and a path whose parent is missing fails with
+  * STATUS_OBJECT_NAME_NOT_FOUND (server/registry.c key_lookup_name), as on
+  * Windows; only kernelbase's RegCreateKeyEx walks the path itself. */
++static HANDLE ios_hw_key_levels( const char *base, const char *subpath, int parents_kept );
++
+ static HANDLE ios_hw_key( const char *base, const char *subpath )
++{
++    return ios_hw_key_levels( base, subpath, 0 );
++}
++
++/* Madeira vcrt-parents: parents_kept = 1 makes only the LAST level volatile; a
++ * missing level above it is made as an ordinary key. Wine refuses an ordinary
++ * key below a volatile one (server/registry.c key_init:
++ * STATUS_CHILD_MUST_BE_VOLATILE), so a volatile middle level blocks every
++ * installer that later writes there (the x64 Visual C++ redistributable's
++ * "Could not create key ...\VC\Runtimes\X64"). */
++static HANDLE ios_hw_key_levels( const char *base, const char *subpath, int parents_kept )
+ {
+     WCHAR nameW[256];
+     UNICODE_STRING name;
+@@ -5892,7 +5905,8 @@ static HANDLE ios_hw_key( const char *base, const char *subpath )
+         nameW[len] = 0;
+         init_unicode_string( &name, nameW );
+         InitializeObjectAttributes( &attr, &name, OBJ_CASE_INSENSITIVE, parent, NULL );
+-        if (NtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, NULL, REG_OPTION_VOLATILE, NULL )) key = 0;
++        if (NtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, NULL,
++                         (parents_kept && *end) ? 0 : REG_OPTION_VOLATILE, NULL )) key = 0;
+         NtClose( parent );
+         if (!key) return 0;
+         parent = key;
+@@ -6345,6 +6359,8 @@ void ios_vcrt_arm64_key_publish(void)
+         "Software\\Wow6432Node\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\arm64",
+     };
+     const char *sw = getenv( "MADEIRA_VCRT_ARM64_KEY" );
++    const char *pk = getenv( "MADEIRA_VCRT_PARENTS" );
++    int parents_kept = !(pk && !strcmp( pk, "0" ));   /* default on; 0 = every new level volatile (0.2.99) */
+     unsigned int v[4] = { 14, 44, 35211, 0 }, i, made = 0, kept = 0, failed = 0;
+     char version[32], path[160];
+     WCHAR pathW[160];
+@@ -6373,7 +6389,7 @@ void ios_vcrt_arm64_key_publish(void)
+             kept++;
+             continue;
+         }
+-        if (!(key = ios_hw_key( machine, keys[i] )))
++        if (!(key = ios_hw_key_levels( machine, keys[i], parents_kept )))
+         {
+             failed++;
+             continue;
+@@ -6389,8 +6405,10 @@ void ios_vcrt_arm64_key_publish(void)
+     }
+     wine_log_write( "[vcrt-arm64] HKLM\\SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\arm64 "
+                     "(volatile) Installed=1 Version %s: %u of %u view(s) written, %u already there and left alone, "
+-                    "%u could not be made; MADEIRA_VCRT_ARM64_KEY unset or 0 turns it off",
+-                    version, made, (unsigned int)ARRAY_SIZE(keys), kept, failed );
++                    "%u could not be made; MADEIRA_VCRT_ARM64_KEY unset or 0 turns it off; "
++                    "missing parent keys %s (env.MADEIRA_VCRT_PARENTS = 0: volatile too)",
++                    version, made, (unsigned int)ARRAY_SIZE(keys), kept, failed,
++                    parents_kept ? "made ordinary" : "made volatile" );
+ }
+ #endif
+ 
+diff --git a/tests/host/check-dock-start-program.py b/tests/host/check-dock-start-program.py
+index 8227c17f..c82aec97 100755
+--- a/tests/host/check-dock-start-program.py
++++ b/tests/host/check-dock-start-program.py
+@@ -46,7 +46,7 @@ project = (app.parent / 'Madeira.xcodeproj/project.pbxproj').read_text(encoding=
+ start = content[content.index('    private func startDock('):]
+ start = start[:start.index('MadeiraDock.requestLaunch(')]
+ check('let steamEntry = options.flatMap { SteamDirectStart.choose($0, installFolder: installFolder) }' in start and
+-      'let chosen = steamEntry?.launchIndex' in start, "the Dock start keeps Steam's launch entry, not only its index")
++      'var chosen = steamEntry?.launchIndex' in start, "the Dock start keeps Steam's launch entry, not only its index")
+ check(start.index('guard StikJITHelper.ready, wine_process_is_running() == 0') <
+       start.index('DockStartProgram.apply(launcher: launcher, program: program, folder: installFolder)') <
+       start.index('DockInstallers.prepare('),
+diff --git a/tests/host/check-hidpad.py b/tests/host/check-hidpad.py
+index ac0217b3..a2593982 100644
+--- a/tests/host/check-hidpad.py
++++ b/tests/host/check-hidpad.py
+@@ -390,8 +390,9 @@ b = server.index('\n}\n', server.index('static void ios_hidpad_publish(void)'))
+ publish = server[a:b].replace('#include "../hidpad/hidpad_ids.h"', '#include "hidpad_ids.h"')
+ # The key helper is the hardware description keys' ios_hw_key (ios_hidpad_key
+ # names it); it is defined above the HID block, so it is taken separately.
+-k = server.index('static HANDLE ios_hw_key(')
+-helper = server[k:server.index('\n}\n', k) + 3]
++k = server.index('static HANDLE ios_hw_key_levels(')   # the prototype, ios_hw_key, then ios_hw_key_levels itself
++e = server.index('\n}\n', server.index('static HANDLE ios_hw_key_levels( const char *base, const char *subpath, int parents_kept )\n{'))
++helper = server[k:e + 3]
+ publish = helper + '\n' + publish
+ 
+ registry = r'''
+diff --git a/tests/host/check-hw-registry.py b/tests/host/check-hw-registry.py
+index 0d2fa569..133bc3e5 100644
+--- a/tests/host/check-hw-registry.py
++++ b/tests/host/check-hw-registry.py
+@@ -111,8 +111,10 @@ check("Session Manager\\Environment is touched only with MADEIRA_HW_REGISTRY=2 (
+       and pub.count("ios_hw_env_value(") == 1 and "ios_hw_env_value(" in env_block
+       and pub.count("hwreg_environment(") == 1 and "hwreg_environment(" in env_block)
+ hk = func(server, "static HANDLE ios_hw_key( const char *base, const char *subpath )")
+-check("ios_hw_key creates each missing level REG_OPTION_VOLATILE (inside the test region)",
+-      "NtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, NULL, REG_OPTION_VOLATILE, NULL )" in hk and hk in region)
++hkl = func(server, "static HANDLE ios_hw_key_levels( const char *base, const char *subpath, int parents_kept )\n{")
++check("ios_hw_key creates each missing level REG_OPTION_VOLATILE (inside the test region; vcrt-parents: through ios_hw_key_levels with parents_kept 0)",
++      "return ios_hw_key_levels( base, subpath, 0 );" in hk and hk in region and hkl in region
++      and "(parents_kept && *end) ? 0 : REG_OPTION_VOLATILE" in hkl)
+ check("one [hw-registry] line per session (or the off line)",
+       pub.count("wine_log_write(") == 3 and pub.count('"[hw-registry] ') == 3)
+ check("the CNTFRQ_EL0 read stays outside the test region (the harness supplies its own)",
+diff --git a/tests/host/check-vcrt-arm64-key.py b/tests/host/check-vcrt-arm64-key.py
+index e3560845..28350dad 100644
+--- a/tests/host/check-vcrt-arm64-key.py
++++ b/tests/host/check-vcrt-arm64-key.py
+@@ -61,7 +61,7 @@ check("one getenv of MADEIRA_VCRT_ARM64_KEY, and the function returns on unset/e
+       server.count('getenv( "MADEIRA_VCRT_ARM64_KEY" )') == 1
+       and pub.index("return;") < pub.index("NtOpenKey") and pub.index("return;") < pub.index("ios_hw_key"))
+ check("keys are made by the volatile level-by-level helper only (no NtCreateKey of its own)",
+-      "ios_hw_key( machine, keys[i] )" in pub and "NtCreateKey" not in region)
++      "ios_hw_key_levels( machine, keys[i], parents_kept )" in pub and "NtCreateKey" not in region)
+ check("an existing key is only opened for query, never written",
+       "NtOpenKey( &key, KEY_QUERY_VALUE, &attr )" in pub and "KEY_SET_VALUE" not in pub)
+ check("the region sits inside the WINE_IOS block that ends before server_ios.c's server_init_process",
+@@ -343,8 +343,17 @@ int main( void )
+     add( add( add( root_node, "Registry", 0 ), "Machine", 0 ), "Software", 0 );
+     setenv( "MADEIRA_VCRT_ARM64_KEY", "1", 1 );
+     ios_vcrt_arm64_key_publish();
+-    assert( find( K64 ) && !strcmp( vals( K64 ), DEF ) && find( K64 )->parent->is_volatile );
++    assert( find( K64 ) && !strcmp( vals( K64 ), DEF ) && !find( K64 )->parent->is_volatile && find( K64 )->is_volatile );
+     assert( find( K32 ) && !open_handles );
++    reset();
++    node_count = 0;
++    root_node = add( NULL, "", 0 );
++    add( add( add( root_node, "Registry", 0 ), "Machine", 0 ), "Software", 0 );
++    setenv( "MADEIRA_VCRT_ARM64_KEY", "1", 1 );
++    setenv( "MADEIRA_VCRT_PARENTS", "0", 1 );
++    ios_vcrt_arm64_key_publish();
++    unsetenv( "MADEIRA_VCRT_PARENTS" );
++    assert( find( K64 ) && find( K64 )->parent->is_volatile && find( K32 ) && !open_handles );
+ 
+     /* a registry that refuses: counted, no crash, no half-written line */
+     reset();
+@@ -359,7 +368,7 @@ int main( void )
+     return 0;
+ }
+ '''
+-harness = harness.replace("@@HK@@", func(server, "static HANDLE ios_hw_key( const char *base, const char *subpath )")) \
++harness = harness.replace("@@HK@@", "static HANDLE ios_hw_key_levels( const char *base, const char *subpath, int parents_kept );\n" + func(server, "static HANDLE ios_hw_key( const char *base, const char *subpath )") + "\n" + func(server, "static HANDLE ios_hw_key_levels( const char *base, const char *subpath, int parents_kept )\n{")) \
+                  .replace("@@REGION@@", region)
+ 
+ if not CC:
