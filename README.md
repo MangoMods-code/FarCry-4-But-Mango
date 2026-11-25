@@ -31,6 +31,7 @@ Mango Port runs **your own copies of Windows PC games** on a non-jailbroken iPho
 | `mango/patches/0019-keep-iphone-saves-mango-playtime.patch` | Per-game Always keep this iPhone's saves (Steam Cloud conflicts resolve to the device after each sync); time played in Mango Port counted per game and shown on its card |
 | `mango/patches/0020-moon-sweepers-mod-menu.patch` | Moon Sweepers mod menu: reads and writes its session.moon (1PCM, SHA-256, gzip) and slot.json; Launch with mods applies chosen upgrade levels and an experimental money test to one slot before launch, with backups, slot copy and restore |
 | `mango/patches/0021-cheats-memory-scanner.patch` | Cheats in the in-game menu: a memory scanner (MangoCheat.inc.c, in JITAllocator.c) over the game's memory in Mango Port's own task, with scan, next scan, set, set all and freeze; its buffers are tagged so the scan skips them |
+| `mango/patches/0022-nightly-ports-heat-guard-polish.patch` | Ports from Madeira Nightly 0.2.100 (Steam direct launch arguments, Dock installers: DirectX skip, every library's shared redistributables, drive links; early player-1 pad; 13 game lists whose keys this runtime reads); Heat guard (ThermalPacing as an in-game switch, Eco at critical); Cheats undo and session reset; Moon Sweepers money test removed |
 | `scripts/apply-mango.sh` | Fetches Madeira and applies the patches (idempotent) |
 | `scripts/test.sh` | Runs the Madeira host checks the patches touch |
 | `docs/` | Roadmap, Far Cry 4 test log, legal notes |

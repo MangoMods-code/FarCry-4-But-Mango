@@ -1,0 +1,964 @@
+diff --git a/app/Madeira/ConfigCatalog.generated.swift b/app/Madeira/ConfigCatalog.generated.swift
+index effb09af..ac61aa3d 100644
+--- a/app/Madeira/ConfigCatalog.generated.swift
++++ b/app/Madeira/ConfigCatalog.generated.swift
+@@ -75,7 +75,7 @@ extension ConfigCatalog {
+         ConfigOption(key: "env.MADEIRA_STEAM_APPID", title: "", kind: .text, defaultValue: "", category: "App & front end", note: "set by the library for one direct Steam start (Start with: The game); not a setting", choices: [], sources: ["app/Madeira/WineProcessBridge.m"]),
+         ConfigOption(key: "env.MADEIRA_STEAM_APPPATH", title: "", kind: .text, defaultValue: "", category: "App & front end", note: "that game's install folder, with MADEIRA_STEAM_APPID; not a setting", choices: [], sources: ["app/Madeira/WineProcessBridge.m"]),
+         ConfigOption(key: "env.MADEIRA_STORE_STEAM_IDENTITY", title: "Give games from other stores the fixed Steam identity", kind: .bool, defaultValue: "0", category: "App & front end", note: "ml2310: off (default): a game from another store (an Epic library entry) starts without the fixed Steam identity (SteamAppId, SteamGameId, SteamAppPath) every other launch outside Madeira Dock gets. With it, a game's launcher took its Steam path, its Steam API start failed and it showed only an error (testers' log, 2026-10-31: a publisher's launcher started by an Epic copy, 'Steam failed to initialize'). 1: publishes it as before.", choices: [], sources: ["app/Madeira/Library.swift"]),
+-        ConfigOption(key: "env.MADEIRA_THERMAL_CAP", title: "", kind: .bool, defaultValue: "0", category: "App & front end", note: "Opt-in `env.MADEIRA_THERMAL_CAP = 1`: when iOS reports the device as serious or critical, a session paced at the 60 cap, MAX or RAW drops to the 40 cap (three refreshes at 120 Hz, so evenly spaced; the 30 cap where 40 is not offered). A ...", choices: [], sources: ["app/Madeira/FPSOverlay.swift"]),
++        ConfigOption(key: "env.MADEIRA_THERMAL_CAP", title: "", kind: .bool, defaultValue: "0", category: "App & front end", note: "Mango Port: Heat guard, the in-game menu's switch (saved on this iPhone), turns this on as well as madeira.cfg's env.MADEIRA_THERMAL_CAP = 1.", choices: [], sources: ["app/Madeira/FPSOverlay.swift"]),
+         ConfigOption(key: "env.MADEIRA_TOUCH_MOUSE", title: "", kind: .text, defaultValue: "", category: "App & front end", note: "1: touches always reach the program as a mouse, 0: never; default: not while touch controller mappings are shown", choices: [], sources: ["app/Madeira/ContentView.swift"]),
+         ConfigOption(key: "env.MADEIRA_UI_LOG_IDLE", title: "", kind: .bool, defaultValue: "1", category: "App & front end", note: "Pending batched diffs to apply on main thread", choices: [], sources: ["app/Madeira/LogStore.swift"]),
+         ConfigOption(key: "env.MADEIRA_USE_ARM64EC", title: "", kind: .text, defaultValue: "", category: "App & front end", note: "Heuristic: x86_64 guest exes (cube-x64, hello-x64, real games like Thumper) need the arm64ec-windows bundle (ARM64EC hybrid system DLLs that interop with FEX-translated x86_64 code). ARM64-native tests (cube.exe) use the aarch64-windows ...", choices: [], sources: ["app/Madeira/WineProcessBridge.m"]),
+@@ -599,7 +599,10 @@ extension ConfigCatalog {
+         ConfigOption(key: "env.MADEIRA_DOCK_VULKAN_STANDIN", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "0: a Vulkan loader an installer wrote stays in system32", choices: [], sources: ["app/Madeira/DockInstallers.swift"]),
+         ConfigOption(key: "env.MADEIRA_DOTNET_FUSION", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "", choices: [], sources: ["app/Madeira/DockInstallers.swift"]),
+         ConfigOption(key: "env.MADEIRA_DOWNLOAD_NOTIFICATIONS", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "Local notifications when a Steam download finishes, fails or pauses while Madeira is in the background (permission asked at the first download). 0: none, and no permission request.", choices: [], sources: ["app/Madeira/SteamDownloadBackground.swift"]),
++        ConfigOption(key: "env.MADEIRA_INSTALL_ALL_LIBRARIES", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "The install scripts' programs of a game: its own folder (one level down) and the shared redistributables Steam keeps next to it, and how many scripts were read.", choices: [], sources: ["app/Madeira/DockInstallers.swift"]),
+         ConfigOption(key: "env.MADEIRA_INSTALL_DEFAULT_KEY", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "The install scripts' programs of a game: its own folder (one level down) and the shared redistributables Steam keeps next to it, and how many scripts were read.", choices: [], sources: ["app/Madeira/DockInstallers.swift"]),
++        ConfigOption(key: "env.MADEIRA_INSTALL_DRIVE_LINKS", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "Madeira nightly 0.2.100: C:\\External\\<name> is a link to a connected drive's folder, so every path through it resolves outside drive_c and the game's install scripts were never read (\"[dock-installers] app=35140 scripts=0\"). Such a path ...", choices: [], sources: ["app/Madeira/DockInstallers.swift"]),
++        ConfigOption(key: "env.MADEIRA_INSTALL_SKIP_DIRECTX", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "0: the DirectX redistributable runs too", choices: [], sources: ["app/Madeira/DockInstallers.swift"]),
+         ConfigOption(key: "env.MADEIRA_INSTALL_SKIP_DOTNET", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "0: .NET Framework setups run too", choices: [], sources: ["app/Madeira/DockInstallers.swift"]),
+         ConfigOption(key: "env.MADEIRA_LIBRARY_COLLAPSE", title: "", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "MADEIRA_LIBRARY_COLLAPSE=0: the section titles do not collapse.", choices: [], sources: ["app/Madeira/SteamGames.swift"]),
+         ConfigOption(key: "env.MADEIRA_ONBOARDING", title: "First-run Steam setup", kind: .bool, defaultValue: "1", category: "Steam & Dock", note: "`env.MADEIRA_ONBOARDING = 0` (madeira.cfg or the environment) never opens setup and hides \"Run setup again\". On by default.", choices: [], sources: ["app/Madeira/Onboarding.swift"]),
+@@ -684,6 +687,7 @@ extension ConfigCatalog {
+         ConfigOption(key: "env.MADEIRA_MOUSE_ROUTING", title: "Mouse routing and pointer-lock fixes", kind: .bool, defaultValue: "1", category: "Windows, display & input", note: "Default on. 0 restores the previous desktop cursor routing, mouse button callbacks, surface-touch handling and key-window-only pointer lock. Keyboard input and manual Ctrl+Alt+P remain available. Fully restart Madeira after changing this switch.", choices: [], sources: ["app/Madeira/HardwareInput.swift"]),
+         ConfigOption(key: "env.MADEIRA_NAV_KEYS_E0", title: "", kind: .text, defaultValue: "", category: "Windows, display & input", note: "Wine's own UI never noticed, because dialogs read the VK out of wParam. A GAME does notice: Unity reads the keyboard through raw input and DirectInput identifies keys by scan code (DIK_W is 0x11, not 'W'), so W/A/S/D were delivered, acce...", choices: [], sources: ["build/win32u-unix/driver_ios.c"]),
+         ConfigOption(key: "env.MADEIRA_OPENGL", title: "OpenGL through Mesa on D3D12", kind: .bool, defaultValue: "0", category: "Windows, display & input", note: "On: x64 games get Mesa's opengl32.dll (OpenGL 3.3 on D3D12, then Metal) when build/mesa-d3d12/build.sh has put it in the app. 0: Wine's builtin opengl32, which uses the native WGL OpenGL ES/Zink route. A game folder's own opengl32.dll still wins. Read at session start.", choices: [], sources: ["app/Madeira/WineProcessBridge.m"]),
++        ConfigOption(key: "env.MADEIRA_PAD_EARLY_SLOT", title: "", kind: .text, defaultValue: "", category: "Windows, display & input", note: "source (touch controller mappings shown, or a controller paired), slot 0 is connected at rest from the start; live input takes it over. The reservation lasts until the process exits (one Wine session per run), so player 1 then shows as c...", choices: [], sources: ["app/Madeira/GamepadInput.swift"]),
+         ConfigOption(key: "env.MADEIRA_PAD_KBM", title: "", kind: .bool, defaultValue: "1", category: "Windows, display & input", note: "Availability of the mode. 0 removes the per-game choice; the physical pad then always feeds XInput.", choices: [], sources: ["app/Madeira/GamepadInput.swift"]),
+         ConfigOption(key: "env.MADEIRA_PASTE_INTERVAL_MS", title: "Clipboard typing interval (ms)", kind: .int, defaultValue: "10", category: "Windows, display & input", note: "Default 10 ms between pasted characters. Range 1-100 ms; use a longer interval for games that miss fast text input. Enforced at delivery as well as queueing. Restart the session after changing it.", choices: [], sources: ["app/Madeira/HardwareInput.swift"]),
+         ConfigOption(key: "env.MADEIRA_POINTER_ABSOLUTE", title: "", kind: .bool, defaultValue: "1", category: "Windows, display & input", note: "MADEIRA_POINTER_ABSOLUTE=0: the program's cursor never follows the iOS pointer's position; all motion is relative.", choices: [], sources: ["app/Madeira/HardwareInput.swift"]),
+diff --git a/app/Madeira/DockInstallers.swift b/app/Madeira/DockInstallers.swift
+index c4803516..df883917 100644
+--- a/app/Madeira/DockInstallers.swift
++++ b/app/Madeira/DockInstallers.swift
+@@ -528,8 +528,14 @@ enum DockInstallScripts {
+         return result
+     }
+ 
+-    /// The Dock sheet's line about the plan, or nil when every program is already done.
+-    static func note(_ items: [DockInstallPlanItem]) -> String? {
++    /// Why a program was left out because Wine has its own of what it installs (DockInstallers.runnable). Nothing
++    /// is wrong and nothing is asked of the player, so the screens leave these out; the log still lists them.
++    static let wineProvides: Set<String> = ["Wine's own .NET is used", "Wine's own DirectX is used"]
++
++    /// The Dock sheet's line about the plan, or nil when every program is already done or left out because
++    /// Wine provides it (`wineProvides`).
++    static func note(_ all: [DockInstallPlanItem]) -> String? {
++        let items = all.filter { !($0.status == .unsupported && $0.reason.map(wineProvides.contains) == true) }
+         func names(_ status: DockInstallStatus) -> String {
+             var seen: [String] = []
+             for item in items where item.status == status {
+@@ -713,6 +719,8 @@ struct DockInstallLedger: Codable, Equatable, Sendable {
+ /// - `MADEIRA_DOCK_INSTALL_SERVER_SYNC`: a start that runs installers turns madsync off for
+ ///   its session (off: madsync stays and the service-manager step is left out).
+ /// - `MADEIRA_DOTNET_FUSION`: place Wine's fusion.dll in the .NET 2.0 folder when missing.
++/// - `MADEIRA_INSTALL_SKIP_DIRECTX`: Microsoft's DirectX redistributable (DXSETUP.exe) is left out
++///   (Wine's own d3dx9/d3dx10/d3dx11, D3DCompiler, XAudio and XInput answer; off: it runs).
+ /// - `MADEIRA_INSTALL_SKIP_DOTNET`: .NET Framework 2.0-4.x setups are left out (Wine's own
+ ///   .NET answers for them; off: they run like any other program).
+ /// - `MADEIRA_DOCK_INSTALL_SEPARATE` (madeira-bcd): a start that runs installers runs only
+@@ -807,24 +815,43 @@ enum DockInstallers {
+     /// The install scripts' programs of a game: its own folder (one level down) and the
+     /// shared redistributables Steam keeps next to it, and how many scripts were read.
+     nonisolated static func found(_ game: DockGame, drive: URL,
+-                                  defaultKey: Bool = DockInstallers.flag("MADEIRA_INSTALL_DEFAULT_KEY")) -> (processes: [SteamInstallProcess], scripts: Int) {
++                                  defaultKey: Bool = DockInstallers.flag("MADEIRA_INSTALL_DEFAULT_KEY"),
++                                  otherLibraries: Bool = DockInstallers.flag("MADEIRA_INSTALL_ALL_LIBRARIES"),
++                                  extraLibraries: [String]? = nil) -> (processes: [SteamInstallProcess], scripts: Int) {
+         let common = game.library + "/common"
+         let shared = common + "/Steamworks Shared"
+         func windows(_ relative: String) -> String { "C:\\" + relative.replacingOccurrences(of: "/", with: "\\") }
+-        let roots: [(URL, Int, String, Int?)] = [
++        var roots: [(URL, Int, String, Int?)] = [
+             (drive.appendingPathComponent(common + "/" + game.installDir, isDirectory: true), 1, game.windowsInstallPath,
+              defaultKey ? game.id : nil),
+             (drive.appendingPathComponent(shared + "/_CommonRedist", isDirectory: true), 3, windows(shared), nil),
+         ]
++        // Madeira nightly 0.2.100 (camhawk): the shared redistributables (PhysX legacy, DirectX,
++        // VC++) are downloaded once, into whichever Steam library got them first: a game copied
++        // to a drive from a PC often has no Steamworks Shared folder beside it (Batman: Arkham
++        // Asylum, 35140: PhysXLoader.dll missing -> "General protection fault"). The other
++        // libraries' copies are read too. MADEIRA_INSTALL_ALL_LIBRARIES=0: the game's own only.
++        if otherLibraries {
++            var seen: Set<String> = [game.library.lowercased()]
++            for library in extraLibraries ?? (MadeiraDock.steamLibraries(drive: drive) + ExternalDrives.steamLibraries) {
++                guard seen.insert(library.lowercased()).inserted else { continue }
++                let other = library + "/common/Steamworks Shared"
++                roots.append((drive.appendingPathComponent(other + "/_CommonRedist", isDirectory: true), 3, windows(other), nil))
++            }
++        }
+         var result: [SteamInstallProcess] = []
+         var scripts = 0
+-        for (root, depth, installDir, owner) in roots {
++        for (index, (root, depth, installDir, owner)) in roots.enumerated() {
+             guard inside(root, drive: drive) else { continue }
++            let earlier = Set(result.map(\.run))   // runs an earlier folder already gave
+             for file in SteamInstallScripts.scripts(folder: root, depth: depth) {
+                 guard let contents = try? Data(contentsOf: file) else { continue }
+                 scripts += 1
+                 for process in DockInstallScripts.processes(script: contents, installDir: installDir, appID: owner)
+                 where !result.contains(process) {
++                    // Another library's copy of a run an earlier folder gave: the first copy is used.
++                    // (Only earlier folders: one entry's process 1 and process 2 share a run and both stay.)
++                    if index >= 2, earlier.contains(process.run) { continue }
+                     result.append(process)
+                 }
+             }
+@@ -860,7 +887,19 @@ enum DockInstallers {
+     }
+ 
+     nonisolated static func inside(_ url: URL, drive: URL) -> Bool {
+-        url.resolvingSymlinksInPath().standardizedFileURL.path.hasPrefix(drive.resolvingSymlinksInPath().standardizedFileURL.path + "/")
++        let path = url.resolvingSymlinksInPath().standardizedFileURL.path
++        if path.hasPrefix(drive.resolvingSymlinksInPath().standardizedFileURL.path + "/") { return true }
++        // Madeira nightly 0.2.100: C:\External\<name> is a link to a connected drive's folder,
++        // so every path through it resolves outside drive_c and the game's install scripts were
++        // never read ("[dock-installers] app=35140 scripts=0"). Such a path is inside when it
++        // resolves inside that drive's opened folder. MADEIRA_INSTALL_DRIVE_LINKS=0: drive_c only.
++        guard flag("MADEIRA_INSTALL_DRIVE_LINKS") else { return false }
++        let base = drive.standardizedFileURL.path + "/"
++        let raw = url.standardizedFileURL.path
++        guard raw.hasPrefix(base + "External/") else { return false }
++        guard let root = (try? ExternalDrives.externalRoot(for: String(raw.dropFirst(base.count))))?.root else { return false }
++        let real = root.resolvingSymlinksInPath().standardizedFileURL.path
++        return path == real || path.hasPrefix(real + "/")
+     }
+ 
+     /// A C:\ path resolved on disk the way Wine resolves it (case-insensitive), staying
+@@ -904,8 +943,12 @@ enum DockInstallers {
+     /// "Extracting Files" and held the game's start (log 2026-10-31 23:22). They are left out,
+     /// as GameNative (Wine on Android) does. Newer .NET (Core, 5+) setups still run.
+     nonisolated static func runnable(_ process: SteamInstallProcess, drive: URL, has32Bit: Bool, hasMsiexec: Bool,
+-                                     skipDotNet: Bool = false) -> String? {
++                                     skipDotNet: Bool = false, skipDirectX: Bool = false) -> String? {
+         if skipDotNet && isDotNetFramework(process) { return "Wine's own .NET is used" }
++        // Madeira nightly 0.2.100: DXSETUP.exe (June 2010) ended with -9 in each player log that
++        // ran it, so a game's first start showed a failed install; Wine has its own d3dx9_*,
++        // d3dx10_*, d3dx11_*, D3DCompiler_*, XAudio2, X3DAudio and XInput.
++        if skipDirectX && isDirectXRedist(process) { return "Wine's own DirectX is used" }
+         if process.executable.lowercased().hasSuffix(".msi") { return hasMsiexec ? nil : "Windows Installer package" }
+         guard let file = resolve(process.executable, drive: drive), let machine = machine(file) else { return nil }
+         return machine == 0x14c && !has32Bit ? "32-bit installer" : nil
+@@ -921,6 +964,14 @@ enum DockInstallers {
+         return key.contains("\\net framework setup\\ndp") || key.contains("\\commonredist\\dotnet\\")
+     }
+ 
++    /// Microsoft's DirectX redistributable: DXSETUP.exe (wherever Steam's _CommonRedist\DirectX or the
++    /// game ships it), or Steam's CommonRedist DirectX key as the entry's HasRunKey.
++    nonisolated static func isDirectXRedist(_ process: SteamInstallProcess) -> Bool {
++        let file = process.executable.split(separator: "\\").last.map { $0.lowercased() } ?? ""
++        if file == "dxsetup.exe" { return true }
++        return process.run.key.lowercased().contains("\\commonredist\\directx")
++    }
++
+     nonisolated static var bundleHas32Bit: Bool { bundled("i386-windows") }
+     nonisolated static var bundleHasMsiexec: Bool {
+         ["aarch64-windows", "arm64ec-windows", "i386-windows"].contains { bundled($0 + "/msiexec.exe") }
+@@ -1094,6 +1145,7 @@ enum DockInstallers {
+         }
+         let defaultKey = flag("MADEIRA_INSTALL_DEFAULT_KEY")
+         let skipDotNet = flag("MADEIRA_INSTALL_SKIP_DOTNET")   // 0: .NET Framework setups run too
++        let skipDirectX = flag("MADEIRA_INSTALL_SKIP_DIRECTX")   // 0: the DirectX redistributable runs too
+         let (found, scripts) = Self.found(game, drive: drive, defaultKey: defaultKey)
+         // A Record as done / Reset request saved since the last start, before the plan reads
+         // the registry.
+@@ -1122,7 +1174,7 @@ enum DockInstallers {
+                                             done: { DockInstallScripts.marked($0, in: registry[$0.hive] ?? "") },
+                                             exists: { resolve($0, drive: drive) != nil },
+                                             runnable: { runnable($0, drive: drive, has32Bit: has32Bit, hasMsiexec: hasMsiexec,
+-                                                                 skipDotNet: skipDotNet) })
++                                                                 skipDotNet: skipDotNet, skipDirectX: skipDirectX) })
+         // ml2020: a publisher's program the script installed (or installs now), by its record's
+         // key: the game session's service-manager decision (DockGameSession) reads the count.
+         thirdPartyInstalls = items.filter { [.done, .pending, .limit].contains($0.status)
+diff --git a/app/Madeira/FPSOverlay.swift b/app/Madeira/FPSOverlay.swift
+index 69481f42..845caebd 100644
+--- a/app/Madeira/FPSOverlay.swift
++++ b/app/Madeira/FPSOverlay.swift
+@@ -199,10 +199,32 @@ final class ProMotionIntent {
+ /// the in-game menu) wins: it is never replaced or restored. Not saved.
+ final class ThermalPacing {
+     static let shared = ThermalPacing()
+-    static var enabled: Bool { MadeiraConfig.flag("MADEIRA_THERMAL_CAP", fallback: false) }
++    /// Mango Port: Heat guard, the in-game menu's switch (saved on this iPhone), turns this on
++    /// as well as madeira.cfg's env.MADEIRA_THERMAL_CAP = 1.
++    static let mangoKey = "mango.heatGuard"
++    static var enabled: Bool {
++        UserDefaults.standard.bool(forKey: mangoKey) || MadeiraConfig.flag("MADEIRA_THERMAL_CAP", fallback: false)
++    }
+     private var observer: NSObjectProtocol?
+     private var restoreMode: Int32?
+     private var ourMode: Int32 = -1
++    /// Mango Port: Eco mode turned on by Heat guard at critical (undone when the device is nominal again).
++    private var ecoByUs = false
++
++    /// Mango Port: the in-game menu's Heat guard switch, live.
++    func setMango(_ on: Bool) {
++        UserDefaults.standard.set(on, forKey: Self.mangoKey)
++        if on { begin() } else { restore(); end() }
++    }
++
++    /// Puts back what Heat guard changed (the session's cap and Eco mode).
++    private func restore() {
++        if let restore = restoreMode, madeira_get_vsync_locked() == ourMode {
++            madeira_set_vsync_locked(restore)
++            ProMotionIntent.apply(mode: restore)
++        }
++        if ecoByUs { madeira_set_eco(0); ecoByUs = false }
++    }
+ 
+     /// From a session's start, after its pacing is applied.
+     func begin() {
+@@ -217,7 +239,7 @@ final class ThermalPacing {
+     /// From a session's end.
+     func end() {
+         if let o = observer { NotificationCenter.default.removeObserver(o) }
+-        observer = nil; restoreMode = nil; ourMode = -1
++        observer = nil; restoreMode = nil; ourMode = -1; ecoByUs = false
+     }
+ 
+     /// The session's cap was changed by hand: leave it alone from now on.
+@@ -225,6 +247,15 @@ final class ThermalPacing {
+ 
+     private func evaluate() {
+         let state = ProcessInfo.processInfo.thermalState
++        // Mango Port: at critical, Eco mode too (the game's threads on the efficiency cores),
++        // unless it was already on; off again once the device is nominal.
++        if state == .critical, madeira_get_eco() == 0 {
++            madeira_set_eco(1); ecoByUs = true
++            LogStore.shared.log("[thermal-cap] critical: Eco mode on (Heat guard)")
++        } else if state == .nominal, ecoByUs {
++            madeira_set_eco(0); ecoByUs = false
++            LogStore.shared.log("[thermal-cap] nominal again: Eco mode off (Heat guard)")
++        }
+         let current = madeira_get_vsync_locked()
+         if let restore = restoreMode {
+             guard current == ourMode else { userChose(); return }
+diff --git a/app/Madeira/GameRecommendations.swift b/app/Madeira/GameRecommendations.swift
+index 2b69a691..f7374fe8 100644
+--- a/app/Madeira/GameRecommendations.swift
++++ b/app/Madeira/GameRecommendations.swift
+@@ -1590,11 +1590,283 @@ extension GameRecommendations {
+                    programs: ["neosphere.exe"], steamPrograms: [], list: glyphicaTypingSurvival),
+         SteamTitle(appIDs: [3483510], folders: ["the adventures of elliot the millennium tales"],
+                    programs: ["elliot-win64-shipping.exe"], steamPrograms: [], list: theAdventuresOfElliot),
++        // Mango Port: game lists ported from Madeira nightly 0.2.100 (camhawk), keys checked against this runtime.
++        SteamTitle(appIDs: [1091500], folders: ["cyberpunk 2077"],
++                   programs: ["cyberpunk2077.exe"], steamPrograms: [], list: cyberpunk2077),
++        SteamTitle(appIDs: [71340], folders: ["sonic generations"],
++                   programs: ["sonicgenerations.exe"], steamPrograms: [], list: sonicGenerations),
++        SteamTitle(appIDs: [1222140], folders: ["detroit become human"],
++                   programs: ["detroitbecomehuman.exe"], steamPrograms: [], list: detroitBecomeHuman),
++        SteamTitle(appIDs: [1145350], folders: ["hades ii"],
++                   programs: ["hades2.exe"], steamPrograms: ["f10.exe"], list: hadesII),
++        SteamTitle(appIDs: [110800], folders: ["l.a.noire", "l.a. noire"],
++                   programs: ["lanoire.exe", "playlan.exe"], steamPrograms: [], list: laNoire),
++        SteamTitle(appIDs: [400], folders: ["portal"],
++                   programs: [], steamPrograms: [], list: portal),
++        SteamTitle(appIDs: [534380], folders: ["dying light 2"],
++                   programs: ["dyinglightgame_x64_rwdi.exe"], steamPrograms: [], list: dyingLight2),
++        SteamTitle(appIDs: [2679460], folders: ["metaphor refantazio", "metaphor: refantazio"],
++                   programs: ["metaphor.exe"], steamPrograms: [], list: metaphorReFantazio),
++        SteamTitle(appIDs: [242760], folders: ["the forest"],
++                   programs: ["theforest.exe"], steamPrograms: [], list: theForest),
++        SteamTitle(appIDs: [1569580], folders: ["blue prince"],
++                   programs: ["blue prince.exe"], steamPrograms: [], list: bluePrince),
++        SteamTitle(appIDs: [962130], folders: ["grounded"],
++                   programs: [], steamPrograms: ["maine-win64-shipping.exe"], list: grounded),
++        SteamTitle(appIDs: [526870], folders: ["satisfactory"],
++                   programs: [], steamPrograms: [], list: satisfactorySteam),
++        SteamTitle(appIDs: [4530370], folders: ["football manager 27"],
++                   programs: ["fm.exe"], steamPrograms: [], list: footballManager27),
+         SteamTitle(appIDs: [298110], folders: ["far cry 4"],
+                    programs: ["farcry4.exe"], steamPrograms: [], list: farCry4),   // Mango Port
+ 
+     ]
+ 
++    /// [cyberpunk-oversize-2gb] Cyberpunk 2077 (Steam App ID 1091500, Cyberpunk2077.exe; also the GOG copy). Our own list,
++    /// from Get Help reports of Nov 16 (0.2.23, iPad15,3). The game asks for an unhinted 64 GB reservation at start. With
++    /// no line it is refused and the game reads a null pointer (0x28 at Cyberpunk2077.exe+0x1976CB6). With oversize-reserve
++    /// alone the real part is 8 GB, a later 4 GB reservation finds no room and REDengine stops itself (0x80000003). With a
++    /// 2 GB real part: "[oversize] ml1298 unhinted reserve of 65536 MB: real 0x7040000000+2048 MB" and "granted=35840 MB
++    /// ok=8 fail=1", and the game went on loading (report 7849845274-ecd40b58). That run drew no frame: what stops the game
++    /// after the memory step is NOT known, so this list is one step, not a working game. The standard line plus the two
++    /// lines that run had; no other game gets them (Bodycam, BIGFOOT, GTA V and .NET games ask for such a reservation,
++    /// are refused, and carry on with a smaller one). To switch it off, delete the two lines. NOT device-tested.
++    static let cyberpunk2077 = GameRecommendation(
++        id: "cyberpunk-2077", title: "Cyberpunk 2077", version: 1,
++        config: """
++        # Madeira's recommended settings for Cyberpunk 2077.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        oversize-reserve = 1
++        oversize-reserve-mb = 2048
++        """)
++
++    /// Sonic Generations (Steam App ID 71340). Its start-up Configuration tool and the game itself look for a
++    /// controller only once, when they start (Discord report by SeeTheBridges, iPhone 17 Pro, 0.2.23, 2026-11-15/16:
++    /// the tool's Input Type list held only "Keyboard"; the log's dinput enumeration found "slot0=empty" about 13 s
++    /// before touch slot 0 connected, and the touch controller connects only once the landscape overlay shows).
++    /// Player 1 is published from the first frame (MADEIRA_PAD_EARLY_SLOT, as Dark Souls: Remastered).
++    /// NOT device-tested; checked in the player's logs only.
++    static let sonicGenerations = GameRecommendation(
++        id: "sonic-generations", title: "Sonic Generations", version: 1,
++        config: """
++        # Madeira's recommended settings for Sonic Generations.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_PAD_EARLY_SLOT = 1
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        """)
++
++    /// Detroit: Become Human (Steam 1222140) renders only through Vulkan, and Madeira keeps Vulkan off unless the game's
++    /// config asks for it: tsun's log (Test 18) shows "[winios-vk] Vulkan is off for this session", then the game's own
++    /// "Unable to find a suitable graphics card with Vulkan 1.1 support" and exit 0xFFFFFFFF (Sentry 7850385210 be90c32c,
++    /// bbdc4a0a; 7850383115 16a025e4). Off switch: put `vulkan = off` in the game's config. Not device-tested.
++    static let detroitBecomeHuman = GameRecommendation(
++        id: "detroit-become-human", title: "Detroit: Become Human", version: 1,
++        config: """
++        # Madeira's recommended settings for Detroit: Become Human.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        vulkan = moltenvk
++        """,
++        avx: false, nvidia: false, wineVCRT: false, display: "fit")
++
++    /// Hades II (Steam 1145350; Release/Hades2.exe is 64-bit, Release/F10.exe is a 32-bit .NET program Steam starts).
++    /// Sentry Nov 16 (0.2.26, iPhone19,4, iOS 27.2, thermal serious): "[wow-window] refused: map too small (5582 MB free VA; a
++    /// window needs 4096 MB plus MADEIRA_WOW_MIN_FREE_GB=8 left over)", then F10.exe "BOOT FAILED at stage
++    /// 'guest-window-reserve'" (0xc0000017). 5582 MB is 1486 MB above the window, so a 1 GB margin passes the rule (the
++    /// MIN_FREE_GB = 2 other lists use would still refuse). Whether F10.exe then runs is not known. Not device-tested.
++    static let hadesII = GameRecommendation(
++        id: "hades-ii", title: "Hades II", version: 1,
++        config: """
++        # Madeira's recommended settings for Hades II.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        env.MADEIRA_WOW_MIN_FREE_GB = 1
++        # The defaults this list was tested with (upstream's differ).
++        env.MADEIRA_FREE_DELAY_MS = 2000
++        env.MADEIRA_CTX_CPU_AREA = 2
++        env.MADEIRA_WAIT_CHILDREN = 1
++        env.MADEIRA_JIT_DUMP = 0
++        """,
++        avx: false, nvidia: false, wineVCRT: false, display: "fit")
++
++    /// L.A. Noire (Steam 110800, 32-bit LANoire.exe started by PlayLAN.exe, Rockstar Games Launcher + Social Club).
++    /// Sentry Nov 16 (0.2.26, iPhone17,1): the launcher's x64 SocialClubHelper.exe fails to load libcef.dll (252 MB image,
++    /// "[jit-pool] EXHAUSTED", then 0xC0000135) and starts again about every 5 s. With the auto-added pool-split + NOCOPY lines the
++    /// next run loads libcef but Chromium's 32 GB PartitionAlloc pool is refused ("[brp-contain]", 5 large reservations
++    /// failed, SC_INIT_ERR_WEBSITE_FAILED_LOAD). So the Rockstar lines GTA IV's tested list uses (Social Club layout 2,
++    /// pool placement, helper block, Dock service manager), without its swap lines. Not device-tested.
++    static let laNoire = GameRecommendation(
++        id: "la-noire", title: "L.A. Noire", version: 1,
++        config: """
++        # Madeira's recommended settings for L.A. Noire.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        pool-low = 1
++        pool-page-fit = 1
++        pool-split = 1
++        env.MADEIRA_DOCK_GAME_SCM = 1
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        env.MADEIRA_EXECREQ_LEAVE = 1
++        env.MADEIRA_LOCK_ORPHAN = stamped
++        env.MADEIRA_POOL_HEAD_RESERVE_MB = 128
++        env.MADEIRA_POOL_LOW_IMAGES = 1
++        env.MADEIRA_POOL_RECYCLE_IMAGES = 1
++        env.MADEIRA_SC_PA_POOLS = 2
++        env.MADEIRA_SPAWN_BLOCK = RockstarErrorHandler;.be\\vc_redist
++        env.MADEIRA_WOW_MIN_FREE_GB = 2
++        env.MADEIRA_X64_IMAGE_NOCOPY = 1
++        env.DXMT_SMALL_RINGS = Launcher.exe;SocialClubHelper.exe
++        # The defaults this list was tested with (upstream's differ).
++        env.MADEIRA_FREE_DELAY_MS = 2000
++        env.MADEIRA_CTX_CPU_AREA = 2
++        env.MADEIRA_WAIT_CHILDREN = 1
++        env.MADEIRA_JIT_DUMP = 0
++        """,
++        avx: false, nvidia: false, wineVCRT: false, display: "fit")
++
++    /// Portal (Steam 400; hl2.exe is a 32-bit program).
++    /// Sentry Nov 16-17 (0.2.26, iPhone14,5, iOS 27.0.1; GET-HELP-LOGS-119 and -13J): when the map ended at 0x7180000000 (454 GB),
++    /// "[wow-window] refused: map too small (5893 MB free VA; a window needs 4096 MB plus MADEIRA_WOW_MIN_FREE_GB=8 left over)",
++    /// then "BOOT FAILED at stage 'guest-window-reserve'" (0xc0000017) and Dock code 45. 5893 MB is 1797 MB above the window,
++    /// so a 1 GB margin passes the rule (the MIN_FREE_GB = 2 other lists use would still refuse). The log also shows the JIT
++    /// pool's RW alias at 0x7000000000, the only slot a short map offers, so the window may still not fit: not proven that
++    /// Portal then runs. On a 512 GB map (report 13K) the line does nothing. Not device-tested.
++    static let portal = GameRecommendation(
++        id: "portal", title: "Portal", version: 1,
++        config: """
++        # Madeira's recommended settings for Portal.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        env.MADEIRA_WOW_MIN_FREE_GB = 1
++        # The defaults this list was tested with (upstream's differ).
++        env.MADEIRA_FREE_DELAY_MS = 2000
++        env.MADEIRA_CTX_CPU_AREA = 2
++        env.MADEIRA_WAIT_CHILDREN = 1
++        env.MADEIRA_JIT_DUMP = 0
++        """,
++        avx: false, nvidia: false, wineVCRT: false, display: "fit")
++
++    /// Dying Light 2 (Steam): DyingLightGame_x64_rwdi.exe stopped ~40 s in with c000001d (illegal instruction)
++    /// while the library had AVX off ([bcd] ... avx=0, Sentry GET-HELP-LOGS-KN/KP). The standard line with the
++    /// game's AVX switch on (Game details). Not device-tested.
++    static let dyingLight2 = GameRecommendation(
++        id: "dying-light-2", title: "Dying Light 2", version: 1,
++        config: """
++        # Madeira's recommended settings for Dying Light 2.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        """,
++        avx: true)
++
++    /// Metaphor: ReFantazio (Steam): the exe stopped at its first instructions with "Unhandled illegal
++    /// instruction at 0x14000129B" while the library had AVX off ([bcd] ... avx=0, Sentry ER). The standard
++    /// line with the game's AVX switch on (Game details). Not device-tested; App ID 2679460 not checked here.
++    static let metaphorReFantazio = GameRecommendation(
++        id: "metaphor-refantazio", title: "Metaphor: ReFantazio", version: 2,
++        config: """
++        # Madeira's recommended settings for Metaphor: ReFantazio.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        env.MADEIRA_X64_IMAGE_NOCOPY = 1
++        pool-split = 1
++        exe-window-mb = 336
++        """,
++        avx: true)
++
++    /// The Forest (Steam 242760, Unity): its ~400 short-lived threads each load and unload avrt.dll, and
++    /// every load takes JIT pool space that comes back only when the game exits (~146 MB over a run), so the
++    /// pool runs out (a community fork's report; idea only). avrt.dll is optional for Unity (it only asks
++    /// for the "Games"/"Audio" thread class), so the list turns it off for this game: Wine then fails the
++    /// load and nothing is mapped. The other leak named there (OVRPlugin.dll tried six times) is not handled
++    /// here. Not device-tested.
++    static let theForest = GameRecommendation(
++        id: "the-forest", title: "The Forest", version: 1,
++        config: """
++        # Madeira's recommended settings for The Forest.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        env.WINEDLLOVERRIDES = avrt=
++        """)
++
++    /// Blue Prince (Steam 1569580, Unity IL2CPP): "Unhandled illegal instruction" 0xC000001D ~97 s in, the
++    /// bytes at the fault are a VEX (AVX) instruction, log avx=0 (Sentry, Test 18). The game's AVX switch on.
++    /// Not device-tested.
++    static let bluePrince = GameRecommendation(
++        id: "blue-prince", title: "Blue Prince", version: 1,
++        config: """
++        # Madeira's recommended settings for Blue Prince.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        """,
++        avx: true)
++
++    /// Grounded (Steam App ID 962130, Unreal Engine 4; Maine-Win64-Shipping.exe). From the owner's device-tested
++    /// game config of the old build line (it got Grounded in game with the controller working, 2026-10-31/11-01):
++    /// the JIT pool and uncopied images make room for the 95 MB 64-bit libcef.dll; the swap file backs the game's
++    /// memory down to Unreal's 64 KB reservations, so iOS's 8 GB limit does not kill it while a world loads; the
++    /// game is told it has 1 GB of video memory so Unreal's texture pool starts smaller; and the game sees an
++    /// NVIDIA card. Not device-tested on this build line: the old line's Grounded fixes that are not in this tree
++    /// (narration through sapi.dll, a split-pool crash, the FEX free/code-lock freeze) may still stop it.
++    static let grounded = GameRecommendation(
++        id: "grounded", title: "Grounded", version: 1,
++        config: """
++        # Madeira's recommended settings for Grounded.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        pool = 896
++        pool-split = 1
++        swap-mb = 8192
++        swap-mode = 2
++        swap-images = 1
++        vram-mb = 1024
++        env.MADEIRA_X64_IMAGE_NOCOPY = 1
++        env.MADEIRA_SWAP_COVERAGE = broad
++        env.MADEIRA_SWAP_MIN_KB = 64
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        # The defaults this list was tested with (upstream's differ).
++        env.MADEIRA_FREE_DELAY_MS = 2000
++        env.MADEIRA_CTX_CPU_AREA = 2
++        env.MADEIRA_WAIT_CHILDREN = 1
++        env.MADEIRA_JIT_DUMP = 0
++        """,
++        nvidia: true)
++
++    /// Satisfactory from Steam (App ID 526870, Unreal Engine 5, Direct3D 12). The owner's device-tested list for the
++    /// Epic copy (Wave 5, 2026-11-06: past the logo and in game, ~29 FPS on Low): the split JIT pool and uncopied
++    /// images make room for its ~300 module DLLs (the pool ran out without them), the ec-hook reporter is off, and
++    /// rp-carry/rp-discard skip the render-pass loads and stores it never uses. It was tested without the community
++    /// build's defaults, so none are added. A device with less than 10 GB of RAM also gets `satisfactorySmallRAMLines`:
++    /// a Test 8 report (Get Help, 2026-11-10, a 6 GB iPad, iOS's limit 4096 MB) reached the game window, then the
++    /// footprint climbed to 4053 MB and iOS ended Madeira. NOT device-tested from Steam or on a small device.
++    static let satisfactorySteam = GameRecommendation(
++        id: "satisfactory-steam", title: "Satisfactory (Steam)", version: 1,
++        config: """
++        # Madeira's recommended settings for Satisfactory (Steam).
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        pool-split = 1
++        env.MADEIRA_X64_IMAGE_NOCOPY = 1
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        rp-carry = 1
++        rp-discard = 1
++        """,
++        smallRAMConfig: satisfactorySmallRAMLines)
++
++    /// Football Manager 27 (Steam App ID 4530370, Unity, 64-bit). fm27-mitigation-policy, 2026-11-22: Sentry
++    /// GET-HELP-LOGS-1PT (0.2.72, iPad16,8) died with c0000005 in ntdll 65 s in, right after the game asked
++    /// GetProcessMitigationPolicy 13 times ("fixme:process:GetProcessMitigationPolicy ... stub"); Wine answers TRUE without
++    /// filling the answer. BCD's notes for this game describe the same stop after 13 calls (ideas only, no code taken);
++    /// env.MADEIRA_ZERO_MITIGATION_POLICY = 1 (wine/dlls/kernelbase/process.c, already in this tree) zeroes the answer.
++    /// env.MADEIRA_X64_IMAGE_NOCOPY = 1 keeps the 400 MB game_plugin.dll out of the JIT pool (the log shows the auto rule
++    /// already did that). Not device-tested. Off switch: delete the lines (or Reset to Recommended after removing this entry).
++    static let footballManager27 = GameRecommendation(
++        id: "football-manager-27", title: "Football Manager 27", version: 1,
++        config: """
++        # Madeira's recommended settings for Football Manager 27.
++        # Reset to Recommended, at the bottom of the game's settings, brings them back.
++        env.MADEIRA_EC_HOOK_TRACE = 0
++        env.MADEIRA_ZERO_MITIGATION_POLICY = 1
++        env.MADEIRA_X64_IMAGE_NOCOPY = 1
++        """)
++
+     /// Microsoft Flight Simulator 2024 (Steam App ID 2537590). Ported on 2026-10-26 from thebcd69's (BCD) tested list
+     /// for it (its version 6); not device-tested here.
+     static let msfs2024 = GameRecommendation(
+diff --git a/app/Madeira/GamepadInput.swift b/app/Madeira/GamepadInput.swift
+index 9e2f6b7e..1e7c25c0 100644
+--- a/app/Madeira/GamepadInput.swift
++++ b/app/Madeira/GamepadInput.swift
+@@ -48,13 +48,34 @@ final class GamepadInput: @unchecked Sendable {
+     /// so player 1 then shows as connected for the whole session even while no
+     /// controller is in use. That is why it is opt-in: without the switch,
+     /// slot 0 connects only when a real source appears, as before.
++    /// Madeira nightly 0.2.100 (early-pad-default): with the switch UNSET, a controller that
++    /// is already paired when the game starts reserves slot 0 too (touch alone still needs the
++    /// switch), so games that look for a pad once at start (Sonic Generations) see player 1.
++    /// env.MADEIRA_PAD_EARLY_SLOT = 0 turns it off; = 1 keeps the old opt-in (touch or paired).
++    /// Skipped when player 1 left XInput for a HID pad, or in keyboard-and-mouse mode.
+     @MainActor func reserveSessionSlot(touchControls: Bool) {
+-        guard Self.enabled, Self.optIn("MADEIRA_PAD_EARLY_SLOT") else { return }
+-        let touch = touchControls && Self.touchEnabled
+-        let paired = !GCController.controllers().isEmpty
++        guard Self.enabled else { return }
++        let setting = MadeiraConfig.gameValue("env.MADEIRA_PAD_EARLY_SLOT")
++            ?? MadeiraConfig.get("env.MADEIRA_PAD_EARLY_SLOT")
++            ?? ProcessInfo.processInfo.environment["MADEIRA_PAD_EARLY_SLOT"]
++        if setting == "0" { return }
++        let optedIn = setting == "1"
++        let touch = optedIn && touchControls && Self.touchEnabled
++        let paired = GCController.controllers().contains { $0.extendedGamepad != nil }
+         guard touch || paired else { return }
+-        queue.async { [self] in touchState.reserved = true; sample() }
+-        LogStore.shared.log("[xinput] ml1990 slot=0 reserved for the session touch=\(touch ? 1 : 0) paired=\(paired ? 1 : 0)")
++        let why = optedIn ? "switch" : "paired-default"
++        queue.async { [self] in
++            if !optedIn, hidActive, !hidKeepsXInput {
++                LogStore.shared.log("[xinput] ml1990 slot=0 not reserved: player 1 is a HID pad this session")
++                return
++            }
++            if !optedIn, keyboardMouse != nil {
++                LogStore.shared.log("[xinput] ml1990 slot=0 not reserved: controller is in keyboard-and-mouse mode")
++                return
++            }
++            touchState.reserved = true; sample()
++            LogStore.shared.log("[xinput] ml1990 slot=0 reserved for the session touch=\(touch ? 1 : 0) paired=\(paired ? 1 : 0) why=\(why)")
++        }
+     }
+ 
+     /// ml2100: how player 1 reaches Windows, `env.MADEIRA_PAD_MODE` from
+diff --git a/app/Madeira/Library.swift b/app/Madeira/Library.swift
+index 14457d90..ba886b1b 100644
+--- a/app/Madeira/Library.swift
++++ b/app/Madeira/Library.swift
+@@ -392,7 +392,14 @@ struct LibraryEntry: Codable, Identifiable {
+     /// else the entry's Launch arguments; an Epic game's sign-in arguments come first
+     /// while its launch is being prepared.
+     var programArguments: String {
+-        let own = startsSteamGameDirectly ? (steamProgramArguments ?? "") : arguments
++        var own = startsSteamGameDirectly ? (steamProgramArguments ?? "") : arguments
++        // Madeira nightly 0.2.100 (steam-direct-user-args): "The game" ignored the Launch
++        // arguments field, so Steam games started directly never got the player's own flags.
++        // The field's text now follows Steam's; an empty field changes nothing.
++        if startsSteamGameDirectly {
++            let mine = arguments.trimmingCharacters(in: .whitespacesAndNewlines)
++            if !mine.isEmpty { own = own.isEmpty ? mine : own + " " + mine }
++        }
+         guard epicAppName != nil, let transient = Self.transientArguments(for: id), !transient.isEmpty else { return own }
+         return own.isEmpty ? transient : transient + " " + own
+     }
+@@ -1922,7 +1929,9 @@ final class LibraryModel: ObservableObject {
+         GestureZonesModel.shared.selected = nil; GestureZonesModel.shared.zones = savedZones
+         if ControlPresetsModel.enabled { controls.layoutID = savedLayout }
+         current = nil; activeEntry = nil; menu = false; sessionMessage = ""
+-        mango_cheat_end_session()   // Mango Port: nothing stays frozen into the next game
++        // Mango Port: nothing stays frozen into the next game, and its results are gone.
++        if Thread.isMainThread { MainActor.assumeIsolated { MangoCheats.shared.endSession() } }
++        else { mango_cheat_end_session(); DispatchQueue.main.async { MangoCheats.shared.endSession() } }
+         quitRequestedAt = nil; forceCloseOffered = false; dockGameEnded = false; dockGameEndedAt = nil
+         displayMode = .fit
+         LogStore.shared.setDisplayActive(true)
+@@ -6063,7 +6072,7 @@ struct LibraryHUD: View {
+                     Button("Gyro aim & turbo", systemImage: "gyroscope") { assistPage = true }
+                 }
+                 Button("Keyboard", systemImage: "keyboard") { model.menu = false; LibraryKeyboard.show() }
+-                Button("Cheats", systemImage: "wand.and.stars") { cheatsPage = true }
++                Button("Cheats", systemImage: "wand.and.stars") { cheatsPage = true }.tint(MangoTheme.mango)
+                 Divider()
+                 FPSChoice(mode: Binding(get: { model.fpsMode }, set: { model.setFPS($0) }))
+                 // Saved to the game with the rest of the session's profile.
+@@ -6081,6 +6090,7 @@ struct LibraryHUD: View {
+                 Toggle("Eco mode", isOn: Binding(get: { eco }, set: { on in eco = on; madeira_set_eco(on ? 1 : 0) }))
+                 Text("Runs the game's threads at a low priority, on the efficiency cores: cooler and slower. Use it while a game loads and turn it off to play.")
+                     .font(.caption).foregroundStyle(.secondary)
++                MangoHeatGuardRow()
+                 Divider()
+                 Text("Mouse & pointer").font(.headline)
+                 LibraryPointerSettings()
+@@ -6188,6 +6198,8 @@ final class MangoCheats: ObservableObject {
+     @Published var saved: [Saved] = []
+     @Published var setAllText = ""
+     @Published var note = ""
++    /// What the last Set all replaced (address, kind, old value as text), for Undo.
++    @Published var undo: [(UInt64, Int32, String)] = []
+ 
+     static let shownMax = 100
+ 
+@@ -6237,8 +6249,14 @@ final class MangoCheats: ObservableObject {
+         }
+     }
+ 
++    /// A session ended: results, kept numbers and frozen values all go (addresses change every launch).
++    func endSession() {
++        mango_cheat_end_session()
++        reset(); saved = []; valueText = ""; setAllText = ""
++    }
++
+     func reset() {
+-        mango_cheat_reset(); scanned = false; count = 0; rows = []; truncated = false; note = ""; mode = 0
++        mango_cheat_reset(); scanned = false; count = 0; rows = []; truncated = false; note = ""; mode = 0; undo = []
+     }
+ 
+     /// Reads the shown results' current values again.
+@@ -6280,11 +6298,26 @@ final class MangoCheats: ObservableObject {
+     func setAll() {
+         guard let (v, _) = Self.parse(setAllText) else { note = "That isn't a number."; return }
+         var done = 0
+-        for row in rows where mango_cheat_set(row.address, row.kind, v) != 0 { done += 1 }
++        var before: [(UInt64, Int32, String)] = []
++        for row in rows where mango_cheat_set(row.address, row.kind, v) != 0 {
++            before.append((row.address, row.kind, row.text)); done += 1
++        }
++        undo = before
+         note = "Set \(done) of \(rows.count)."
+         refresh()
+     }
+ 
++    /// Puts back what the last Set all changed.
++    func undoSetAll() {
++        var done = 0
++        for (address, kind, text) in undo {
++            if let v = Self.parse(text)?.0, mango_cheat_set(address, kind, v) != 0 { done += 1 }
++        }
++        note = "Put back \(done) of \(undo.count)."
++        undo = []
++        refresh()
++    }
++
+     func freeze(_ item: Saved, on: Bool) {
+         guard let (v, _) = Self.parse(item.valueText) else { note = "That isn't a number."; return }
+         if mango_cheat_freeze(item.address, item.kind, v, on ? 1 : 0) == 0 { note = "Too many frozen numbers (64 at most)." }
+@@ -6293,6 +6326,40 @@ final class MangoCheats: ObservableObject {
+ }
+ 
+ /// The Session menu's Cheats page.
++/// Mango Port: the in-game menu's heat readout and Heat guard switch (ThermalPacing). Heat guard
++/// lowers the FPS cap to 40 (or 30) when iOS reports the iPhone as hot, turns Eco mode on at
++/// critical, and puts both back once it has cooled down. Off by default; saved on this iPhone.
++struct MangoHeatGuardRow: View {
++    @State private var state = ProcessInfo.processInfo.thermalState
++    @State private var on = UserDefaults.standard.bool(forKey: ThermalPacing.mangoKey)
++
++    private var reading: (text: String, color: Color, symbol: String) {
++        switch state {
++        case .nominal: return (L("Cool"), .green, "thermometer.low")
++        case .fair: return (L("Warm"), .yellow, "thermometer.medium")
++        case .serious: return (L("Hot: iOS is slowing the chip"), .orange, "thermometer.high")
++        case .critical: return (L("Very hot: iOS is slowing the chip a lot"), .red, "thermometer.sun.fill")
++        @unknown default: return (L("Unknown"), .secondary, "thermometer.medium")
++        }
++    }
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: 8) {
++            LabeledContent("iPhone heat") {
++                Label(reading.text, systemImage: reading.symbol).foregroundStyle(reading.color).font(.subheadline.weight(.medium))
++            }
++            Toggle("Heat guard", isOn: Binding(get: { on }, set: { value in
++                on = value; ThermalPacing.shared.setMango(value)
++            })).tint(MangoTheme.mango)
++            Text("When the iPhone gets hot, the FPS limit drops to 40 (or 30) and, when it's very hot, Eco mode turns on. Both go back once it cools down. Choosing an FPS limit yourself turns the drop off for this session.")
++                .font(.caption).foregroundStyle(.secondary)
++        }
++        .onReceive(NotificationCenter.default.publisher(for: ProcessInfo.thermalStateDidChangeNotification).receive(on: RunLoop.main)) { _ in
++            state = ProcessInfo.processInfo.thermalState
++        }
++    }
++}
++
+ struct MangoCheatsPage: View {
+     let back: () -> Void
+     let done: () -> Void
+@@ -6304,7 +6371,7 @@ struct MangoCheatsPage: View {
+             HStack {
+                 Button("Session", systemImage: "chevron.left", action: back).buttonStyle(.borderless)
+                 Spacer()
+-                Text("Cheats").font(.headline)
++                Label("Cheats", systemImage: "wand.and.stars").font(.headline).foregroundStyle(MangoTheme.mango)
+                 Spacer()
+                 Button("Done", action: done).buttonStyle(.bordered)
+             }.padding(.horizontal, 22).padding(.top, 22).padding(.bottom, 8)
+@@ -6365,6 +6432,9 @@ struct MangoCheatsPage: View {
+                             TextField("New value", text: $cheats.setAllText).keyboardType(.numbersAndPunctuation)
+                             Button("Set all") { cheats.setAll() }.buttonStyle(.bordered).disabled(MangoCheats.parse(cheats.setAllText) == nil)
+                         }
++                        if !cheats.undo.isEmpty {
++                            Button("Undo Set all", systemImage: "arrow.uturn.backward") { cheats.undoSetAll() }
++                        }
+                     } header: { Text("Results") } footer: {
+                         Text("A game often keeps the same number in more than one place: Set all changes every result. Keep (+) adds one to the list below, to set or freeze on its own.")
+                     }
+@@ -6401,6 +6471,7 @@ struct MangoCheatsPage: View {
+                 }
+             }.scrollContentBackground(.hidden)
+         }
++        .tint(MangoTheme.mango)
+         .onReceive(tick) { _ in if !cheats.scanning { cheats.refresh() } }
+     }
+ }
+diff --git a/app/Madeira/SteamGames.swift b/app/Madeira/SteamGames.swift
+index 229d8ccf..c30a5ed1 100644
+--- a/app/Madeira/SteamGames.swift
++++ b/app/Madeira/SteamGames.swift
+@@ -3082,43 +3082,12 @@ enum MangoMoonSave {
+         return range.upperBound - raw.startIndex
+     }
+ 
+-    /// Lifetime earnings, stored as a Double right before the team's name ("<earned> 01000000 04 team"),
+-    /// with a second copy in the player's entry just before it.
+-    static func earnings(in raw: Data) -> [Int] {
+-        guard let team = raw.range(of: Data([4] + Array("team".utf8))) else { return [] }
+-        let t = team.lowerBound - raw.startIndex
+-        var spots: [Int] = []
+-        if t >= 12 { spots.append(t - 12) }
+-        if t >= 24, raw.subdata(in: (t - 24)..<(t - 16)) == raw.subdata(in: (t - 12)..<(t - 4)) { spots.append(t - 24) }
+-        return spots
+-    }
+-
+-    static func double(at offset: Int, in raw: Data) -> Double {
+-        Double(bitPattern: raw.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset, as: UInt64.self) }.littleEndian)
+-    }
+-
+-    static func setDouble(_ value: Double, at offset: Int, in raw: inout Data) {
+-        var bits = value.bitPattern.littleEndian
+-        withUnsafeBytes(of: &bits) { raw.replaceSubrange(offset..<(offset + 8), with: $0) }
+-    }
+-
+     /// slot.json's money (the save-slot screen).
+     static func slotDollars(_ slotFolder: URL) -> Double? {
+         guard let data = try? Data(contentsOf: slotFolder.appendingPathComponent("slot.json")),
+               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+         return (object["dollars"] as? NSNumber)?.doubleValue
+     }
+-
+-    static func setSlotDollars(_ value: Double, _ slotFolder: URL) {
+-        for name in ["slot.json", "slot.json.bak"] {
+-            let url = slotFolder.appendingPathComponent(name)
+-            guard let text = try? String(contentsOf: url, encoding: .utf8),
+-                  let regex = try? NSRegularExpression(pattern: "\"dollars\":[-0-9.eE+]+") else { continue }
+-            let range = NSRange(text.startIndex..., in: text)
+-            let replaced = regex.stringByReplacingMatches(in: text, range: range, withTemplate: "\"dollars\":\(value)")
+-            try? replaced.write(to: url, atomically: true, encoding: .utf8)
+-        }
+-    }
+ }
+ 
+ /// The mods chosen on Moon Sweepers' Mods page, kept on this iPhone.
+@@ -3136,8 +3105,6 @@ final class MangoMoonMods: ObservableObject {
+     @Published var slot: Int { didSet { save() } }
+     /// Upgrade key -> level to set (missing: left as the game has it).
+     @Published var levels: [String: Int] { didSet { save() } }
+-    @Published var moneyOn: Bool { didSet { save() } }
+-    @Published var money: Double { didSet { save() } }
+     @Published private(set) var lastResult: String?
+ 
+     private static let key = "mango.moonMods"
+@@ -3147,13 +3114,11 @@ final class MangoMoonMods: ObservableObject {
+         enabled = saved["enabled"] as? Bool ?? false
+         slot = saved["slot"] as? Int ?? 2
+         levels = saved["levels"] as? [String: Int] ?? [:]
+-        moneyOn = saved["moneyOn"] as? Bool ?? false
+-        money = saved["money"] as? Double ?? 10_000
+         lastResult = saved["lastResult"] as? String
+     }
+ 
+     private func save() {
+-        var all: [String: Any] = ["enabled": enabled, "slot": slot, "levels": levels, "moneyOn": moneyOn, "money": money]
++        var all: [String: Any] = ["enabled": enabled, "slot": slot, "levels": levels]
+         if let lastResult { all["lastResult"] = lastResult }
+         UserDefaults.standard.set(all, forKey: Self.key)
+     }
+@@ -3197,19 +3162,9 @@ final class MangoMoonMods: ObservableObject {
+                 if MangoMoonSave.setLevel(key, level, in: &session.raw) { done.append("\(key) \(level)") }
+                 else { done.append("\(key) not bought yet, skipped") }
+             }
+-            if moneyOn {
+-                let current = MangoMoonSave.slotDollars(folder) ?? 0
+-                let spots = MangoMoonSave.earnings(in: session.raw)
+-                for spot in spots {
+-                    let earned = MangoMoonSave.double(at: spot, in: session.raw)
+-                    MangoMoonSave.setDouble(earned + (money - current), at: spot, in: &session.raw)
+-                }
+-                done.append("money test \(Int(money)) (\(spots.count) spot\(spots.count == 1 ? "" : "s"))")
+-            }
+             guard !done.isEmpty else { finish("Launch with mods is on, but no mod is chosen."); return }
+             let saved = try backup(folder)
+             try MangoMoonSave.write(session, to: file)
+-            if moneyOn { MangoMoonSave.setSlotDollars(money, folder) }
+             finish("Slot \(slot): " + done.joined(separator: ", ") + ". Backup: \(saved.lastPathComponent)")
+         } catch {
+             finish("Mods not applied: \(error.localizedDescription)")
+@@ -3273,7 +3228,6 @@ struct MangoMoonModsPage: View {
+     @State private var readout: [String] = []
+     @State private var notice: String?
+     @State private var confirmCopy = false
+-    @State private var moneyText = ""
+ 
+     var body: some View {
+         Form {
+@@ -3307,16 +3261,10 @@ struct MangoMoonModsPage: View {
+             }
+ 
+             Section {
+-                Toggle("Money changer (experimental)", isOn: $mods.moneyOn).tint(MangoTheme.mango)
+-                if mods.moneyOn {
+-                    LabeledContent("Money") {
+-                        TextField("10000", text: $moneyText)
+-                            .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+-                            .onChange(of: moneyText) { _, text in if let value = Double(text) { mods.money = max(0, min(value, 1_000_000_000)) } }
+-                    }
+-                }
+-            } header: { Text("Test mods") } footer: {
+-                Text("The game scrambles its money, so this test sets your earnings total and the save-slot screen to the amount instead. It may not change the money shown in the game yet; tell Claude what you see.")
++                Label("To change your money, use Cheats in the in-game menu while Moon Sweepers runs: scan for your money, spend or earn some, scan again, then set it.", systemImage: "wand.and.stars")
++                    .font(.callout)
++            } header: { Text("Money") } footer: {
++                Text("The save scrambles money, so it can't be edited here. Cheats changes it in the running game instead.")
+             }
+ 
+             Section {
+@@ -3334,7 +3282,6 @@ struct MangoMoonModsPage: View {
+         .navigationTitle("Mods")
+         .onAppear {
+             readout = mods.readout()
+-            moneyText = String(Int(mods.money))
+         }
+         .onChange(of: mods.slot) { _, _ in readout = mods.readout() }
+         .confirmationDialog("Copy slot 1 into slot \(mods.slot)?", isPresented: $confirmCopy, titleVisibility: .visible) {
+diff --git a/tests/host/check-control-presets.py b/tests/host/check-control-presets.py
+index ff4d9bc9..78fae316 100644
+--- a/tests/host/check-control-presets.py
++++ b/tests/host/check-control-presets.py
+@@ -302,8 +302,12 @@ for flag, where in (('MADEIRA_CONTROL_PRESETS', presets), ('MADEIRA_CONTROLS_EDI
+     assert f'.flag("{flag}")' in where, flag + ' is a kill switch'
+ # Defaults an existing user would notice are opt-in: the built-in is never applied
+ # automatically and player 1 is not reserved unless the switch is set to 1.
+-for flag, where in (('MADEIRA_CONTROLS_XBOX_DEFAULT', presets), ('MADEIRA_PAD_EARLY_SLOT', gamepad)):
++for flag, where in (('MADEIRA_CONTROLS_XBOX_DEFAULT', presets),):
+     assert f'.optIn("{flag}")' in where and f'.flag("{flag}")' not in where, flag + ' is opt-in'
++# early-pad-default (Madeira nightly 0.2.100): MADEIRA_PAD_EARLY_SLOT is on by default for a pad
++# already paired when the game starts; env.MADEIRA_PAD_EARLY_SLOT = 0 turns it off.
++assert 'MadeiraConfig.gameValue("env.MADEIRA_PAD_EARLY_SLOT")' in gamepad and 'MadeiraConfig.get("env.MADEIRA_PAD_EARLY_SLOT")' in gamepad \
++    and 'environment["MADEIRA_PAD_EARLY_SLOT"]' in gamepad, 'MADEIRA_PAD_EARLY_SLOT is default-on with a 0 off switch'
+ assert '!= "0"' in function(gamepad, 'static func flag('), 'only "0" disables'
+ assert '== "1"' in function(gamepad, 'static func optIn('), 'only "1" enables'
+ assert 'Self.xboxDefault' in function(presets, 'var defaultPending: Bool {'), 'the automatic built-in needs the opt-in'
+@@ -327,7 +331,7 @@ window = function(content, 'final class ControlsWindow: UIWindow {')
+ assert window.index('if m.editing {') < window.index('!hit.isDescendant(of: root)') \
+     < window.index('guard m.hitsInteractive('), 'menu and dialog presentations take their touches in play mode'
+ reserve = function(gamepad, '@MainActor func reserveSessionSlot(touchControls: Bool) {')
+-assert reserve.index('guard Self.enabled, Self.optIn("MADEIRA_PAD_EARLY_SLOT")') < reserve.index('touchState.reserved = true')
++assert reserve.index('if setting == "0" { return }') < reserve.index('touchState.reserved = true')
+ run = function(content, 'private func runWineFullSequence(profile: LibraryEntry? = nil) {')
+ assert run.index('GamepadInput.shared.reserveSessionSlot(') < run.index('DispatchQueue.global'), 'reserved before Wine starts'
+ 
+diff --git a/tests/host/check-dock-installers.py b/tests/host/check-dock-installers.py
+index cc54bc00..55f93091 100644
+--- a/tests/host/check-dock-installers.py
++++ b/tests/host/check-dock-installers.py
+@@ -51,12 +51,17 @@ madsync = (root / 'build/madsync/madsync.c').read_text(encoding='utf-8')
+ 
+ # ------------------------------------------------------------------ static rules
+ lower = installers.lower()
+-# One documented exception: .NET Framework setups (isDotNetFramework, env.MADEIRA_INSTALL_SKIP_DOTNET),
+-# which do not finish under Wine's own .NET. Outside that function no name decides anything.
+-named = re.sub(r'nonisolated static func isdotnetframework.*?\n    \}\n', '', lower, flags=re.S)
++# Two documented exceptions (as in Madeira nightly 0.2.100): .NET Framework setups (isDotNetFramework,
++# env.MADEIRA_INSTALL_SKIP_DOTNET), which do not finish under Wine's own .NET, and the DirectX redistributable
++# (isDirectXRedist, env.MADEIRA_INSTALL_SKIP_DIRECTX), which ended with -9 on device and whose files Wine has its
++# own of. Outside those two functions (and comments) no name decides anything.
++named = re.sub(r'nonisolated static func (isdotnetframework|isdirectxredist)\(.*?\n    \}\n', '', lower, flags=re.S)
++named = '\n'.join(line for line in named.splitlines() if not line.lstrip().startswith('//'))
++dx = re.search(r'nonisolated static func isdirectxredist\(.*?\n    \}\n', lower, flags=re.S)
+ require('func isdotnetframework' in lower and 'dotnetfx' not in named and
+-        not any(n in lower for n in ('dxsetup', 'vcredist', 'vc_redist', 'dxwebsetup', 'physx', 'ndp4')),
+-        'no redistributable names: nothing is decided by program name, except the .NET Framework setups')
++        dx is not None and 'dxsetup.exe' in dx.group(0) and 'vcredist' not in dx.group(0) and
++        not any(n in named for n in ('dxsetup', 'vcredist', 'vc_redist', 'dxwebsetup', 'physx', 'ndp4')),
++        'no redistributable names: nothing is decided by program name, except the .NET Framework and DirectX setups')
+ require('SteamSignIn.flag(name, default: true)' in installers, 'every installer switch defaults on and reads env.NAME')
+ for switch in ('MADEIRA_DOCK_INSTALLERS', 'MADEIRA_INSTALL_DEFAULT_KEY', 'MADEIRA_DOCK_INSTALL_CHOICE',
+                'MADEIRA_DOCK_INSTALL_SCM', 'MADEIRA_DOCK_INSTALL_SERVER_SYNC', 'MADEIRA_DOTNET_FUSION',
+diff --git a/tests/host/check-game-recommendations.py b/tests/host/check-game-recommendations.py
+index 70026b73..e5fb27e3 100644
+--- a/tests/host/check-game-recommendations.py
++++ b/tests/host/check-game-recommendations.py
+@@ -77,11 +77,14 @@ MERGED = {'msfs-2024', 'counter-strike-2', 'breakneck', 'spelunky-2', 'albion-on
+           'glyphica-typing-survival', 'the-adventures-of-elliot', 'the-escapists-2', 'garrys-mod', 'persona-3-reload'}
+ # Mango Port (MangoMods-code/FarCry-4-But-Mango): Far Cry 4 and the Ubisoft Connect launcher chain.
+ MANGO = {'mango-far-cry-4', 'mango-ubisoft-connect', 'mango-ubisoft-connect-setup'}
++# Mango Port: lists ported from Madeira nightly 0.2.100 (camhawk) whose every key this runtime reads.
++NIGHTLY = {'cyberpunk-2077', 'sonic-generations', 'detroit-become-human', 'hades-ii', 'la-noire', 'portal', 'dying-light-2',
++           'metaphor-refantazio', 'the-forest', 'blue-prince', 'grounded', 'satisfactory-steam', 'football-manager-27'}
+ assert set(presets) == {'rdr2-steam', 'rdr2-other', 'gta5e-steam', 'gta5e-other', 'gta5l-steam', 'gta5l-other', 'gta4-steam',
+                         'ghost-of-tsushima', 'god-of-war', 'horizon-zero-dawn', 'horizon-forbidden-west', 'ratchet-clank-rift-apart',
+                         'crysis-remastered', 'crysis-2-remastered', 'crysis-3-remastered', 'rockstar-launcher', 'rockstar-launcher-setup',
+                         'steam-big-picture', 'dark-souls-remastered', 'dark-souls-iii', 'fallout-new-vegas', 'fallout-3', 'black-ops-1', 'black-ops-2', 'borderlands-2',
+-                        'standard'} | MERGED | MANGO, \
++                        'standard'} | MERGED | MANGO | NIGHTLY, \
+     sorted(presets)
+ assert ('static let all = [rdr2Steam, rdr2Other, gta5EnhancedSteam, gta5EnhancedOther, gta5LegacySteam, gta5LegacyOther, gta4Steam,\n'
+         '                      ghostOfTsushima, godOfWar, horizonZeroDawn, horizonForbiddenWest, ratchetClankRiftApart, crysisRemastered,\n'
+@@ -111,7 +114,7 @@ assert 'if let on = rec.startServices { entry.startServices = on ? true : nil }'
+ titles_src = block(lists_src, '    static let steamTitles: [SteamTitle] = [', '\n    ]\n')
+ for ident in MERGED:
+     assert titles_src.count('list: %s)' % presets[ident]['name']) == 1, ident
+-assert titles_src.count('SteamTitle(') == len(MERGED) + 1   # + Mango Port's Far Cry 4
++assert titles_src.count("SteamTitle(") == len(MERGED) + 1 + len(NIGHTLY)   # + Mango Port's Far Cry 4 and the nightly lists
+ assert titles_src.count('list: farCry4)') == 1
+ # Mango Port: Far Cry 4 by App ID 298110, its folder or FarCry4.exe; Ubisoft Connect only in its own folder;
+ # all three start in the Wine desktop with Windows services first, like the Rockstar chain.
+@@ -184,7 +187,10 @@ for ident, p in presets.items():
+         p['tested'], p['fork'] = [line for line in p['lines'][2:] if not line.startswith('#')], []
+         continue
+     # The Fallout lists are the standard one plus a switch: the games ran with it. Persona 3 Reload's is the list as it ran.
+-    if ident in ('standard', 'fallout-new-vegas', 'fallout-3', 'black-ops-1', 'black-ops-2', 'borderlands-2', 'persona-3-reload'):
++    # Mango Port: the nightly lists that were tested without madeira-bcd's defaults (as in Madeira nightly 0.2.100's check).
++    if ident in ('standard', 'fallout-new-vegas', 'fallout-3', 'black-ops-1', 'black-ops-2', 'borderlands-2', 'persona-3-reload',
++                 'satisfactory-steam', 'metaphor-refantazio', 'dying-light-2', 'blue-prince', 'the-forest', 'sonic-generations',
++                 'detroit-become-human', 'cyberpunk-2077', 'football-manager-27'):
+         assert not set(FORK_DEFAULTS) & set(p['lines']), (ident, "the standard list has none of madeira-bcd's defaults")
+         p['tested'], p['fork'] = p['lines'][2:], []
+         continue

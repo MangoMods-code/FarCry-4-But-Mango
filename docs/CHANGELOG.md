@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.17.0
+Quality-of-life update: the best of Madeira's latest nightly, Heat guard, and cleanup.
+
+- **From Madeira Nightly 0.2.100** (camhawk's test builds):
+  - Steam games started as **The game** now get your **Launch arguments** too (they used to be ignored)
+  - First-start installs: the DirectX setup that always failed is skipped (Wine has its own), and PhysX and other shared installers are found in every Steam library, including external drives (Batman Arkham fix)
+  - A controller that's already connected counts as player 1 from the start, so games that only look once (Sonic Generations) see it
+  - Recommended settings for 13 more games: Cyberpunk 2077, Dying Light 2, Detroit: Become Human, Hades II, L.A. Noire, Portal, Metaphor: ReFantazio, The Forest, Grounded, Satisfactory, Blue Prince, Sonic Generations and Football Manager 27
+- New **Heat guard** in the in-game menu: shows how hot your iPhone is, and when it gets hot it drops the FPS limit (and turns on Eco mode when it's very hot), then puts things back once it cools down
+- **Cheats:** Undo for Set all, Mango colors, and everything clears when the game closes
+- Moon Sweepers: the save-file money test is gone (it never worked); the Mods page points to Cheats for money instead
+
 ## v0.16.0
 A real cheat engine, built in.
 
