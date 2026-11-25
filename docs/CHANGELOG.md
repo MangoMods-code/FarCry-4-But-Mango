@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.18.0
+A real Moon Sweepers money mod, and a smarter cheat engine.
+
+- **Moon Sweepers money** card at the top of Cheats (in-game menu) while Moon Sweepers runs: **Find my money** once (it starts from your last save's amount), then **+1,000 / +10,000 / +100,000**, **Set** any amount, or **Lock** it
+- It works like a PC trainer: after finding your money it runs a **pointer scan** from the game's code (GameAssembly.dll) and saves the path, so next launch your money shows up at once, with no scanning
+- Finds money however the game keeps it: double, float, cents, or **hidden by anti-cheat** (XOR-scrambled values)
+- Cheats: new **Hidden number (anti-cheat)** type for any single-player game
+- Safer scans: only memory that's actually in use is read, so big games can't run Mango Port out of memory during a scan
+
 ## v0.17.0
 Quality-of-life update: the best of Madeira's latest nightly, Heat guard, and cleanup.
 
